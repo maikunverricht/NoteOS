@@ -1,1853 +1,1646 @@
-<!DOCTYPE html>
-<html lang="de">
+<!doctype html>
+<html lang="de" data-theme="dark">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>NoteOS – Buch aufklappen</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NoteOS – Wissen der Werkbank</title>
+<meta name="description" content="Notizen als Kartei: Kategorien, Tags und Volltext – lokal im Ordner gespeichert.">
+<meta name="theme-color" content="#06090E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2306090E'/%3E%3Crect x='7' y='6' width='18' height='4' rx='1.5' fill='%23F2B33D'/%3E%3Crect x='7' y='13' width='18' height='4' rx='1.5' fill='%2363D9C4'/%3E%3Crect x='7' y='20' width='11' height='4' rx='1.5' fill='%23EDF0F3' opacity='.35'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500&display=swap">
+<script>
+/* Theme vor dem ersten Bild setzen – gleicher Schlüssel wie im Cockpit,
+   gleiche Herkunft, also teilen sich alle Werkzeuge die Einstellung. */
+(function(){var t=null;try{t=localStorage.getItem('wb-cockpit-theme')}catch(e){}
+if(t!=='light'&&t!=='dark'){t=window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
 <style>
-  :root{
-    --bg-app:#3b2a1d; --bg-page:#f2e6c9;
-    --ink:#2b1c10; --ink-muted:#6b5642; --accent:#a9803f;
-    --border:#c9b489; --shadow:rgba(20,12,4,.5);
-    --wall:#241a11; --wood:#5c3a22; --wood-dark:#3a2414;
-    --tab-bg:#c9a876; --tab-ink:#3a2a16;
-    --font-display:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
-    --font-body:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
-    --page-w: clamp(230px, 27vw, 360px);
-    --reg-w: clamp(120px, 13vw, 165px);
-  }
-  body[data-mode="dark"]{
-    --bg-app:#14100b; --bg-page:#241b10;
-    --ink:#e6d6b0; --ink-muted:#a8916c; --accent:#c79a52;
-    --border:#4a3b24; --shadow:rgba(0,0,0,.75);
-    --wall:#0c0906; --wood:#3a2415; --wood-dark:#221208;
-    --tab-bg:#5c4526; --tab-ink:#e8d9b8;
-  }
-  *{ box-sizing:border-box; }
-  html,body{ margin:0; padding:0; min-height:100%; }
-  body{ font-family:var(--font-body); background:var(--bg-app); color:var(--ink); -webkit-font-smoothing:antialiased; }
-  button{ font:inherit; cursor:pointer; }
-  /* must outrank any element's own display value, e.g. the tag menu's display:flex */
-  [hidden]{ display:none !important; }
-  input{ font:inherit; }
+:root{
+  color-scheme:dark;
+  --void:#06090E;
+  --bg-grad:linear-gradient(175deg,#070B11 0%,#0A121B 38%,#0C1620 68%,#080C12 100%);
+  --glass:rgba(16,22,31,.55);
+  --glass-2:rgba(12,17,24,.82);
+  --glass-edge:rgba(255,255,255,.10);
+  --sheet:rgba(20,27,37,.72);
+  --text:#EDF0F3;--text-2:#9BA6B2;--text-3:#6B7683;
+  --line:rgba(255,255,255,.09);
+  --line-2:rgba(255,255,255,.05);
+  --line-hi:rgba(242,179,61,.38);
+  --amber:#F2B33D;--teal:#63D9C4;--danger:#E2725B;
+  --em-1:#F2B33D;--em-2:#F7CF83;--em-3:#63D9C4;
+  --glow-a:rgba(242,179,61,.10);--glow-t:rgba(99,217,196,.08);
+  --shadow:0 18px 46px -22px rgba(0,0,0,.75);
+  --shadow-lg:0 30px 80px -30px rgba(0,0,0,.85);
+  --on-accent:#12171F;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --max:1180px;--pad:22px;
+  --t-s:.25s;--t-m:.45s;
+}
+html[data-theme="light"]{
+  color-scheme:light;
+  --void:#EEF1F6;
+  --bg-grad:linear-gradient(175deg,#F5F7FA 0%,#EAEEF4 38%,#E6EBF2 68%,#F2F4F8 100%);
+  --glass:rgba(255,255,255,.60);
+  --glass-2:rgba(248,250,252,.88);
+  --glass-edge:rgba(17,25,35,.10);
+  --sheet:rgba(255,255,255,.78);
+  --text:#111923;--text-2:#4A5563;--text-3:#7A8491;
+  --line:rgba(17,25,35,.10);
+  --line-2:rgba(17,25,35,.06);
+  --line-hi:rgba(224,162,31,.55);
+  --amber:#E0A21F;--teal:#2FA894;--danger:#B4442E;
+  --em-1:#C98A0C;--em-2:#E0A21F;--em-3:#2FA894;
+  --glow-a:rgba(224,162,31,.13);--glow-t:rgba(47,168,148,.10);
+  --shadow:0 18px 40px -24px rgba(30,40,60,.30);
+  --shadow-lg:0 30px 70px -34px rgba(30,40,60,.42);
+  --on-accent:#FFFFFF;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scrollbar-gutter:stable;-webkit-text-size-adjust:100%}
+html.locked{overflow:hidden;background:var(--void)}
+body{margin:0;background:var(--void);color:var(--text);font-family:var(--display);font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background-color .35s ease,color .35s ease}
+a{color:inherit}
+button{font:inherit;color:inherit}
+input,select,textarea{font:inherit;color:inherit}
+.mono{font-family:var(--mono)}
+[hidden]{display:none !important}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 
-  /* ---------- lab bar ---------- */
-  .lab-bar{
-    display:flex; flex-wrap:wrap; align-items:center; gap:.8rem; padding:.65rem 1rem;
-    background:rgba(8,6,4,.9); color:#f4f0e6; font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
-    font-size:.76rem; position:sticky; top:0; z-index:100; backdrop-filter:blur(6px);
-  }
-  .lab-group{ display:flex; gap:.3rem; }
-  .lab-group button{
-    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:#f4f0e6;
-    padding:.3rem .65rem; border-radius:999px; font-size:.74rem;
-  }
-  .lab-group button.active{ background:#f4f0e6; color:#161207; border-color:#f4f0e6; }
-  .lab-hint{ opacity:.7; font-size:.7rem; }
-  @media (max-width:860px){ .lab-hint{ display:none; } }
+/* ── Hintergrund ───────────────────────────────────────────── */
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:var(--bg-grad)}
+.bg i{position:absolute;border-radius:50%;filter:blur(60px)}
+.bg .g1{width:620px;height:620px;left:-180px;top:-220px;background:radial-gradient(circle,var(--glow-a),transparent 70%)}
+.bg .g2{width:720px;height:720px;right:-260px;top:38%;background:radial-gradient(circle,var(--glow-t),transparent 70%)}
+.bg::after{content:"";position:absolute;inset:0;opacity:.5;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 0%,transparent 62%);mask-image:radial-gradient(ellipse at 50% 0%,#000 0%,transparent 62%)}
 
-  .add-btn{
-    background:var(--accent); color:#2b1c10; border:none; width:26px; height:26px; border-radius:50%;
-    font-size:1.05rem; font-weight:700; line-height:1; display:flex; align-items:center; justify-content:center;
-    margin-left:.1rem;
-  }
-  .add-menu{
-    position:fixed; top:48px; left:1rem; z-index:130; background:#efe3c4; border:1px solid var(--border);
-    border-radius:8px; box-shadow:0 14px 30px rgba(0,0,0,.4); overflow:hidden; min-width:175px;
-  }
-  .add-menu button{
-    display:block; width:100%; text-align:left; background:none; border:none; padding:.65rem .9rem;
-    font-family:var(--font-body); font-size:.85rem; color:#2b1c10; border-bottom:1px solid rgba(0,0,0,.08);
-  }
-  .add-menu button:last-child{ border-bottom:none; }
-  .add-menu button:hover{ background:rgba(169,128,63,.22); }
+/* ── Navigation ────────────────────────────────────────────── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:40;padding:calc(12px + env(safe-area-inset-top)) var(--pad) 0}
+.nav-in{max-width:var(--max);margin:0 auto;display:flex;align-items:center;gap:14px;height:52px;padding:0 8px 0 18px;
+  border-radius:100px;border:1px solid var(--glass-edge);background:var(--glass);box-shadow:var(--shadow);
+  -webkit-backdrop-filter:blur(15px) saturate(1.3);backdrop-filter:blur(15px) saturate(1.3)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:500;letter-spacing:-.01em;white-space:nowrap}
+.brand b{font-weight:800;font-variation-settings:'wdth' 112}
+.mark{display:flex;flex-direction:column;gap:2px;width:16px}
+.mark i{height:3px;border-radius:2px;background:var(--text-3)}
+.mark i:nth-child(1){background:var(--amber)}
+.mark i:nth-child(2){background:var(--teal)}
+.mark i:nth-child(3){width:60%}
+.nav-r{margin-left:auto;display:flex;align-items:center;gap:8px}
+.clock{font-size:12px;color:var(--text-3);letter-spacing:.08em;margin-right:6px;font-family:var(--mono)}
+.pill{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:100px;border:1px solid var(--glass-edge);
+  background:transparent;text-decoration:none;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;
+  transition:background var(--t-s),border-color var(--t-s),color var(--t-s)}
+.pill:hover{background:var(--glass);border-color:var(--line-hi)}
+.pill:disabled{opacity:.35;cursor:default}
+.pill:disabled:hover{background:transparent;border-color:var(--glass-edge)}
+.pill.primary{background:var(--amber);color:var(--on-accent);border-color:transparent;font-weight:600}
+.pill.primary:hover{background:var(--amber);filter:brightness(1.06)}
+.pill.on{background:var(--amber);color:var(--on-accent);border-color:transparent;font-weight:600}
+.icon-btn{width:36px;padding:0;justify-content:center}
+.pill svg{width:16px;height:16px;flex:none}
+.sun{display:none}
+html[data-theme="light"] .sun{display:block}
+html[data-theme="light"] .moon{display:none}
+.dot-state{width:7px;height:7px;border-radius:50%;background:var(--text-3);flex:none}
+.dot-state.on{background:var(--teal);box-shadow:0 0 0 3px color-mix(in srgb,var(--teal) 22%,transparent)}
+.dot-state.warn{background:var(--amber)}
+.kbd{font-family:var(--mono);font-size:11px;color:var(--text-3);border:1px solid var(--line);border-radius:5px;padding:0 5px;margin-left:2px}
 
-  .print-btn{
-    background:rgba(255,255,255,.1); color:#f4f0e6; border:1px solid rgba(255,255,255,.3); width:26px; height:26px;
-    border-radius:50%; font-size:.85rem; line-height:1; display:flex; align-items:center; justify-content:center;
-  }
-  .print-btn:disabled{ opacity:.35; cursor:default; }
-  .print-menu{
-    position:fixed; top:48px; z-index:130; background:#efe3c4; border:1px solid var(--border);
-    border-radius:8px; box-shadow:0 14px 30px rgba(0,0,0,.4); overflow:hidden; min-width:210px;
-  }
-  .print-menu button{
-    display:block; width:100%; text-align:left; background:none; border:none; padding:.65rem .9rem;
-    font-family:var(--font-body); font-size:.85rem; color:#2b1c10; border-bottom:1px solid rgba(0,0,0,.08);
-  }
-  .print-menu button:last-child{ border-bottom:none; }
-  .print-menu button:hover{ background:rgba(169,128,63,.22); }
-  .pm-side{ display:flex !important; align-items:center; gap:.5rem; font-size:.8rem !important; }
-  .pm-side::before{ content:'○'; opacity:.5; }
-  .pm-side.selected{ background:rgba(169,128,63,.28); font-weight:600; }
-  .pm-side.selected::before{ content:'●'; opacity:1; color:var(--accent); }
-  .pm-sep{ border-top:1px solid rgba(0,0,0,.12); }
-  .folder-btn{
-    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:#f4f0e6;
-    padding:.3rem .7rem; border-radius:999px; font-size:.74rem; display:flex; align-items:center; gap:.4rem;
-  }
-  .folder-dot{ width:7px; height:7px; border-radius:50%; background:#8a8a86; display:inline-block; }
-  .folder-dot.on{ background:#6fbf73; } .folder-dot.warn{ background:#d9a441; }
-  .folder-menu{
-    position:fixed; top:48px; left:5.6rem; z-index:130; background:#efe3c4; border:1px solid var(--border);
-    border-radius:8px; box-shadow:0 14px 30px rgba(0,0,0,.4); overflow:hidden; min-width:230px;
-  }
-  .folder-menu button{
-    display:block; width:100%; text-align:left; background:none; border:none; padding:.65rem .9rem;
-    font-family:var(--font-body); font-size:.85rem; color:#2b1c10; border-bottom:1px solid rgba(0,0,0,.08);
-  }
-  .folder-menu button:last-child{ border-bottom:none; }
-  .folder-menu button:hover{ background:rgba(169,128,63,.22); }
-  .pm-note{ padding:.6rem .9rem; font-size:.72rem; line-height:1.4; color:var(--ink-muted); border-bottom:1px solid rgba(0,0,0,.08); }
+/* ── Hero ──────────────────────────────────────────────────── */
+main{position:relative;z-index:1;max-width:var(--max);margin:0 auto;padding:0 var(--pad)}
+.hero{padding:clamp(112px,16vw,158px) 0 clamp(20px,4vw,34px)}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-3);
+  display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:"";width:28px;height:1px;background:var(--amber);flex:none}
+.hero-top{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+.hero-count{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;color:var(--text-3);white-space:nowrap}
+h1{font-family:var(--display);font-size:clamp(38px,6.6vw,78px);line-height:.98;letter-spacing:-.045em;margin:20px 0 0;font-weight:700}
+h1 span{font-variation-settings:'wdth' 116,'wght' 800}
+h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--em-1),var(--em-2) 52%,var(--em-3));
+  -webkit-background-clip:text;background-clip:text;color:transparent;padding-right:.06em}
+.lead{max-width:560px;color:var(--text-2);font-size:clamp(15.5px,1.8vw,18px);margin:20px 0 0}
+.stats{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:24px;font-family:var(--mono);font-size:12.5px;color:var(--text-3)}
+.stats b{color:var(--text);font-weight:500}
 
-  .print-sheet{ display:none; }
-  @media print{
-    body > *:not(.print-sheet){ display:none !important; }
-    .print-sheet{
-      display:block !important; font-family:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
-      color:#161207; background:#fff;
-    }
-    .print-sheet h1{ font-size:22pt; border-bottom:2px double #333; padding-bottom:6pt; margin-bottom:8pt; }
-    .print-sheet .p-meta{ font-size:9pt; color:#555; margin-bottom:3pt; }
-    .print-sheet .p-source{ font-size:9pt; color:#555; font-style:italic; margin-bottom:3pt; }
-    .print-sheet .p-tags{ margin-bottom:16pt; }
-    .print-sheet .p-tag{ display:inline-block; font-size:8pt; border:1px solid #999; padding:1pt 7pt; margin-right:5pt; border-radius:8pt; font-style:italic; }
-    .print-sheet .p-body{ font-size:11pt; line-height:1.55; }
-    .print-sheet .p-body h1,.print-sheet .p-body h2,.print-sheet .p-body h3{ margin:14pt 0 6pt; }
-    .print-sheet .p-body blockquote{ border-left:2pt solid #999; padding-left:10pt; margin:8pt 0; color:#444; font-style:italic; }
-  }
+/* Fächer-Welle: der Bestand als gekippte Blätter */
+.wave{position:relative;height:clamp(96px,15vw,168px);margin:26px 0 0;overflow:hidden;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.wave-in{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:2px;perspective:900px}
+.wave i{display:block;flex:1 1 0;min-width:4px;max-width:15px;border-radius:2px;
+  background:linear-gradient(180deg,var(--wc,#F2B33D),color-mix(in srgb,var(--wc,#F2B33D) 55%,var(--void)));
+  box-shadow:1px 0 0 rgba(0,0,0,.35),-1px 0 0 rgba(255,255,255,.10);
+  animation:waveIn .9s cubic-bezier(.2,.8,.2,1) both}
+@keyframes waveIn{from{opacity:0;transform:translateY(18px) scaleY(.2)}}
 
-  /* ---------- editor ---------- */
-  .editor-view{
-    position:fixed; inset:45px 0 0; background:var(--bg-app); overflow:auto; z-index:120;
-    opacity:0; visibility:hidden; transition:opacity .3s ease;
-  }
-  .editor-view.active{ opacity:1; visibility:visible; }
-  .editor-topbar{ display:flex; justify-content:space-between; align-items:center; padding:1rem 1.4rem .2rem; max-width:720px; margin:0 auto; }
-  .editor-topbar button{ background:none; border:none; font-size:.85rem; }
-  .editor-cancel{ color:var(--ink-muted); padding:0; }
-  .editor-save{ background:var(--accent); color:#2b1c10; font-weight:600; padding:.45rem 1.1rem; border-radius:6px; }
-  .editor-sheet{ max-width:720px; margin:1.2rem auto 3rem; background:var(--bg-page); color:var(--ink); border-radius:2px; box-shadow:0 24px 48px -12px var(--shadow); padding:1.8rem 2rem 2.2rem; }
-  .editor-title{
-    width:100%; border:none; background:none; font-family:var(--font-display); font-size:1.6rem; font-weight:600;
-    color:var(--ink); padding:0 0 .5rem; border-bottom:2px double var(--accent); outline:none;
-  }
-  .editor-title::placeholder{ color:var(--ink-muted); opacity:.6; }
-  .editor-meta-row{ display:flex; flex-wrap:wrap; align-items:center; gap:.8rem; margin:.8rem 0 .3rem; }
-  .editor-meta-row select{
-    background:#fff8e8; border:1px solid var(--border); color:var(--ink); padding:.35rem .6rem; border-radius:5px; font-size:.82rem;
-  }
-  .editor-tags-input{
-    background:#fff8e8; border:1px solid var(--border); color:var(--ink); padding:.35rem .6rem; border-radius:5px;
-    font-size:.82rem; flex:1; min-width:160px;
-  }
-  .editor-tags-input::placeholder{ color:var(--ink-muted); opacity:.7; }
-  .editor-source{ font-size:.72rem; color:var(--ink-muted); font-style:italic; }
-  .editor-hint{ font-size:.72rem; color:#8a3b3b; min-height:1.1em; margin:.2rem 0 .8rem; }
-  .editor-toolbar{ display:flex; flex-wrap:wrap; gap:.3rem; padding:.5rem; background:rgba(0,0,0,.05); border-radius:6px; margin-bottom:1rem; }
-  .editor-toolbar button{
-    background:#fff8e8; border:1px solid var(--border); color:var(--ink); padding:.32rem .6rem; border-radius:4px; font-size:.78rem;
-  }
-  .editor-toolbar button:hover{ background:var(--accent); color:#2b1c10; }
-  .tb-sep{ width:1px; background:var(--border); margin:.2rem .15rem; }
-  .editor-body{ min-height:38vh; outline:none; font-size:.97rem; line-height:1.65; }
-  .editor-body h1{ font-family:var(--font-display); font-size:1.5rem; margin:.6rem 0 .4rem; }
-  .editor-body h2{ font-family:var(--font-display); font-size:1.2rem; margin:.6rem 0 .4rem; }
-  .editor-body blockquote{ border-left:3px solid var(--accent); margin:.6rem 0; padding:.2rem 0 .2rem .9rem; color:var(--ink-muted); font-style:italic; }
-  .editor-body ul,.editor-body ol{ padding-left:1.3rem; margin:.5rem 0; }
-  .editor-body p{ margin:0 0 .8rem; }
-  .editor-body:empty::before{ content:'Schreib deine Notiz …'; color:var(--ink-muted); opacity:.55; }
+/* ── Steuerleiste ──────────────────────────────────────────── */
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:0 0 18px;
+  border-bottom:1px solid var(--line);margin-bottom:26px}
+.search{flex:1;min-width:190px;height:38px;padding:0 14px;border-radius:100px;border:1px solid var(--glass-edge);
+  background:var(--glass);color:var(--text);font-size:14px;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.search::placeholder{color:var(--text-3)}
+.seg{display:flex;gap:4px;padding:3px;border-radius:100px;border:1px solid var(--glass-edge);background:var(--glass)}
+.seg button{height:30px;padding:0 12px;border:none;background:transparent;border-radius:100px;font-size:13px;cursor:pointer;
+  color:var(--text-2);transition:background var(--t-s),color var(--t-s)}
+.seg button:hover{color:var(--text)}
+.seg button.active{background:var(--amber);color:var(--on-accent);font-weight:600}
 
-  /* ---------- shelf ---------- */
-  .shelf-wall{ min-height:calc(100vh - 45px); display:flex; flex-direction:column; background:var(--wall); padding:2.2rem 0 3rem; }
-  .shelf-sign{ text-align:center; font-family:var(--font-display); font-style:italic; color:var(--accent); font-size:1.1rem; margin-bottom:1.3rem; opacity:.85; }
-  .shelf-controls{ display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; justify-content:center; padding:0 24px 1.6rem; max-width:760px; margin:0 auto; width:100%; }
-  .shelf-search{ flex:1; min-width:170px; max-width:280px; background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.25); color:#f4ead0; padding:.45rem .8rem; border-radius:6px; }
-  .shelf-search::placeholder{ color:rgba(244,234,208,.5); }
-  .sort-toggle{ display:flex; gap:.3rem; }
-  .sort-toggle button{ background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.25); color:#f4ead0; padding:.42rem .75rem; border-radius:999px; font-size:.76rem; }
-  .sort-toggle button.active{ background:var(--accent); color:#2b1c10; border-color:var(--accent); font-weight:600; }
-  .tag-filter-btn{
-    background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.25); color:#f4ead0;
-    padding:.42rem .75rem; border-radius:999px; font-size:.76rem;
-  }
-  .tag-filter-btn.active{ background:var(--accent); color:#2b1c10; border-color:var(--accent); font-weight:600; }
-  .tag-filter-menu{
-    position:fixed; z-index:130; background:#efe3c4; border:1px solid var(--border); border-radius:8px;
-    box-shadow:0 14px 30px rgba(0,0,0,.4); padding:.4rem; min-width:180px; max-width:280px;
-    display:flex; flex-direction:column; gap:2px; max-height:60vh; overflow-y:auto;
-  }
-  .tag-filter-head{
-    display:flex; align-items:center; justify-content:space-between; gap:.5rem;
-    padding:.35rem .35rem .45rem .6rem; font-size:.72rem; color:var(--ink-muted);
-    border-bottom:1px solid rgba(0,0,0,.1); margin-bottom:2px;
-  }
-  .tag-filter-close{
-    background:none; border:none; color:var(--ink-muted); font-size:.9rem; line-height:1;
-    padding:.25rem .4rem; border-radius:4px;
-  }
-  .tag-filter-close:hover{ background:rgba(169,128,63,.2); color:var(--ink); }
-  .tag-chip{
-    background:none; border:none; color:#2b1c10; padding:.5rem .6rem; font-size:.82rem; text-align:left;
-    border-radius:5px; display:flex; align-items:center; justify-content:space-between; width:100%;
-  }
-  .tag-chip:hover{ background:rgba(169,128,63,.15); }
-  .tag-chip.selected{ background:rgba(169,128,63,.28); font-weight:600; }
-  .tag-chip .check{ opacity:0; }
-  .tag-chip.selected .check{ opacity:1; }
-  .tag-filter-empty{ font-size:.78rem; color:var(--ink-muted); font-style:italic; padding:.5rem .6rem; }
-  .tag-filter-clear{ text-align:left; margin-top:2px; padding:.5rem .6rem; background:none; border:none; border-top:1px solid rgba(0,0,0,.1); font-size:.78rem; color:var(--ink-muted); }
-  .tag-filter-clear:hover{ background:rgba(169,128,63,.15); }
-  .shelf-label{ color:var(--accent); font-family:var(--font-display); font-style:italic; font-size:1rem; padding:0 24px 6px; opacity:.9; }
-  .shelf-row{ display:flex; align-items:flex-end; gap:9px; padding:0 24px; margin-top:26px; }
-  .shelf-row:first-child{ margin-top:0; }
-  .shelf-ledge{ height:18px; background:linear-gradient(var(--wood), var(--wood-dark)); box-shadow:0 8px 14px rgba(0,0,0,.45); }
-  .shelf-empty{ text-align:center; color:#f4ead0; opacity:.6; font-style:italic; padding:2rem; }
-  .spine{
-    background:var(--spine-color); border:none; border-radius:2px 2px 0 0; flex-shrink:0; position:relative;
-    box-shadow:inset 2px 0 0 rgba(255,255,255,.14), inset -2px 0 0 rgba(0,0,0,.28), 0 6px 10px rgba(0,0,0,.35);
-    display:flex; align-items:center; justify-content:center; padding:12px 3px;
-  }
-  .spine::before,.spine::after{ content:''; position:absolute; left:3px; right:3px; height:2px; background:rgba(255,255,255,.35); }
-  .spine::before{ top:12px; } .spine::after{ bottom:12px; }
-  .spine-title{ writing-mode:vertical-rl; transform:rotate(180deg); color:#f4ead0; font-family:var(--font-display); font-size:.76rem; white-space:nowrap; max-height:100%; overflow:hidden; }
-  .spine-hidden{ visibility:hidden; }
-  .spine:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
-  .shelf-row.picking .spine:not(.spine-hidden){ opacity:.4; pointer-events:none; transition:opacity .3s ease; }
+/* ── Kartei ────────────────────────────────────────────────── */
+.deck{padding-bottom:90px}
+.group-head{display:flex;align-items:center;gap:14px;margin:34px 0 16px}
+.group-head:first-child{margin-top:0}
+.group-head .eyebrow{flex:none}
+.group-head .rule{flex:1;height:1px;background:var(--line)}
+.group-head .n{font-family:var(--mono);font-size:11.5px;color:var(--text-3);letter-spacing:.12em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.card{position:relative;border-radius:17px;padding:14px;display:flex;flex-direction:column;gap:12px;cursor:pointer;
+  border:0;background:none;text-align:left;font:inherit;color:inherit;opacity:0;animation:fade .55s ease forwards;
+  min-width:0;overflow:hidden}
+@keyframes fade{to{opacity:1}}
+.card-bg{position:absolute;inset:0;border-radius:inherit;border:1px solid var(--line);background:var(--glass);box-shadow:var(--shadow-lg);
+  -webkit-backdrop-filter:blur(15px) saturate(1.3);backdrop-filter:blur(15px) saturate(1.3);
+  transition:border-color var(--t-m),box-shadow var(--t-m),transform var(--t-m)}
+.card:hover .card-bg,.card:focus-visible .card-bg{border-color:var(--acc,var(--line-hi))}
+.card:focus-visible{outline:none}
+.card:focus-visible .card-bg{box-shadow:var(--shadow-lg),0 0 0 2px var(--amber)}
+.c-head{position:relative;display:flex;align-items:center;gap:10px;padding:0 4px;min-width:0}
+.c-idx{font-family:var(--mono);font-size:11.5px;color:var(--text-3);letter-spacing:.06em;flex:none}
+.c-head h2{margin:0;font-size:18px;letter-spacing:-.02em;font-weight:700;font-variation-settings:'wdth' 108;line-height:1.25;
+  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);
+  border:1px solid var(--line);border-radius:100px;padding:2px 8px;white-space:nowrap}
+.c-cat{border-color:color-mix(in srgb,var(--acc) 45%,transparent);color:var(--acc)}
 
-  /* ---------- book as a solid 3D body (shelf → centre) ---------- */
-  .fly-stage{ position:fixed; inset:0; z-index:95; pointer-events:none; perspective:1800px; perspective-origin:50% 45%; }
-  .book3d{ position:absolute; transform-style:preserve-3d; }
-  .bf{ position:absolute; backface-visibility:hidden; overflow:hidden; }
-  .bf-cover,.bf-back{ width:100%; height:100%; left:0; top:0; background:var(--spine-color); }
-  .bf-cover{
-    transform:translateZ(calc(var(--d) / 2));
-    box-shadow:inset 0 0 50px rgba(0,0,0,.3), 0 34px 60px rgba(0,0,0,.5);
-    border-radius:1px 3px 3px 1px;
-  }
-  .bf-back{
-    transform:translateZ(calc(var(--d) / -2)) rotateY(180deg);
-    box-shadow:inset 0 0 55px rgba(0,0,0,.45);
-    border-radius:1px 3px 3px 1px;
-  }
-  .bf-spine{
-    width:var(--d); height:100%; top:0; left:calc(50% - var(--d) / 2); background:var(--spine-color);
-    transform:translateX(calc(var(--w) / -2)) rotateY(-90deg);
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:inset 3px 0 6px rgba(0,0,0,.3), inset -3px 0 6px rgba(0,0,0,.3);
-  }
-  .bf-spine::before,.bf-spine::after{ content:''; position:absolute; left:8%; right:8%; height:2px; background:rgba(255,255,255,.4); }
-  .bf-spine::before{ top:7%; } .bf-spine::after{ bottom:7%; }
-  .bf-edge{
-    width:var(--d); height:100%; top:0; left:calc(50% - var(--d) / 2);
-    transform:translateX(calc(var(--w) / 2)) rotateY(90deg);
-    background:repeating-linear-gradient(90deg,#f4ead2 0 1.5px,#d6c49c 1.5px 3px);
-    box-shadow:inset 0 0 20px rgba(90,66,30,.35);
-  }
-  .bf-top,.bf-bottom{
-    width:100%; height:var(--d); left:0; top:calc(50% - var(--d) / 2);
-    background:repeating-linear-gradient(180deg,#f4ead2 0 1.5px,#d6c49c 1.5px 3px);
-  }
-  .bf-top{ transform:translateY(calc(var(--h) / -2)) rotateX(90deg); box-shadow:inset 0 0 18px rgba(90,66,30,.3); }
-  .bf-bottom{ transform:translateY(calc(var(--h) / 2)) rotateX(-90deg); box-shadow:inset 0 0 22px rgba(40,26,10,.5); }
-  .bf-spine .spine-title{ font-size:.8rem; }
+/* Vorschau: ein Blatt mit gefächertem Stapel dahinter */
+.leaf{position:relative;aspect-ratio:16/10;border-radius:11px;perspective:1000px}
+.leaf-stack{position:absolute;inset:0;transform-style:preserve-3d;transition:transform var(--t-m) cubic-bezier(.2,.8,.2,1)}
+.card:hover .leaf-stack{transform:rotateX(2deg) translateY(-3px)}
+.leaf-back{position:absolute;left:8px;right:8px;top:10px;bottom:-4px;border-radius:9px;background:var(--sheet);
+  border:1px solid var(--line-2);transform:translateZ(-24px) rotate(-1.6deg);opacity:.75}
+.leaf-back.b2{left:14px;right:14px;top:16px;transform:translateZ(-42px) rotate(2.2deg);opacity:.45}
+.leaf-face{position:absolute;inset:0;border-radius:11px;overflow:hidden;background:var(--sheet);
+  border:1px solid var(--line);padding:14px 15px;
+  box-shadow:0 14px 30px -18px rgba(0,0,0,.8)}
+.leaf-face::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--acc);opacity:.9}
+.leaf-face::after{content:"";position:absolute;inset:auto 0 0 0;height:46%;pointer-events:none;
+  background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--void) 72%,transparent))}
+.leaf-rule{height:1px;background:var(--line);margin:0 0 9px}
+.leaf-text{font-size:12.5px;line-height:1.55;color:var(--text-2);overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
+.leaf-kick{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-3);margin-bottom:7px}
+.open-hint{position:absolute;right:10px;bottom:10px;z-index:2;display:flex;align-items:center;gap:6px;height:28px;padding:0 11px;border-radius:100px;
+  background:var(--glass-2);border:1px solid var(--glass-edge);font-size:12.5px;font-weight:600;pointer-events:none;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:background var(--t-s),color var(--t-s)}
+.card:hover .open-hint{background:var(--acc);color:var(--on-accent);border-color:transparent}
+.c-foot{position:relative;padding:0 4px;min-width:0}
+.c-meta{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:11.5px;color:var(--text-3);min-width:0}
+.c-meta span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
+.c-tags .tag{font-size:10px;padding:1px 7px}
+.deck-empty{text-align:center;color:var(--text-3);font-style:italic;padding:60px 20px;border:1px dashed var(--line);border-radius:17px}
 
-  /* cover artwork, shared by flying book and the closed leaf */
-  .cover-art{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:1.8rem; color:#f4ead0; height:100%; }
-  .cover-art h2{ font-family:var(--font-display); font-weight:600; font-size:1.2rem; margin:.9rem 0; line-height:1.3; }
-  .cover-rule{ width:55%; height:2px; background:rgba(244,234,208,.55); }
+/* ── Leseansicht ───────────────────────────────────────────── */
+.scrim{position:fixed;inset:0;z-index:50;background:color-mix(in srgb,var(--void) 82%,transparent);opacity:0;pointer-events:none;
+  transition:opacity var(--t-m) ease;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+body.reading .scrim{opacity:1;pointer-events:auto}
+.bar{position:fixed;top:0;left:0;right:0;z-index:70;padding:env(safe-area-inset-top) 10px 0;height:calc(58px + env(safe-area-inset-top));
+  display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--glass-edge);background:var(--glass-2);
+  -webkit-backdrop-filter:blur(15px) saturate(1.3);backdrop-filter:blur(15px) saturate(1.3);
+  transform:translateY(-102%);transition:transform var(--t-m) cubic-bezier(.2,.8,.2,1)}
+body.reading .bar{transform:none}
+.bar-title{display:flex;align-items:baseline;gap:10px;min-width:0;flex:1;justify-content:center}
+.bar-title strong{font-size:16px;font-weight:700;letter-spacing:-.01em;font-variation-settings:'wdth' 108;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-title .c-idx{flex:none}
+.bar .grp{display:flex;gap:6px;align-items:center}
+.reader{position:fixed;inset:calc(58px + env(safe-area-inset-top)) 0 0;z-index:60;overflow:auto;-webkit-overflow-scrolling:touch;
+  opacity:0;visibility:hidden;transition:opacity .28s ease}
+body.reading .reader{opacity:1;visibility:visible}
+.sheet{max-width:760px;margin:30px auto 80px;border-radius:18px;border:1px solid var(--line);background:var(--glass);
+  box-shadow:var(--shadow-lg);-webkit-backdrop-filter:blur(15px) saturate(1.3);backdrop-filter:blur(15px) saturate(1.3);
+  padding:clamp(22px,4vw,46px);position:relative;overflow:hidden}
+.sheet::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;
+  background:linear-gradient(90deg,var(--acc),transparent 70%)}
+.s-kick{display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--text-3)}
+.s-kick .rule{flex:1;height:1px;background:var(--line)}
+.sheet h1{font-size:clamp(28px,4.6vw,44px);line-height:1.05;letter-spacing:-.035em;margin:18px 0 0;font-weight:700;
+  font-variation-settings:'wdth' 110}
+.s-meta{display:flex;flex-wrap:wrap;gap:6px 18px;margin:18px 0 0;font-family:var(--mono);font-size:11.5px;color:var(--text-3)}
+.s-source{font-family:var(--mono);font-size:11.5px;color:var(--text-3);margin-top:6px;font-style:italic}
+.s-tags{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 0}
+.s-rule{height:1px;background:var(--line);margin:22px 0 24px}
+.s-body{font-size:16.5px;line-height:1.72;color:var(--text)}
+.s-body p{margin:0 0 1.05em}
+.s-body h1{font-size:1.5em;margin:1.4em 0 .5em;letter-spacing:-.02em}
+.s-body h2{font-size:1.25em;margin:1.3em 0 .5em;letter-spacing:-.015em;font-weight:700}
+.s-body h3{font-size:1.08em;margin:1.2em 0 .4em;font-weight:700}
+.s-body ul,.s-body ol{padding-left:1.25em;margin:0 0 1.05em}
+.s-body li{margin:.3em 0}
+.s-body blockquote{margin:1.1em 0;padding:.2em 0 .2em 1.1em;border-left:2px solid var(--acc);color:var(--text-2);font-style:italic}
+.s-body a{color:var(--acc);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--acc) 40%,transparent)}
+.s-body a:hover{border-color:var(--acc)}
+.s-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:34px;padding-top:18px;
+  border-top:1px solid var(--line);font-family:var(--mono);font-size:11.5px;color:var(--text-3)}
+.s-empty{text-align:center;color:var(--text-3);font-style:italic;padding:40px 0}
 
-  /* ---------- book view ---------- */
-  .book-view{
-    position:fixed; inset:45px 0 0; background:var(--bg-app); overflow:auto; z-index:60;
-    opacity:0; visibility:hidden; transition:opacity .3s ease;
-  }
-  .book-view.active{ opacity:1; visibility:visible; }
-  .book-topbar{ padding:1rem 1.4rem .2rem; }
-  .back-to-shelf{ background:none; border:none; color:var(--ink-muted); font-size:.85rem; padding:0; }
-  .book-stage{ perspective:2400px; display:flex; justify-content:center; padding:1rem 1rem 3rem; }
-  .spread{ display:flex; align-items:stretch; gap:0; transform-style:preserve-3d; transition:transform 1.3s cubic-bezier(.3,0,.25,1); }
+/* ── Menüs ─────────────────────────────────────────────────── */
+.menu{position:fixed;z-index:130;min-width:210px;max-width:320px;border-radius:14px;overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  border:1px solid var(--glass-edge);background:var(--glass-2);box-shadow:var(--shadow-lg);
+  -webkit-backdrop-filter:blur(15px) saturate(1.3);backdrop-filter:blur(15px) saturate(1.3)}
+.menu button{display:block;width:100%;text-align:left;background:none;border:none;padding:.62rem .9rem;font-size:14px;
+  cursor:pointer;border-bottom:1px solid var(--line-2)}
+.menu button:last-child{border-bottom:none}
+.menu button:hover{background:color-mix(in srgb,var(--amber) 16%,transparent)}
+.m-note{padding:.7rem .9rem;font-family:var(--mono);font-size:11.5px;line-height:1.5;color:var(--text-3);
+  border-bottom:1px solid var(--line)}
+.m-side{display:flex !important;align-items:center;gap:.5rem}
+.m-side::before{content:'○';opacity:.5}
+.m-side.selected::before{content:'●';opacity:1;color:var(--amber)}
+.tagmenu{padding:6px;display:flex;flex-direction:column;gap:2px;max-height:60vh;overflow-y:auto}
+.tag-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.35rem .35rem .5rem .6rem;
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);
+  border-bottom:1px solid var(--line);margin-bottom:3px}
+.tag-close{background:none;border:none;color:var(--text-3);font-size:.9rem;line-height:1;padding:.25rem .4rem;border-radius:6px;cursor:pointer}
+.tag-close:hover{background:var(--glass);color:var(--text)}
+.tag-chip{background:none;border:none;color:var(--text);padding:.45rem .6rem;font-size:14px;text-align:left;
+  border-radius:8px;display:flex;align-items:center;justify-content:space-between;width:100%;cursor:pointer;border-bottom:none !important}
+.tag-chip:hover{background:var(--glass)}
+.tag-chip.selected{background:color-mix(in srgb,var(--amber) 20%,transparent);font-weight:600}
+.tag-chip .check{opacity:0}
+.tag-chip.selected .check{opacity:1;color:var(--amber)}
+.tag-empty{font-size:13px;color:var(--text-3);font-style:italic;padding:.5rem .6rem}
+.tag-clear{text-align:left;padding:.5rem .6rem;background:none;border:none;border-top:1px solid var(--line) !important;
+  font-size:13px;color:var(--text-3);margin-top:3px;cursor:pointer;border-radius:0}
 
-  .reg-col{ width:var(--reg-w); flex-shrink:0; max-height:78vh; overflow-y:auto; transition:opacity .9s ease .4s; }
-  .reg-col ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px; }
-  .ordner-tab{
-    background:var(--tab-color, var(--tab-bg)); color:#f4ead0; border:none; text-align:left; width:100%;
-    padding:.45rem .65rem; font-family:var(--font-body); font-size:.73rem; line-height:1.25;
-    box-shadow:1px 2px 4px rgba(0,0,0,.25); transition:margin .2s ease, box-shadow .2s ease;
-    border-left:3px solid rgba(0,0,0,.22);
-  }
-  .reg-left .ordner-tab{ border-radius:6px 0 0 6px; margin-left:18px; }
-  .reg-left .ordner-tab.active{ margin-left:0; }
-  .reg-right .ordner-tab{ border-radius:0 6px 6px 0; margin-right:18px; text-align:right; border-left:none; border-right:3px solid rgba(0,0,0,.22); }
-  .reg-right .ordner-tab.active{ margin-right:0; }
-  .ordner-tab.active{ box-shadow:inset 0 0 0 2px var(--accent), 2px 3px 8px rgba(0,0,0,.35); font-weight:600; }
-  .ordner-tab.active{ background:var(--accent); color:#2b1c10; font-weight:600; }
-  .ordner-tab:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+/* ── Editor ────────────────────────────────────────────────── */
+.editor{position:fixed;inset:0;z-index:120;background:var(--void);overflow:auto;
+  opacity:0;visibility:hidden;transition:opacity .28s ease}
+.editor.active{opacity:1;visibility:visible}
+.editor-bg{position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--bg-grad)}
+.ed-bar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;
+  padding:calc(10px + env(safe-area-inset-top)) var(--pad) 10px;
+  border-bottom:1px solid var(--glass-edge);background:var(--glass-2);
+  -webkit-backdrop-filter:blur(15px) saturate(1.3);backdrop-filter:blur(15px) saturate(1.3)}
+.ed-bar .eyebrow{margin-left:6px}
+.ed-bar .grp{margin-left:auto;display:flex;gap:8px}
+.ed-sheet{position:relative;z-index:1;max-width:760px;margin:28px auto 80px;padding:clamp(22px,4vw,40px);
+  border-radius:18px;border:1px solid var(--line);background:var(--glass);box-shadow:var(--shadow-lg);
+  -webkit-backdrop-filter:blur(15px) saturate(1.3);backdrop-filter:blur(15px) saturate(1.3)}
+.ed-title{width:100%;border:none;background:none;font-family:var(--display);font-size:clamp(26px,4vw,38px);
+  font-weight:700;letter-spacing:-.035em;font-variation-settings:'wdth' 110;color:var(--text);
+  padding:0 0 14px;border-bottom:1px solid var(--line);outline:none}
+.ed-title::placeholder{color:var(--text-3);opacity:.7}
+.ed-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:16px 0 0}
+.field{height:36px;padding:0 12px;border-radius:100px;border:1px solid var(--glass-edge);background:var(--glass);
+  color:var(--text);font-size:14px}
+.field::placeholder{color:var(--text-3)}
+select.field{padding-right:8px}
+.ed-tags{flex:1;min-width:170px}
+.ed-source{font-family:var(--mono);font-size:11.5px;color:var(--text-3);font-style:italic}
+.ed-hint{font-family:var(--mono);font-size:11.5px;color:var(--danger);min-height:1.2em;margin:10px 0 0}
+.ed-toolbar{display:flex;flex-wrap:wrap;gap:5px;padding:7px;border-radius:12px;border:1px solid var(--line);
+  background:var(--glass);margin:16px 0 18px}
+.ed-toolbar button{height:30px;padding:0 10px;border-radius:8px;border:1px solid transparent;background:transparent;
+  font-size:13px;cursor:pointer;color:var(--text-2)}
+.ed-toolbar button:hover{background:var(--amber);color:var(--on-accent)}
+.tb-sep{width:1px;background:var(--line);margin:4px 3px}
+.ed-body{min-height:40vh;outline:none;font-size:16.5px;line-height:1.72}
+.ed-body:empty::before{content:'Schreib deine Notiz …';color:var(--text-3);opacity:.7}
+.ed-body h1{font-size:1.5em;margin:1.2em 0 .4em;letter-spacing:-.02em}
+.ed-body h2{font-size:1.25em;margin:1.1em 0 .4em}
+.ed-body blockquote{border-left:2px solid var(--amber);margin:1em 0;padding:.2em 0 .2em 1.1em;color:var(--text-2);font-style:italic}
+.ed-body ul,.ed-body ol{padding-left:1.25em;margin:.6em 0}
+.ed-body p{margin:0 0 1em}
 
-  .leaf-slot{
-    width:var(--page-w); flex-shrink:0; position:relative; transform-style:preserve-3d;
-    min-height:calc(var(--page-w) * 1.35);
-  }
-  /* the page block that stays behind while the cover swings away */
-  .leaf-block{
-    position:absolute; inset:0; transform:translateZ(-7px); background:var(--bg-page);
-    border-radius:2px 0 0 2px; opacity:1; transition:opacity .5s ease .45s;
-    box-shadow:inset -12px 0 20px -16px rgba(0,0,0,.5), 0 24px 48px -12px var(--shadow);
-  }
-  .spread.closed .leaf-block{ opacity:0; transition:none; }
-  .leaf{
-    position:absolute; inset:0; transform-style:preserve-3d;
-    transform-origin:right center; transition:transform 1.3s cubic-bezier(.3,0,.25,1);
-    --lt:3px;
-  }
-  .leaf-face{ position:absolute; inset:0; backface-visibility:hidden; overflow:hidden; }
-  .leaf-page{ transform:translateZ(calc(var(--lt) / 2)); }
-  .leaf-cover{
-    transform:translateZ(calc(var(--lt) / -2)) rotateY(180deg);
-    background:var(--spine-color,#5c2331); border-radius:3px 1px 1px 3px;
-    box-shadow:inset 0 0 46px rgba(0,0,0,.3);
-  }
-  /* free edge of the board — what you see when the cover stands upright */
-  .leaf-edge{
-    position:absolute; top:0; bottom:0; left:0; width:var(--lt); backface-visibility:hidden;
-    transform-origin:left center; transform:translateZ(calc(var(--lt) / -2)) rotateY(-90deg);
-    background:var(--spine-color,#5c2331);
-    box-shadow:inset 0 0 10px rgba(0,0,0,.55);
-  }
-  .face-shade{ position:absolute; inset:0; background:#0a0704; opacity:0; pointer-events:none; }
-  .leaf.opening .leaf-cover .face-shade{ animation:coverShade 1.3s linear both; }
-  .leaf.opening .leaf-page  .face-shade{ animation:pageShade  1.3s linear both; }
-  .leaf.opening{ animation:leafOpen 1.3s linear both; }
-  @keyframes leafOpen{
-    0%{ transform:rotateY(180deg) }   15%{ transform:rotateY(168deg) }
-    30%{ transform:rotateY(140deg) }  50%{ transform:rotateY(88deg) }
-    68%{ transform:rotateY(38deg) }   82%{ transform:rotateY(4deg) }
-    90%{ transform:rotateY(-8deg) }   96%{ transform:rotateY(-3deg) }
-    100%{ transform:rotateY(0deg) }
-  }
-  @keyframes coverShade{ 0%{ opacity:0 } 55%{ opacity:.45 } 100%{ opacity:.6 } }
-  @keyframes pageShade{ 0%{ opacity:.88 } 50%{ opacity:.55 } 100%{ opacity:0 } }
-  .right-holder{
-    width:var(--page-w); flex-shrink:0; position:relative; transform-style:preserve-3d;
-    min-height:calc(var(--page-w) * 1.35);
-  }
-  /* a real turning sheet: sweeps over the spine and uncovers the page beneath */
-  .flipper{
-    position:absolute; inset:0; transform-style:preserve-3d; pointer-events:none;
-    will-change:transform, opacity; backface-visibility:hidden;
-    transition:transform 1s cubic-bezier(.42,.02,.34,1), opacity .2s linear .8s;
-  }
-  .flipper.turning{ opacity:0; }
-  .flip-right{ transform-origin:left center; transform:translateZ(3px) rotateY(0deg); }
-  .flip-right.turning{ transform:translateZ(3px) rotateY(-178deg); }
-  .flip-left{ transform-origin:right center; transform:translateZ(3px) rotateY(0deg); }
-  .flip-left.turning{ transform:translateZ(3px) rotateY(178deg); }
-  .flipper-face{
-    position:absolute; inset:0; backface-visibility:hidden; overflow:hidden;
-    background:var(--bg-page); transform:translateZ(0);
-  }
-  .flipper-back{ transform:rotateY(180deg); }
-  .flipper-face .page{ box-shadow:none; }
-  .flip-right .flipper-front{ border-radius:0 2px 2px 0; box-shadow:inset 14px 0 22px -18px rgba(0,0,0,.55); }
-  .flip-right .flipper-back{ border-radius:2px 0 0 2px; box-shadow:inset -14px 0 22px -18px rgba(0,0,0,.55); }
-  .flip-left .flipper-front{ border-radius:2px 0 0 2px; box-shadow:inset -14px 0 22px -18px rgba(0,0,0,.55); }
-  .flip-left .flipper-back{ border-radius:0 2px 2px 0; box-shadow:inset 14px 0 22px -18px rgba(0,0,0,.55); }
-  .flipper-shade{ position:absolute; inset:0; background:#0a0704; opacity:0; pointer-events:none;
-    transition:opacity 1s ease; }
-  .flipper.turning .flipper-front .flipper-shade{ opacity:.5; }
-  .flipper .flipper-back .flipper-shade{ opacity:.5; }
-  .flipper.turning .flipper-back .flipper-shade{ opacity:0; }
-  /* page edges revealed while a sheet is lifted */
-  .page-stack{
-    position:absolute; top:6px; bottom:6px; width:7px; opacity:0; transition:opacity .3s ease;
-    background:repeating-linear-gradient(90deg,#e9dcbc 0 1px,#c9b78d 1px 2px);
-  }
-  .right-holder .page-stack{ right:-7px; border-radius:0 3px 3px 0; }
-  .leaf-slot .page-stack{ left:-7px; border-radius:3px 0 0 3px; }
-  .turning-active .page-stack{ opacity:1; }
+/* ── Dialog & Toast ────────────────────────────────────────── */
+.confirm{position:fixed;inset:0;z-index:200;background:color-mix(in srgb,var(--void) 72%,transparent);
+  display:flex;align-items:center;justify-content:center;padding:1.5rem;
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.confirm-box{max-width:380px;width:100%;padding:24px;border-radius:18px;border:1px solid var(--glass-edge);
+  background:var(--glass-2);box-shadow:var(--shadow-lg)}
+.confirm-box p{margin:0 0 20px;font-size:15px;line-height:1.55}
+.confirm-actions{display:flex;gap:8px;justify-content:flex-end}
+.pill.danger{background:var(--danger);color:#fff;border-color:transparent;font-weight:600}
+.pill.danger:hover{background:var(--danger);filter:brightness(1.08)}
+.toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%);z-index:210;
+  background:var(--glass-2);color:var(--text);padding:.7rem 1.2rem;border-radius:100px;border:1px solid var(--glass-edge);
+  font-size:13.5px;box-shadow:var(--shadow-lg);-webkit-backdrop-filter:blur(15px);backdrop-filter:blur(15px);
+  opacity:0;transition:opacity .25s ease;pointer-events:none;max-width:88vw;text-align:center}
+.toast.show{opacity:1}
 
-  .page{
-    height:100%; background:var(--bg-page); color:var(--ink); padding:1.9rem 1.7rem 1.4rem;
-    box-shadow:0 24px 48px -12px var(--shadow); overflow-y:auto;
-  }
-  .leaf .page{ border-radius:2px 0 0 2px; box-shadow:inset -14px 0 22px -18px rgba(0,0,0,.55), 0 24px 48px -12px var(--shadow); }
-  .right-holder .page{ border-radius:0 2px 2px 0; box-shadow:inset 14px 0 22px -18px rgba(0,0,0,.55), 0 24px 48px -12px var(--shadow); }
-  .page-head-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:.5rem; border-bottom:2px double var(--accent); padding-bottom:.4rem; margin-bottom:.4rem; }
-  .page-head h1{ margin:0; flex:1; font-family:var(--font-display); font-size:1.35rem; font-weight:600; line-height:1.25; }
-  .edit-btn{
-    background:none; border:1px solid var(--border); color:var(--ink-muted); width:24px; height:24px; flex-shrink:0;
-    border-radius:50%; font-size:.75rem; display:flex; align-items:center; justify-content:center;
-  }
-  .edit-btn:hover{ background:rgba(169,128,63,.18); color:var(--ink); }
-  .page-actions{ display:flex; gap:.35rem; flex-shrink:0; }
-  .del-btn{
-    background:none; border:1px solid var(--border); color:var(--ink-muted); width:24px; height:24px; flex-shrink:0;
-    border-radius:50%; font-size:.72rem; display:flex; align-items:center; justify-content:center;
-  }
-  .del-btn:hover{ background:rgba(138,59,59,.22); color:#a34a4a; border-color:#a34a4a; }
+footer{position:relative;z-index:1;max-width:var(--max);margin:0 auto;padding:26px var(--pad) calc(40px + env(safe-area-inset-bottom));
+  display:flex;flex-wrap:wrap;gap:10px 22px;justify-content:space-between;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:12px;color:var(--text-3)}
+footer a{text-decoration:none}
+footer a:hover{color:var(--text)}
 
-  .confirm-overlay{
-    position:fixed; inset:0; z-index:200; background:rgba(10,7,3,.62);
-    display:flex; align-items:center; justify-content:center; padding:1.5rem;
-  }
-  .confirm-box{
-    background:var(--bg-page); color:var(--ink); border-radius:6px; max-width:340px; width:100%;
-    padding:1.4rem 1.3rem 1.1rem; box-shadow:0 24px 60px rgba(0,0,0,.55); font-family:var(--font-body);
-  }
-  .confirm-box p{ margin:0 0 1.2rem; font-size:.92rem; line-height:1.5; }
-  .confirm-actions{ display:flex; gap:.6rem; justify-content:flex-end; }
-  .confirm-actions button{ padding:.45rem 1rem; border-radius:5px; font-size:.85rem; font-family:var(--font-body); }
-  #confirmCancel{ background:none; border:1px solid var(--border); color:var(--ink-muted); }
-  #confirmOk{ background:#8a3b3b; border:1px solid #8a3b3b; color:#f4ead0; font-weight:600; }
+@media (max-width:820px){
+  :root{--pad:16px}
+  .clock,.hide-sm{display:none !important}
+  .nav-in{padding-left:14px}
+  .grid{grid-template-columns:1fr}
+  .hero-top{flex-direction:column;align-items:flex-start;gap:6px}
+  .wave{height:90px}
+  .bar-title{justify-content:flex-start}
+  .sheet{margin:16px auto 60px;border-radius:14px}
+}
+@media (prefers-reduced-motion:reduce){
+  .card,.wave i{animation:none;opacity:1}
+  .leaf-stack,.card-bg{transition:none}
+}
 
-  .toast{
-    position:fixed; left:50%; bottom:2rem; transform:translateX(-50%); z-index:210;
-    background:rgba(20,14,6,.94); color:#f4ead0; padding:.7rem 1.2rem; border-radius:999px;
-    font-size:.82rem; font-family:var(--font-body); box-shadow:0 10px 26px rgba(0,0,0,.45);
-    opacity:0; transition:opacity .25s ease; pointer-events:none; max-width:88vw; text-align:center;
-  }
-  .toast.show{ opacity:1; }
-  .meta-line{ display:flex; flex-wrap:wrap; gap:.55rem; font-size:.68rem; color:var(--ink-muted); margin:.45rem 0; font-variant:small-caps; letter-spacing:.03em; }
-  .meta-source{ font-size:.68rem; color:var(--ink-muted); font-style:italic; margin-bottom:.4rem; }
-  .tags{ display:flex; gap:.35rem; flex-wrap:wrap; margin-bottom:1rem; }
-  .tag{ font-size:.63rem; padding:.1rem .5rem; border:1px solid var(--border); color:var(--ink-muted); font-style:italic; }
-  .page-body p{ line-height:1.6; margin:0 0 .9rem; font-size:.87rem; }
-  .page-empty{ color:var(--ink-muted); font-style:italic; padding:2rem 0; text-align:center; }
-  .page-body p:first-of-type::first-letter{ font-size:2.5em; float:left; line-height:.78; padding:.03em .1em 0 0; color:var(--accent); }
-  .page-foot{ margin-top:1.2rem; font-size:.68rem; color:var(--ink-muted); text-align:center; font-variant:small-caps; letter-spacing:.05em; display:flex; align-items:center; justify-content:center; gap:.9rem; }
-  .slide-btn{
-    background:none; border:1px solid var(--border); color:var(--ink-muted); width:22px; height:22px;
-    border-radius:50%; font-size:.85rem; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
-  }
-  .slide-btn:hover:not(:disabled){ background:rgba(169,128,63,.15); color:var(--ink); }
-  .slide-btn:disabled{ opacity:.28; cursor:default; }
-
-  /* closed state (set by JS just before opening) */
-  .spread.closed .reg-col{ opacity:0; }
-  .spread.closed .leaf{ transform:rotateY(180deg); }
-
-  @media (prefers-reduced-motion:reduce){
-    .spread,.leaf,.right-holder,.page,.reg-col,.leaf-block{ transition:none !important; }
-    .leaf.opening,.leaf.opening .face-shade{ animation:none !important; }
-  }
-
-  /* ---------- narrow screens: one page + one register ---------- */
-  @media (max-width:900px){
-    .book-stage{ perspective:1400px; padding:1rem .8rem 3rem; }
-    .spread{ flex-direction:column; gap:.9rem; width:100%; max-width:540px; transform:none !important; }
-    .reg-col{ width:100%; max-height:none; opacity:1 !important; }
-    .reg-right{ display:none; }
-    .leaf-slot{ display:none; }
-    .reg-col ul{ flex-direction:row; overflow-x:auto; gap:7px; padding-bottom:4px; }
-    .ordner-tab{ flex-shrink:0; width:auto; white-space:nowrap; margin:0 !important; border-radius:6px !important; text-align:left !important; }
-    .right-holder{ width:100%; min-height:62vh; }
-    .right-holder .page{ border-radius:2px; box-shadow:0 18px 34px -14px var(--shadow); }
-  }
+/* ── Druck ─────────────────────────────────────────────────── */
+.print-sheet{display:none}
+@media print{
+  body > *:not(.print-sheet){display:none !important}
+  .print-sheet{display:block !important;font-family:Georgia,'Times New Roman',serif;color:#161207;background:#fff}
+  .print-sheet h1{font-size:22pt;border-bottom:2px double #333;padding-bottom:6pt;margin-bottom:8pt}
+  .print-sheet .p-meta{font-size:9pt;color:#555;margin-bottom:3pt}
+  .print-sheet .p-source{font-size:9pt;color:#555;font-style:italic;margin-bottom:3pt}
+  .print-sheet .p-tags{margin-bottom:16pt}
+  .print-sheet .p-tag{display:inline-block;font-size:8pt;border:1px solid #999;padding:1pt 7pt;margin-right:5pt;border-radius:8pt;font-style:italic}
+  .print-sheet .p-body{font-size:11pt;line-height:1.55}
+  .print-sheet .p-body h1,.print-sheet .p-body h2,.print-sheet .p-body h3{margin:14pt 0 6pt}
+  .print-sheet .p-body blockquote{border-left:2pt solid #999;padding-left:10pt;margin:8pt 0;color:#444;font-style:italic}
+}
 </style>
 </head>
-<body data-mode="light">
+<body>
+<div class="bg" aria-hidden="true"><i class="g1"></i><i class="g2"></i></div>
 
-  <div class="lab-bar">
-    <strong>NoteOS</strong>
-    <button class="folder-btn" id="folderBtn" title="Speicherort">Ordner<span class="folder-dot" id="folderDot"></span></button>
-    <button class="add-btn" id="addBtn" title="Neue Notiz" aria-label="Neue Notiz">+</button>
-    <button class="print-btn" id="printBtn" title="Drucken / Exportieren" aria-label="Drucken / Exportieren" disabled>⎙</button>
-    <div class="lab-group" role="group" aria-label="Hell oder dunkel">
-      <button data-mode-choice="light" class="active">Hell</button>
-      <button data-mode-choice="dark">Dunkel</button>
-    </div>
-    <span class="lab-hint">Buch antippen → herausnehmen und aufklappen · Register wechselt die Seite · wischen, ‹ › oder ← → blättert</span>
-  </div>
-
-  <div class="add-menu" id="addMenu" hidden>
-    <button id="addBlank">Leere Notiz</button>
-    <button id="addImport">Datei importieren …</button>
-  </div>
-
-  <div class="tag-filter-menu" id="tagFilterMenu" hidden></div>
-
-  <div class="folder-menu" id="folderMenu" hidden>
-    <div class="pm-note" id="folderStatusText">–</div>
-    <button id="folderConnect" hidden>Ordner verbinden</button>
-    <button id="folderReconnect" hidden>Ordner erneut verbinden</button>
-    <button id="folderReload" hidden>Ordner neu einlesen</button>
-    <button id="folderBulkImport" hidden>Ordner einlesen (einmalig) …</button>
-    <button id="folderDisconnect" hidden>Ordner trennen</button>
-  </div>
-  <input type="file" id="bulkImportInput" webkitdirectory multiple hidden />
-
-  <div class="print-menu" id="printMenu" hidden></div>
-  <div class="print-sheet" id="printSheet"></div>
-  <input type="file" id="importInput" accept=".txt,.md,.pdf,.docx" hidden />
-
-  <div class="editor-view" id="editorView">
-    <div class="editor-topbar">
-      <button class="editor-cancel" id="editorCancel" type="button">← Abbrechen</button>
-      <button class="editor-save" id="editorSave" type="button">Speichern</button>
-    </div>
-    <div class="editor-sheet">
-      <input type="text" class="editor-title" id="editorTitle" placeholder="Titel der Notiz" />
-      <div class="editor-meta-row">
-        <select id="editorCategory" aria-label="Kategorie">
-          <option value="">Kategorie wählen …</option>
-        </select>
-        <input type="text" id="editorTags" class="editor-tags-input" placeholder="Tags, mit Komma getrennt" aria-label="Tags" />
-        <span class="editor-source" id="editorSource"></span>
-      </div>
-      <div class="editor-hint" id="editorHint"></div>
-      <div class="editor-toolbar" id="editorToolbar">
-        <button type="button" data-cmd="undo" title="Rückgängig (Strg+Z)" aria-label="Rückgängig">↶</button>
-        <button type="button" data-cmd="redo" title="Wiederherstellen (Strg+Umschalt+Z)" aria-label="Wiederherstellen">↷</button>
-        <span class="tb-sep"></span>
-        <button type="button" data-cmd="formatBlock" data-val="H1">H1</button>
-        <button type="button" data-cmd="formatBlock" data-val="H2">H2</button>
-        <button type="button" data-cmd="formatBlock" data-val="P">Text</button>
-        <span class="tb-sep"></span>
-        <button type="button" data-cmd="bold"><b>F</b></button>
-        <button type="button" data-cmd="italic"><i>K</i></button>
-        <span class="tb-sep"></span>
-        <button type="button" data-cmd="insertUnorderedList">• Liste</button>
-        <button type="button" data-cmd="insertOrderedList">1. Liste</button>
-        <button type="button" data-cmd="formatBlock" data-val="BLOCKQUOTE">Zitat</button>
-        <button type="button" id="tbLink">Link</button>
-      </div>
-      <div class="editor-body" id="editorBody" contenteditable="true"></div>
+<header class="nav">
+  <div class="nav-in">
+    <a class="brand" href="#" id="home"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Note<b>OS</b></a>
+    <div class="nav-r">
+      <span class="clock" id="clock"></span>
+      <button class="pill" id="folderBtn" type="button">Ordner<span class="dot-state" id="folderDot"></span></button>
+      <button class="pill primary" id="addBtn" type="button">+<span class="hide-sm">&nbsp;Notiz</span></button>
+      <a class="pill icon-btn hide-sm" href="https://maikunverricht.github.io/Der-Werkzeugkasten/" aria-label="Zurück ins Cockpit" title="Cockpit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      </a>
+      <button class="pill icon-btn" id="themeBtn" type="button" aria-label="Hell/Dunkel umschalten">
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
     </div>
   </div>
+</header>
 
-  <div class="shelf-view" id="shelfView">
-    <div class="shelf-wall">
-      <div class="shelf-sign">NoteOS — 50 Bücher</div>
-      <div class="shelf-controls">
-        <input type="text" class="shelf-search" id="shelfSearch" placeholder="Notizen durchsuchen …" aria-label="Notizen nach Titel, Inhalt, Tags und Autor durchsuchen" />
-        <div class="sort-toggle" role="group" aria-label="Sortierung">
-          <button data-sort="kategorie" class="active">Kategorie</button>
-          <button data-sort="az">A–Z</button>
-          <button data-sort="neu">Geändert</button>
-          <button data-sort="erstellt">Erstellt</button>
-        </div>
-        <button class="tag-filter-btn" id="tagFilterBtn">Tags</button>
-      </div>
-      <div id="shelfContainer"></div>
+<main>
+  <section class="hero">
+    <div class="hero-top">
+      <div class="eyebrow">Wissen · Werkbank Unverricht</div>
+      <div class="hero-count" id="heroCount">001 — 000</div>
+    </div>
+    <h1><span>Alles Notierte</span><br><em>auf einen Griff.</em></h1>
+    <p class="lead">Jede Karte ist eine Notiz – als Markdown-Datei in deinem Ordner. Antippen liest, <span class="mono">←</span> <span class="mono">→</span> blättert, <span class="mono">Esc</span> legt zurück.</p>
+    <div class="stats" id="stats"></div>
+    <div class="wave" aria-hidden="true"><div class="wave-in" id="wave"></div></div>
+  </section>
+
+  <section class="controls">
+    <input type="text" class="search" id="search" placeholder="Notizen durchsuchen …" aria-label="Notizen nach Titel, Inhalt, Tags und Autor durchsuchen">
+    <div class="seg" role="group" aria-label="Sortierung">
+      <button data-sort="kategorie" class="active">Kategorie</button>
+      <button data-sort="az">A–Z</button>
+      <button data-sort="neu">Geändert</button>
+      <button data-sort="erstellt">Erstellt</button>
+    </div>
+    <button class="pill" id="tagBtn" type="button">Tags</button>
+  </section>
+
+  <section class="deck" id="deck" aria-label="Notizen"></section>
+</main>
+
+<footer>
+  <span>© <span id="yr"></span> Maik Unverricht · NoteOS</span>
+  <span><a href="https://maikunverricht.github.io/Der-Werkzeugkasten/">Cockpit</a> · <a href="https://github.com/maikunverricht/NoteOS" target="_blank" rel="noopener">Repo ↗</a></span>
+</footer>
+
+<div class="scrim" id="scrim"></div>
+<div class="bar" id="bar" role="toolbar" aria-label="Geöffnete Notiz">
+  <button class="pill" id="backBtn" type="button">← <span class="hide-sm">Kartei</span><span class="kbd hide-sm">Esc</span></button>
+  <div class="bar-title"><span class="c-idx" id="barIdx">001</span><strong id="barName">–</strong><span class="tag hide-sm" id="barTag"></span></div>
+  <div class="grp">
+    <button class="pill icon-btn" id="prevBtn" type="button" aria-label="Vorherige Notiz">‹</button>
+    <button class="pill icon-btn" id="nextBtn" type="button" aria-label="Nächste Notiz">›</button>
+    <button class="pill icon-btn" id="printBtn" type="button" aria-label="Drucken oder exportieren" title="Drucken / Exportieren">⎙</button>
+    <button class="pill icon-btn" id="delBtn" type="button" aria-label="In den Papierkorb" title="In den Papierkorb">🗑</button>
+    <button class="pill primary" id="editBtn" type="button"><span class="hide-sm">Bearbeiten</span> ✎</button>
+  </div>
+</div>
+<div class="reader" id="reader"><article class="sheet" id="sheet"></article></div>
+
+<div class="menu" id="addMenu" hidden>
+  <button id="addBlank">Leere Notiz</button>
+  <button id="addImport">Datei importieren …</button>
+</div>
+
+<div class="menu" id="folderMenu" hidden>
+  <div class="m-note" id="folderStatusText">–</div>
+  <button id="folderConnect" hidden>Ordner verbinden</button>
+  <button id="folderReconnect" hidden>Ordner erneut verbinden</button>
+  <button id="folderReload" hidden>Ordner neu einlesen</button>
+  <button id="folderBulkImport" hidden>Ordner einlesen (einmalig) …</button>
+  <button id="folderDisconnect" hidden>Ordner trennen</button>
+</div>
+
+<div class="menu" id="printMenu" hidden></div>
+<div class="menu tagmenu" id="tagMenu" hidden></div>
+
+<input type="file" id="bulkImportInput" webkitdirectory multiple hidden>
+<input type="file" id="importInput" accept=".txt,.md,.pdf,.docx" hidden>
+
+<div class="editor" id="editorView">
+  <div class="editor-bg" aria-hidden="true"></div>
+  <div class="ed-bar">
+    <button class="pill" id="editorCancel" type="button">← Abbrechen</button>
+    <div class="eyebrow hide-sm" id="editorKick">Neue Notiz</div>
+    <div class="grp"><button class="pill primary" id="editorSave" type="button">Speichern</button></div>
+  </div>
+  <div class="ed-sheet">
+    <input type="text" class="ed-title" id="editorTitle" placeholder="Titel der Notiz">
+    <div class="ed-row">
+      <select id="editorCategory" class="field" aria-label="Kategorie"><option value="">Kategorie wählen …</option></select>
+      <input type="text" id="editorTags" class="field ed-tags" placeholder="Tags, mit Komma getrennt" aria-label="Tags">
+      <span class="ed-source" id="editorSource"></span>
+    </div>
+    <div class="ed-hint" id="editorHint"></div>
+    <div class="ed-toolbar" id="editorToolbar">
+      <button type="button" data-cmd="undo" title="Rückgängig (Strg+Z)" aria-label="Rückgängig">↶</button>
+      <button type="button" data-cmd="redo" title="Wiederherstellen" aria-label="Wiederherstellen">↷</button>
+      <span class="tb-sep"></span>
+      <button type="button" data-cmd="formatBlock" data-val="H1">H1</button>
+      <button type="button" data-cmd="formatBlock" data-val="H2">H2</button>
+      <button type="button" data-cmd="formatBlock" data-val="P">Text</button>
+      <span class="tb-sep"></span>
+      <button type="button" data-cmd="bold"><b>F</b></button>
+      <button type="button" data-cmd="italic"><i>K</i></button>
+      <span class="tb-sep"></span>
+      <button type="button" data-cmd="insertUnorderedList">• Liste</button>
+      <button type="button" data-cmd="insertOrderedList">1. Liste</button>
+      <button type="button" data-cmd="formatBlock" data-val="BLOCKQUOTE">Zitat</button>
+      <button type="button" id="tbLink">Link</button>
+    </div>
+    <div class="ed-body" id="editorBody" contenteditable="true"></div>
+  </div>
+</div>
+
+<div class="confirm" id="confirmOverlay" hidden>
+  <div class="confirm-box">
+    <p id="confirmText"></p>
+    <div class="confirm-actions">
+      <button class="pill" id="confirmCancel" type="button">Abbrechen</button>
+      <button class="pill danger" id="confirmOk" type="button">In den Papierkorb</button>
     </div>
   </div>
-
-  <div class="book-view" id="bookView">
-    <div class="book-topbar"><button class="back-to-shelf" type="button">← Zurück ins Regal</button></div>
-    <div class="book-stage">
-      <div class="spread" id="spread">
-        <nav class="reg-col reg-left" aria-label="Register linke Seiten"><ul id="regLeft"></ul></nav>
-        <div class="leaf-slot">
-          <div class="page-stack"></div>
-          <div class="leaf-block"></div>
-          <div class="leaf" id="leaf">
-            <div class="leaf-edge" id="leafEdge"></div>
-            <div class="leaf-face leaf-cover" id="leafCover"><div class="face-shade"></div></div>
-            <div class="leaf-face leaf-page"><article class="page" id="pageLeft"></article><div class="face-shade"></div></div>
-          </div>
-        </div>
-        <div class="right-holder" id="rightHolder"><article class="page" id="pageRight"></article><div class="page-stack"></div></div>
-        <nav class="reg-col reg-right" aria-label="Register rechte Seiten"><ul id="regRight"></ul></nav>
-      </div>
-    </div>
-  </div>
-
-  <div class="confirm-overlay" id="confirmOverlay" hidden>
-    <div class="confirm-box">
-      <p id="confirmText"></p>
-      <div class="confirm-actions">
-        <button id="confirmCancel" type="button">Abbrechen</button>
-        <button id="confirmOk" type="button">In den Papierkorb</button>
-      </div>
-    </div>
-  </div>
-  <div class="toast" id="toast"></div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="print-sheet" id="printSheet"></div>
 
 <script>
-  /* ---------------- demo data ---------------- */
-  const TODAY = new Date('2026-08-02');
-  const daysAgo = d => { const x = new Date(TODAY); x.setDate(x.getDate()-d); return x; };
-  const fmt = d => d.toLocaleDateString('de-DE',{day:'numeric',month:'short',year:'numeric'});
-  function shade(hex, amt){
-    const n = parseInt(hex.slice(1),16);
-    const c = v => Math.max(0,Math.min(255, v + Math.round(255*amt)));
-    return '#'+((1<<24)+(c(n>>16)<<16)+(c((n>>8)&255)<<8)+c(n&255)).toString(16).slice(1);
+(() => {
+'use strict';
+
+/* ════════════════════════════════════════════════════════════════
+   WERKBANK-BUS · gleichlautend in jedem Werkzeug
+   Alle Werkzeuge liegen unter derselben Herkunft, teilen sich also
+   Speicher. Wer etwas ändert, sagt Bescheid; die anderen ziehen nach.
+   ════════════════════════════════════════════════════════════════ */
+const WB = (function(){
+  const KANAL = 'werkbank', WECK = 'wb-signal';
+  const eigen = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const hoerer = [];
+  let bc = null;
+  try { bc = new BroadcastChannel(KANAL); } catch (e) {}
+  function zustellen(n){
+    if (!n || typeof n !== 'object' || n.von === eigen) return;
+    for (let i = 0; i < hoerer.length; i++){
+      const h = hoerer[i];
+      if (h.thema && h.thema !== n.thema) continue;
+      try { h.fn(n); } catch (e) {}
+    }
   }
-  const CATS = { Rezept:'#8a6a34', Projekt:'#3f5c46', Arbeit:'#4a3a5c', Alltag:'#35473f', Reise:'#5c2331', Lernen:'#4a5c6b', Familie:'#6b4a2e' };
-  const FALLBACK_COLORS = ['#5c4a3a','#3a4a5c','#4a5c3a','#5c3a4a'];
-  function colorForCategory(cat){
-    if (CATS[cat]) return CATS[cat];
-    let h = 0; for (let i=0;i<cat.length;i++) h = (h + cat.charCodeAt(i)) % FALLBACK_COLORS.length;
-    return FALLBACK_COLORS[h];
-  }
-  function slugify(title, taken){
-    let base = title.toLowerCase()
-      .replace(/[äöüß]/g, c => ({ä:'ae',ö:'oe',ü:'ue',ß:'ss'}[c]))
-      .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'notiz';
-    let name = base, i = 2;
-    while (taken.has(name+'.md')) name = `${base}-${i++}`;
-    return name + '.md';
-  }
-  const CONTENT = {
-    Rezept:['Zutaten und Zubereitungsschritte für dieses Gericht.','Nach mehrmaligem Testen die Version, die am besten funktioniert.'],
-    Projekt:['Ideen, nächste Schritte und offene Fragen zu diesem Vorhaben.','Wird laufend ergänzt, sobald sich der Stand ändert.'],
-    Arbeit:['Besprochene Punkte, Entscheidungen und nächste Schritte.','Verantwortlichkeiten und Termine im Überblick.'],
-    Alltag:['Dinge, die erledigt werden müssen.','Wird bei Bedarf ergänzt und abgehakt.'],
-    Reise:['Orte, Ideen und praktische Hinweise für die Reise.','Sammlung von Empfehlungen und Notizen unterwegs.'],
-    Lernen:['Zusammenfassung der wichtigsten Punkte.','Notizen zum Nacharbeiten und Wiederholen.'],
-    Familie:['Planung, Termine und Absprachen.','Wichtige Details für alle Beteiligten.']
+  if (bc) bc.onmessage = e => zustellen(e.data);
+  addEventListener('storage', e => {
+    if (e.key !== WECK || !e.newValue) return;
+    try { zustellen(JSON.parse(e.newValue)); } catch (err) {}
+  });
+  return {
+    id: eigen,
+    melden(thema, zusatz){
+      const n = Object.assign({ thema, von: eigen, zeit: Date.now() }, zusatz || {});
+      if (bc) { try { bc.postMessage(n); } catch (e) {} }
+      try { localStorage.setItem(WECK, JSON.stringify(n)); } catch (e) {}
+    },
+    horchen(thema, fn){ hoerer.push({ thema, fn }); },
+    lesen(k){ try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : null; } catch(e){ return null; } },
+    schreiben(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
   };
-  const RAW = [
-    ['Rezept','Rezept: Apfelkuchen',3],['Rezept','Rezept: Linsensuppe',18],['Rezept','Rezept: Pesto alla Genovese',40],
-    ['Rezept','Rezept: Sonntagsbraten',65],['Rezept','Rezept: Zitronenkuchen',12],['Rezept','Rezept: Kürbissuppe',200],
-    ['Rezept','Rezept: Bananenbrot',30],
-    ['Projekt','Projektideen Sommer',13],['Projekt','Website Relaunch – Notizen',22],['Projekt','Gartenprojekt Kräuterbeet',8],
-    ['Projekt','Buchprojekt: Kapitelplan',90],['Projekt','Renovierung Bad – Checkliste',55],['Projekt','App-Idee: Skizze',4],
-    ['Projekt','Podcast-Konzept',130],
-    ['Arbeit','Meeting-Notizen 28.07',5],['Arbeit','Jahresgespräch Vorbereitung',45],['Arbeit','Team-Retro Notizen',10],
-    ['Arbeit','Kundentermin Müller GmbH',2],['Arbeit','Sprint Planning Q3',7],['Arbeit','Onboarding neue Kollegin',25],
-    ['Arbeit','Präsentation Vorstand',60],
-    ['Alltag','Einkaufsliste',1],['Alltag','Packliste Urlaub',15],['Alltag','Geschenkideen Weihnachten',20],
-    ['Alltag','Wohnungsübergabe Checkliste',300],['Alltag','Umzugsplanung',280],['Alltag','To-do Wochenende',2],
-    ['Alltag','Handwerker-Kontakte',110],['Alltag','Versicherungen Übersicht',400],
-    ['Reise','Reisetagebuch Portugal',70],['Reise','Roadtrip Schottland – Route',35],['Reise','Städtetrip Wien Notizen',95],
-    ['Reise','Packliste Skiurlaub',6],['Reise','Restaurants Lissabon',72],['Reise','Camping-Ausrüstung Liste',150],
-    ['Reise','Visum-Unterlagen Japan',40],
-    ['Lernen','Lernplan Spanisch',9],['Lernen','Zusammenfassung Statistik-Kurs',50],['Lernen','Notizen: Sapiens (Buch)',100],
-    ['Lernen','Recherche Masterarbeit',14],['Lernen','Vokabeln Französisch',6],['Lernen','Online-Kurs UX-Design',28],
-    ['Lernen','Prüfungsvorbereitung Mathe',160],
-    ['Familie','Kindergeburtstag Planung',11],['Familie','Familienfeier Weihnachten',240],['Familie','Schulanmeldung Checkliste',190],
-    ['Familie','Fotobuch Ideen',33],['Familie','Elternabend Notizen',17],['Familie','Ferienbetreuung Anmeldung',60],
-    ['Familie','Familientreffen Sommer',4]
-  ];
-  const EXTRA_TAGS = {
-    'Rezept: Linsensuppe':['Vegetarisch','Schnell'], 'Rezept: Kürbissuppe':['Vegetarisch'],
-    'Rezept: Bananenbrot':['Schnell'], 'Rezept: Pesto alla Genovese':['Vegetarisch','Schnell'],
-    'Sprint Planning Q3':['Wichtig'], 'Präsentation Vorstand':['Wichtig'],
-    'Jahresgespräch Vorbereitung':['Wichtig'], 'Packliste Urlaub':['Reise'], 'Packliste Skiurlaub':['Reise'],
-    'Kindergeburtstag Planung':['Wichtig'], 'Prüfungsvorbereitung Mathe':['Wichtig'],
-    'Wohnungsübergabe Checkliste':['Wichtig'], 'Versicherungen Übersicht':['Wichtig']
+})();
+const WB_NOTES_LS = 'wb-noteos-stand';
+
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const root = document.documentElement;
+const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad3 = n => String(n).padStart(3,'0');
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+};
+
+/* ───────── Theme & Uhr ───────── */
+function setTheme(t, persist){
+  root.setAttribute('data-theme', t);
+  $('meta[name="theme-color"]').content = t === 'light' ? '#EEF1F6' : '#06090E';
+  if (persist){ store.set('wb-cockpit-theme', t); WB.melden('theme', { theme:t }); }
+}
+setTheme(root.getAttribute('data-theme'), false);
+$('#themeBtn').addEventListener('click', () => {
+  setTheme(root.getAttribute('data-theme') === 'light' ? 'dark' : 'light', true);
+});
+WB.horchen('theme', n => { if (n.theme) setTheme(n.theme, false); });
+addEventListener('storage', e => {
+  if (e.key === 'wb-cockpit-theme' && (e.newValue === 'light' || e.newValue === 'dark')) setTheme(e.newValue, false);
+});
+$('#yr').textContent = new Date().getFullYear();
+const clock = $('#clock');
+const tick = () => { const d = new Date(); clock.textContent = String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+tick(); setInterval(tick, 15000);
+
+/* ───────── Demodaten ───────── */
+const TODAY = new Date('2026-08-02');
+const daysAgo = d => { const x = new Date(TODAY); x.setDate(x.getDate()-d); return x; };
+const fmt = d => d.toLocaleDateString('de-DE',{day:'numeric',month:'short',year:'numeric'});
+function shade(hex, amt){
+  const n = parseInt(hex.slice(1),16);
+  const c = v => Math.max(0,Math.min(255, v + Math.round(255*amt)));
+  return '#'+((1<<24)+(c(n>>16)<<16)+(c((n>>8)&255)<<8)+c(n&255)).toString(16).slice(1);
+}
+/* Akzente aus der Cockpit-Familie: Amber/Teal als Achse, dazu drei
+   gedämpfte Töne, die auf Fast-Schwarz wie auf Hell noch tragen. */
+const CATS = { Rezept:'#F2B33D', Projekt:'#63D9C4', Arbeit:'#8FA6FF', Alltag:'#AEBAC7',
+               Reise:'#F58F7C', Lernen:'#B79BFF', Familie:'#F7CF83' };
+const FALLBACK_COLORS = ['#F2B33D','#63D9C4','#8FA6FF','#B79BFF'];
+function colorForCategory(cat){
+  if (CATS[cat]) return CATS[cat];
+  let h = 0; for (let i=0;i<cat.length;i++) h = (h + cat.charCodeAt(i)) % FALLBACK_COLORS.length;
+  return FALLBACK_COLORS[h];
+}
+function slugify(title, taken){
+  let base = title.toLowerCase()
+    .replace(/[äöüß]/g, c => ({'ä':'ae','ö':'oe','ü':'ue','ß':'ss'}[c]))
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'notiz';
+  let name = base, i = 2;
+  while (taken.has(name+'.md')) name = base+'-'+(i++);
+  return name + '.md';
+}
+const CONTENT = {
+  Rezept:['Zutaten und Zubereitungsschritte für dieses Gericht.','Nach mehrmaligem Testen die Version, die am besten funktioniert.'],
+  Projekt:['Ideen, nächste Schritte und offene Fragen zu diesem Vorhaben.','Wird laufend ergänzt, sobald sich der Stand ändert.'],
+  Arbeit:['Besprochene Punkte, Entscheidungen und nächste Schritte.','Verantwortlichkeiten und Termine im Überblick.'],
+  Alltag:['Dinge, die erledigt werden müssen.','Wird bei Bedarf ergänzt und abgehakt.'],
+  Reise:['Orte, Ideen und praktische Hinweise für die Reise.','Sammlung von Empfehlungen und Notizen unterwegs.'],
+  Lernen:['Zusammenfassung der wichtigsten Punkte.','Notizen zum Nacharbeiten und Wiederholen.'],
+  Familie:['Planung, Termine und Absprachen.','Wichtige Details für alle Beteiligten.']
+};
+const RAW = [
+  ['Rezept','Rezept: Apfelkuchen',3],['Rezept','Rezept: Linsensuppe',18],['Rezept','Rezept: Pesto alla Genovese',40],
+  ['Rezept','Rezept: Sonntagsbraten',65],['Rezept','Rezept: Zitronenkuchen',12],['Rezept','Rezept: Kürbissuppe',200],
+  ['Rezept','Rezept: Bananenbrot',30],
+  ['Projekt','Projektideen Sommer',13],['Projekt','Website Relaunch – Notizen',22],['Projekt','Gartenprojekt Kräuterbeet',8],
+  ['Projekt','Buchprojekt: Kapitelplan',90],['Projekt','Renovierung Bad – Checkliste',55],['Projekt','App-Idee: Skizze',4],
+  ['Projekt','Podcast-Konzept',130],
+  ['Arbeit','Meeting-Notizen 28.07',5],['Arbeit','Jahresgespräch Vorbereitung',45],['Arbeit','Team-Retro Notizen',10],
+  ['Arbeit','Kundentermin Müller GmbH',2],['Arbeit','Sprint Planning Q3',7],['Arbeit','Onboarding neue Kollegin',25],
+  ['Arbeit','Präsentation Vorstand',60],
+  ['Alltag','Einkaufsliste',1],['Alltag','Packliste Urlaub',15],['Alltag','Geschenkideen Weihnachten',20],
+  ['Alltag','Wohnungsübergabe Checkliste',300],['Alltag','Umzugsplanung',280],['Alltag','To-do Wochenende',2],
+  ['Alltag','Handwerker-Kontakte',110],['Alltag','Versicherungen Übersicht',400],
+  ['Reise','Reisetagebuch Portugal',70],['Reise','Roadtrip Schottland – Route',35],['Reise','Städtetrip Wien Notizen',95],
+  ['Reise','Packliste Skiurlaub',6],['Reise','Restaurants Lissabon',72],['Reise','Camping-Ausrüstung Liste',150],
+  ['Reise','Visum-Unterlagen Japan',40],
+  ['Lernen','Lernplan Spanisch',9],['Lernen','Zusammenfassung Statistik-Kurs',50],['Lernen','Notizen: Sapiens (Buch)',100],
+  ['Lernen','Recherche Masterarbeit',14],['Lernen','Vokabeln Französisch',6],['Lernen','Online-Kurs UX-Design',28],
+  ['Lernen','Prüfungsvorbereitung Mathe',160],
+  ['Familie','Kindergeburtstag Planung',11],['Familie','Familienfeier Weihnachten',240],['Familie','Schulanmeldung Checkliste',190],
+  ['Familie','Fotobuch Ideen',33],['Familie','Elternabend Notizen',17],['Familie','Ferienbetreuung Anmeldung',60],
+  ['Familie','Familientreffen Sommer',4]
+];
+const EXTRA_TAGS = {
+  'Rezept: Linsensuppe':['Vegetarisch','Schnell'], 'Rezept: Kürbissuppe':['Vegetarisch'],
+  'Rezept: Bananenbrot':['Schnell'], 'Rezept: Pesto alla Genovese':['Vegetarisch','Schnell'],
+  'Sprint Planning Q3':['Wichtig'], 'Präsentation Vorstand':['Wichtig'],
+  'Jahresgespräch Vorbereitung':['Wichtig'], 'Packliste Urlaub':['Reise'], 'Packliste Skiurlaub':['Reise'],
+  'Kindergeburtstag Planung':['Wichtig'], 'Prüfungsvorbereitung Mathe':['Wichtig'],
+  'Wohnungsübergabe Checkliste':['Wichtig'], 'Versicherungen Übersicht':['Wichtig']
+};
+const notes = RAW.map(([cat,title,d], i) => {
+  const mod = daysAgo(d), cre = daysAgo(d + 5 + (i%20));
+  return {
+    id:i, title, category:cat, tags:[cat, ...(EXTRA_TAGS[title]||[])],
+    accent: shade(CATS[cat], ((i%5)-2)*0.025),
+    created: fmt(cre), createdSort: cre.getTime(), modified: fmt(mod), modifiedSort: mod.getTime(),
+    author:'Du', content: CONTENT[cat], filename: null, source: null
   };
-  const notes = RAW.map(([cat,title,d], i) => {
-    const mod = daysAgo(d), cre = daysAgo(d + 5 + (i%20));
-    return {
-      id:i, title, category:cat, tags:[cat, ...(EXTRA_TAGS[title]||[])], spineColor: shade(CATS[cat], ((i%5)-2)*0.035),
-      spineWidth: 36 + (i*7)%22, spineHeight: 212 + (i*11)%42,
-      created: fmt(cre), createdSort: cre.getTime(), modified: fmt(mod), modifiedSort: mod.getTime(),
-      author:'Du', content: CONTENT[cat], filename: null, source: null
+});
+
+/* ───────── Zustand ───────── */
+let curIdx = 0, sortMode = 'kategorie', searchQuery = '';
+const activeTags = new Set();
+let view = [];                 /* aktuell sichtbare Notizen in Anzeigereihenfolge */
+let reading = false;
+
+/* ───────── Markdown ───────── */
+function inlineMdToHtml(text){
+  return String(text)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+function contentToHtml(lines){
+  let html = '', i = 0;
+  while (i < lines.length){
+    const line = lines[i];
+    if (line.startsWith('- ')){
+      let items=''; while (i<lines.length && lines[i].startsWith('- ')){ items+='<li>'+inlineMdToHtml(lines[i].slice(2))+'</li>'; i++; }
+      html += '<ul>'+items+'</ul>';
+    } else if (/^\d+\.\s/.test(line)){
+      let items=''; while (i<lines.length && /^\d+\.\s/.test(lines[i])){ items+='<li>'+inlineMdToHtml(lines[i].replace(/^\d+\.\s/,''))+'</li>'; i++; }
+      html += '<ol>'+items+'</ol>';
+    } else if (line.startsWith('### ')){ html += '<h3>'+inlineMdToHtml(line.slice(4))+'</h3>'; i++; }
+    else if (line.startsWith('## ')){ html += '<h2>'+inlineMdToHtml(line.slice(3))+'</h2>'; i++; }
+    else if (line.startsWith('# ')){ html += '<h1>'+inlineMdToHtml(line.slice(2))+'</h1>'; i++; }
+    else if (line.startsWith('> ')){ html += '<blockquote>'+inlineMdToHtml(line.slice(2))+'</blockquote>'; i++; }
+    else { html += '<p>'+inlineMdToHtml(line)+'</p>'; i++; }
+  }
+  return html;
+}
+function plainExcerpt(n){
+  const raw = (n.content || []).join(' ').replace(/^#+\s*/gm,'').replace(/[*>`]/g,'').replace(/\s+/g,' ').trim();
+  return raw || '(Kein Inhalt)';
+}
+
+/* ───────── Suche ───────── */
+const searchCache = new WeakMap();
+function searchIndex(n){
+  let s = searchCache.get(n);
+  if (s === undefined){
+    s = [n.title, n.author, ...(n.tags||[]), ...(n.content||[])].join('\n').toLowerCase();
+    searchCache.set(n, s);
+  }
+  return s;
+}
+const matchesSearch = (n, terms) => { const hay = searchIndex(n); return terms.every(t => hay.includes(t)); };
+
+/* ───────── Kartei zeichnen ───────── */
+const deck = $('#deck');
+function filtered(){
+  const terms = searchQuery.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  let list = terms.length ? notes.filter(n => matchesSearch(n, terms)) : notes.slice();
+  if (activeTags.size) list = list.filter(n => n.tags.some(t => activeTags.has(t)));
+  return list;
+}
+function cardHtml(n, pos, delay){
+  const tags = n.tags.filter(t => t !== n.category).slice(0,3)
+    .map(t => '<span class="tag">'+esc(t)+'</span>').join('');
+  return '<button class="card" data-note="'+n.id+'" style="--acc:'+n.accent+';animation-delay:'+delay+'ms" aria-label="'+esc(n.title)+' öffnen">'
+    + '<span class="card-bg"></span>'
+    + '<span class="c-head"><span class="c-idx">'+pad3(pos)+'</span><h2>'+esc(n.title)+'</h2>'
+    +   '<span class="tag c-cat">'+esc(n.category)+'</span></span>'
+    + '<span class="leaf"><span class="leaf-stack">'
+    +   '<span class="leaf-back b2"></span><span class="leaf-back"></span>'
+    +   '<span class="leaf-face"><span class="leaf-kick">'+esc(n.modified)+'</span><span class="leaf-rule"></span>'
+    +     '<span class="leaf-text">'+esc(plainExcerpt(n))+'</span></span>'
+    +   '</span><span class="open-hint">Lesen ↗</span></span>'
+    + '<span class="c-foot"><span class="c-meta"><span>'+esc(n.author)+'</span><span>'
+    +   (n.filename ? esc(n.filename) : 'nicht gespeichert')+'</span></span>'
+    +   (tags ? '<span class="c-tags">'+tags+'</span>' : '')+'</span>'
+    + '</button>';
+}
+function renderDeck(){
+  const list = filtered();
+  if (!list.length){
+    view = [];
+    deck.innerHTML = '<div class="deck-empty">Keine Notiz gefunden.</div>';
+    updateHero(); return;
+  }
+  let html = '', pos = 0, d = 0;
+  if (sortMode === 'kategorie'){
+    const by = {};
+    list.forEach(n => (by[n.category] = by[n.category] || []).push(n));
+    const order = [];
+    Object.keys(by).sort((a,b)=>a.localeCompare(b,'de')).forEach(cat => {
+      const group = by[cat].slice().sort((a,b)=>a.title.localeCompare(b.title,'de'));
+      html += '<div class="group-head"><div class="eyebrow">'+esc(cat)+'</div><div class="rule"></div>'
+            + '<div class="n">'+pad3(group.length)+'</div></div><div class="grid">';
+      group.forEach(n => { order.push(n); html += cardHtml(n, ++pos, Math.min(d += 35, 700)); });
+      html += '</div>';
+    });
+    view = order;
+  } else {
+    const l = list.slice();
+    if (sortMode==='az') l.sort((a,b)=>a.title.localeCompare(b.title,'de'));
+    if (sortMode==='neu') l.sort((a,b)=>b.modifiedSort-a.modifiedSort);
+    if (sortMode==='erstellt') l.sort((a,b)=>(b.createdSort||b.modifiedSort)-(a.createdSort||a.modifiedSort));
+    view = l;
+    html = '<div class="grid">' + l.map(n => cardHtml(n, ++pos, Math.min(d += 35, 700))).join('') + '</div>';
+  }
+  deck.innerHTML = html;
+  updateHero();
+}
+function updateHero(){
+  const cats = new Set(notes.map(n => n.category));
+  const newest = notes.reduce((a,n) => (!a || n.modifiedSort > a.modifiedSort) ? n : a, null);
+  $('#heroCount').textContent = pad3(Math.min(view.length,notes.length) ? 1 : 0) + ' — ' + pad3(notes.length);
+  $('#stats').innerHTML =
+    '<span><b>'+notes.length+'</b> Notizen</span>'
+    + '<span><b>'+cats.size+'</b> Kategorien</span>'
+    + (view.length !== notes.length ? '<span><b>'+view.length+'</b> gefiltert</span>' : '')
+    + (newest ? '<span>Zuletzt: <b>'+esc(newest.modified)+'</b></span>' : '');
+  buildWave();
+  WB.schreiben(WB_NOTES_LS, { anzahl: notes.length, kategorien: cats.size, zeit: Date.now() });
+}
+/* Die Welle ist der Bestand: ein Blatt je Notiz, in Kategoriefarbe. */
+function buildWave(){
+  const el = $('#wave');
+  if (!el) return;
+  const max = innerWidth < 820 ? 30 : 56;
+  const src = notes.slice(0, max);
+  const n = src.length || 1;
+  el.innerHTML = src.map((note,i) => {
+    const p = i/(n-1 || 1);
+    const h = 34 + Math.sin(p*Math.PI*2.1)*22 + Math.sin(p*Math.PI*5.5)*7;
+    const rot = Math.cos(p*Math.PI*2.1)*13;
+    const y = Math.sin(p*Math.PI*2.1)*-9;
+    return '<i style="--wc:'+note.accent+';height:'+Math.max(16,h+38)+'%;'
+      + 'transform:translateY('+y.toFixed(1)+'px) rotate('+rot.toFixed(1)+'deg);'
+      + 'animation-delay:'+(i*14)+'ms"></i>';
+  }).join('');
+}
+deck.addEventListener('click', e => {
+  const c = e.target.closest('.card');
+  if (c) openNote(+c.dataset.note);
+});
+$('#search').addEventListener('input', e => { searchQuery = e.target.value; renderDeck(); });
+$$('.seg button').forEach(b => b.addEventListener('click', () => {
+  sortMode = b.dataset.sort;
+  $$('.seg button').forEach(x => x.classList.toggle('active', x === b));
+  renderDeck();
+}));
+$('#home').addEventListener('click', e => {
+  e.preventDefault();
+  if (reading) closeNote(); else scrollTo({ top:0, behavior:'smooth' });
+});
+let waveTimer = null;
+addEventListener('resize', () => { clearTimeout(waveTimer); waveTimer = setTimeout(buildWave, 200); });
+
+/* ───────── Tag-Filter ───────── */
+function allTags(){
+  const s = new Set();
+  notes.forEach(n => n.tags.forEach(t => s.add(t)));
+  return Array.from(s).sort((a,b)=>a.localeCompare(b,'de'));
+}
+function updateTagBtn(){
+  const btn = $('#tagBtn');
+  btn.textContent = activeTags.size ? 'Tags ('+activeTags.size+')' : 'Tags';
+  btn.classList.toggle('on', activeTags.size > 0);
+}
+function renderTagMenu(){
+  const menu = $('#tagMenu'), tags = allTags();
+  const head = '<div class="tag-head"><span>Nach Tags filtern</span>'
+             + '<button class="tag-close" id="tagClose" aria-label="Schließen">✕</button></div>';
+  menu.innerHTML = head + (tags.length
+    ? tags.map(t => '<button class="tag-chip'+(activeTags.has(t)?' selected':'')+'" data-tag="'+esc(t)+'"><span>'+esc(t)+'</span><span class="check">✓</span></button>').join('')
+      + (activeTags.size ? '<button class="tag-clear" id="tagClear">Filter zurücksetzen</button>' : '')
+    : '<div class="tag-empty">Noch keine Tags vorhanden.</div>');
+}
+/* Menü am Knopf ausrichten – und notfalls nach oben klappen,
+   damit es nie unter den Bildschirmrand rutscht. */
+function placeMenu(menu, anchor, width){
+  const r = anchor.getBoundingClientRect();
+  menu.style.left = Math.max(8, Math.min(r.left, innerWidth - (width||240) - 8)) + 'px';
+  const below = innerHeight - r.bottom - 16;
+  const above = r.top - 16;
+  if (below < 180 && above > below){
+    menu.style.top = '';
+    menu.style.bottom = (innerHeight - r.top + 8) + 'px';
+    menu.style.maxHeight = Math.max(140, above) + 'px';
+  } else {
+    menu.style.bottom = '';
+    menu.style.top = (r.bottom + 8) + 'px';
+    menu.style.maxHeight = Math.max(140, below) + 'px';
+  }
+}
+$('#tagBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  const menu = $('#tagMenu');
+  placeMenu(menu, e.currentTarget, 280);
+  renderTagMenu();
+  menu.hidden = !menu.hidden;
+});
+$('#tagMenu').addEventListener('click', e => {
+  e.stopPropagation();
+  if (e.target.closest('#tagClose')){ $('#tagMenu').hidden = true; return; }
+  const chip = e.target.closest('.tag-chip');
+  if (chip){
+    activeTags.has(chip.dataset.tag) ? activeTags.delete(chip.dataset.tag) : activeTags.add(chip.dataset.tag);
+    renderTagMenu(); updateTagBtn(); renderDeck(); return;
+  }
+  if (e.target.id === 'tagClear'){ activeTags.clear(); renderTagMenu(); updateTagBtn(); renderDeck(); }
+});
+
+/* ───────── Popover-Schließer ───────── */
+const POPOVERS = [['tagMenu','tagBtn'],['addMenu','addBtn'],['printMenu','printBtn'],['folderMenu','folderBtn']];
+function closePopoversExcept(target){
+  POPOVERS.forEach(([menuId, btnId]) => {
+    const m = document.getElementById(menuId);
+    if (!m || m.hidden) return;
+    const keep = target && target.closest && target.closest('#'+menuId+', #'+btnId);
+    if (!keep) m.hidden = true;
+  });
+}
+['pointerdown','click','touchstart'].forEach(evt =>
+  document.addEventListener(evt, e => closePopoversExcept(e.target), true));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopoversExcept(null); });
+
+/* ───────── Leseansicht ───────── */
+const reader = $('#reader'), sheet = $('#sheet');
+function viewPos(n){ const i = view.indexOf(n); return i < 0 ? 0 : i + 1; }
+function renderSheet(){
+  const n = notes[curIdx];
+  if (!n){ sheet.innerHTML = '<div class="s-empty">Keine Notiz ausgewählt.</div>'; return; }
+  sheet.style.setProperty('--acc', n.accent);
+  const pos = viewPos(n), total = view.length || notes.length;
+  const tags = n.tags.map(t => '<span class="tag">'+esc(t)+'</span>').join('');
+  sheet.innerHTML =
+    '<div class="s-kick"><span>'+pad3(pos)+' — '+pad3(total)+'</span><span class="rule"></span><span>'+esc(n.category)+'</span></div>'
+    + '<h1>'+esc(n.title)+'</h1>'
+    + '<div class="s-meta"><span>Erstellt '+esc(n.created)+'</span><span>Geändert '+esc(n.modified)+'</span><span>Autor '+esc(n.author)+'</span></div>'
+    + (n.source ? '<div class="s-source">Importiert aus: '+esc(n.source)+'</div>' : '')
+    + '<div class="s-tags">'+tags+'</div>'
+    + '<div class="s-rule"></div>'
+    + '<div class="s-body">'+contentToHtml(n.content)+'</div>'
+    + '<div class="s-foot"><span>'+(n.filename ? esc(n.filename) : 'nicht gespeichert')+'</span>'
+    +   '<span>Notiz '+pos+' von '+total+'</span></div>';
+  $('#barIdx').textContent = pad3(pos);
+  $('#barName').textContent = n.title;
+  $('#barTag').textContent = n.category;
+  const i = view.indexOf(n);
+  $('#prevBtn').disabled = i <= 0;
+  $('#nextBtn').disabled = i < 0 || i >= view.length - 1;
+  document.title = n.title + ' · NoteOS';
+}
+function openNote(id, fromEl){
+  if (!notes[id]) return;
+  curIdx = id;
+  const card = fromEl || deck.querySelector('.card[data-note="'+id+'"]');
+  renderSheet();
+  reading = true;
+  document.body.classList.add('reading');
+  root.classList.add('locked');
+  reader.scrollTop = 0;
+  $('#printBtn').disabled = false;
+  if (card && !reduced() && sheet.animate){
+    const a = card.getBoundingClientRect();
+    const b = sheet.getBoundingClientRect();
+    if (b.width && b.height){
+      const s = Math.max(.35, Math.min(1, a.width / b.width));
+      const dx = (a.left + a.width/2) - (b.left + b.width/2);
+      const dy = (a.top + a.height/2) - (b.top + b.height/2);
+      sheet.animate(
+        [{ transform:'translate('+dx+'px,'+dy+'px) scale('+s+')', opacity:0 }, { transform:'none', opacity:1 }],
+        { duration:460, easing:'cubic-bezier(.2,.8,.2,1)' });
+    }
+  }
+  if (history.state && history.state.noteos) history.replaceState({ noteos:id }, '', '#n'+id);
+  else history.pushState({ noteos:id }, '', '#n'+id);
+  setTimeout(() => $('#backBtn').focus({ preventScroll:true }), 60);
+}
+function closeNote({ back = true } = {}){
+  if (!reading) return;
+  reading = false;
+  document.body.classList.remove('reading');
+  root.classList.remove('locked');
+  $('#printBtn').disabled = true;
+  document.title = 'NoteOS – Wissen der Werkbank';
+  const card = deck.querySelector('.card[data-note="'+curIdx+'"]');
+  if (card && card.scrollIntoView) card.scrollIntoView({ block:'center' });
+  if (card && card.focus) card.focus({ preventScroll:true });
+  if (back && history.state && history.state.noteos) history.back();
+  else if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+}
+function stepNote(dir){
+  if (!reading) return;
+  const i = view.indexOf(notes[curIdx]);
+  const next = view[i + dir];
+  if (!next) return;
+  curIdx = next.id;
+  renderSheet();
+  history.replaceState({ noteos:curIdx }, '', '#n'+curIdx);
+  if (!reduced() && sheet.animate){
+    sheet.animate([{ opacity:0, transform:'translateX('+(dir*24)+'px)' }, { opacity:1, transform:'none' }],
+      { duration:260, easing:'cubic-bezier(.2,.8,.2,1)' });
+  }
+  reader.scrollTop = 0;
+}
+$('#backBtn').addEventListener('click', () => closeNote());
+$('#scrim').addEventListener('click', () => closeNote());
+$('#prevBtn').addEventListener('click', () => stepNote(-1));
+$('#nextBtn').addEventListener('click', () => stepNote(1));
+addEventListener('popstate', () => {
+  const m = /^#n(\d+)$/.exec(location.hash);
+  if (m && notes[+m[1]]){ if (!reading || curIdx !== +m[1]) openNote(+m[1]); }
+  else if (reading) closeNote({ back:false });
+});
+addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if ($('#editorView').classList.contains('active')) return;
+  if (!$('#confirmOverlay').hidden) return;
+  if (POPOVERS.some(([id]) => { const m = document.getElementById(id); return m && !m.hidden; })) return;
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+  if (e.key === 'Escape' && reading){ closeNote(); return; }
+  if (!reading) return;
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); stepNote(-1); }
+  else if (e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); stepNote(1); }
+});
+/* Wischen blättert */
+(function(){
+  let sx = 0, sy = 0, on = false;
+  reader.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; on = true;
+  }, { passive:true });
+  reader.addEventListener('touchend', e => {
+    if (!on) return; on = false;
+    const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.6) stepNote(dx < 0 ? 1 : -1);
+  }, { passive:true });
+})();
+
+/* ───────── Editor ───────── */
+const editorView = $('#editorView'), editorBody = $('#editorBody');
+const editorTitle = $('#editorTitle'), editorCategory = $('#editorCategory'), editorTags = $('#editorTags');
+const editorSource = $('#editorSource'), editorHint = $('#editorHint');
+const addBtn = $('#addBtn'), addMenu = $('#addMenu'), importInput = $('#importInput');
+let pendingSource = null, editingNoteId = null, importToken = 0, editorSnapshot = null;
+
+Object.keys(CATS).sort((a,b)=>a.localeCompare(b,'de')).forEach(c => {
+  const o = document.createElement('option'); o.value = c; o.textContent = c; editorCategory.appendChild(o);
+});
+addBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  placeMenu(addMenu, addBtn, 210);
+  addMenu.hidden = !addMenu.hidden;
+});
+function snapshotEditor(){
+  return JSON.stringify({ t:editorTitle.value, c:editorCategory.value, g:editorTags.value, b:editorBody.innerHTML });
+}
+const editorIsDirty = () => editorSnapshot !== null && snapshotEditor() !== editorSnapshot;
+function openEditor({ title='', category='', bodyHtml='', source=null, editId=null, tags=[] } = {}){
+  importToken++;
+  addMenu.hidden = true;
+  editingNoteId = editId;
+  editorTitle.value = title;
+  editorCategory.value = category;
+  editorTags.value = tags.filter(t => t !== category).join(', ');
+  editorBody.innerHTML = bodyHtml;
+  pendingSource = source;
+  editorSource.textContent = source ? 'Importiert aus: '+source : '';
+  editorHint.textContent = '';
+  $('#editorKick').textContent = editId === null ? 'Neue Notiz' : 'Notiz bearbeiten';
+  $('#editorSave').textContent = editId === null ? 'Speichern' : 'Änderungen speichern';
+  editorView.classList.add('active');
+  root.classList.add('locked');
+  editorSnapshot = snapshotEditor();
+  setTimeout(() => editorTitle.focus(), 60);
+}
+function closeEditor(){
+  editorView.classList.remove('active');
+  editorSnapshot = null;
+  if (!reading) root.classList.remove('locked');
+}
+$('#addBlank').addEventListener('click', () => openEditor());
+$('#addImport').addEventListener('click', () => { addMenu.hidden = true; importInput.click(); });
+$('#editBtn').addEventListener('click', () => {
+  const n = notes[curIdx];
+  if (!n) return;
+  openEditor({ title:n.title, category:n.category, bodyHtml:contentToHtml(n.content), source:n.source||null, editId:n.id, tags:n.tags });
+});
+$('#editorCancel').addEventListener('click', async () => {
+  if (editorIsDirty()){
+    const ok = await confirmDialog('Ungespeicherte Änderungen verwerfen?', 'Verwerfen');
+    if (!ok) return;
+  }
+  closeEditor();
+});
+addEventListener('beforeunload', e => {
+  if (editorView.classList.contains('active') && editorIsDirty()){ e.preventDefault(); e.returnValue = ''; }
+});
+
+$('#editorToolbar').addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
+$('#editorToolbar').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-cmd]'); if (!btn) return;
+  editorBody.focus();
+  if (btn.dataset.cmd === 'formatBlock') document.execCommand('formatBlock', false, '<'+btn.dataset.val.toLowerCase()+'>');
+  else document.execCommand(btn.dataset.cmd, false, null);
+});
+$('#tbLink').addEventListener('click', () => {
+  const url = prompt('Link-Ziel (URL):', 'https://');
+  if (url){ editorBody.focus(); document.execCommand('createLink', false, url); }
+});
+
+/* ───────── Import ───────── */
+function loadScript(src){
+  return new Promise((resolve, reject) => {
+    if (document.querySelector('script[src="'+src+'"]')){ resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = () => resolve(); s.onerror = () => reject(new Error('load failed: '+src));
+    document.head.appendChild(s);
+  });
+}
+async function loadPdfJs(){
+  if (window.pdfjsLib) return window.pdfjsLib;
+  const base = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/';
+  const mod = await import(base + 'pdf.min.mjs');
+  mod.GlobalWorkerOptions.workerSrc = base + 'pdf.worker.min.mjs';
+  window.pdfjsLib = mod;
+  return mod;
+}
+async function loadMammoth(){
+  if (window.mammoth) return window.mammoth;
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.11.0/mammoth.browser.min.js');
+  return window.mammoth;
+}
+async function extractPdfText(file){
+  const lib = await loadPdfJs();
+  const doc = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const paragraphs = [];
+  for (let i=1; i<=doc.numPages; i++){
+    const tc = await (await doc.getPage(i)).getTextContent();
+    const text = tc.items.map(it => it.str).join(' ').replace(/\s+/g,' ').trim();
+    if (text) paragraphs.push(text);
+  }
+  return contentToHtml(paragraphs.length ? paragraphs : ['(Kein Text im PDF gefunden – evtl. ein gescanntes Dokument ohne Textebene.)']);
+}
+async function extractDocxHtml(file){
+  const m = await loadMammoth();
+  return (await m.convertToHtml({ arrayBuffer: await file.arrayBuffer() })).value;
+}
+importInput.addEventListener('change', () => {
+  const file = importInput.files[0]; if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const titleGuess = file.name.replace(/\.[^.]+$/, '');
+  if (ext === 'txt' || ext === 'md'){
+    const reader2 = new FileReader();
+    reader2.onload = () => {
+      const lines = String(reader2.result).split(/\r?\n+/).map(l=>l.trim()).filter(Boolean);
+      openEditor({ title:titleGuess, bodyHtml:contentToHtml(lines.length ? lines : ['']), source:file.name });
     };
-  });
-  /* even id → left page, odd id → right page (recomputed, since notes can grow) */
-  const leftNotes  = () => notes.filter(n => n.id % 2 === 0);
-  const rightNotes = () => notes.filter(n => n.id % 2 === 1);
-
-  /* ---------------- state ---------------- */
-  let leftIdx = 0, rightIdx = 1;
-  let isPicking = false, sortMode = 'kategorie', searchQuery = '';
-  const activeTags = new Set();
-  const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const spreadMode = () => window.innerWidth > 900;
-
-  /* ---------------- shelf ---------------- */
-  const shelfContainer = document.getElementById('shelfContainer');
-  function booksPerRow(){ const w = innerWidth; return w>1100?10 : w>800?7 : w>520?5 : 3; }
-  const spineHtml = n => `<button class="spine" data-note="${n.id}" style="--spine-color:${n.spineColor}; width:${n.spineWidth}px; height:${n.spineHeight}px;" aria-label="${n.title} aus dem Regal nehmen"><span class="spine-title">${n.title}</span></button>`;
-  function rowsHtml(list){
-    const per = booksPerRow(); let html='';
-    for (let i=0;i<list.length;i+=per) html += `<div class="shelf-row">${list.slice(i,i+per).map(spineHtml).join('')}</div><div class="shelf-ledge"></div>`;
-    return html;
-  }
-  /* cached lowercase haystack per note; WeakMap keeps it out of the saved objects */
-  const searchCache = new WeakMap();
-  function searchIndex(n){
-    let s = searchCache.get(n);
-    if (s === undefined){
-      s = [n.title, n.author, ...(n.tags||[]), ...(n.content||[])].join('\n').toLowerCase();
-      searchCache.set(n, s);
-    }
-    return s;
-  }
-  function matchesSearch(n, terms){
-    const hay = searchIndex(n);
-    return terms.every(t => hay.includes(t));
-  }
-
-  function renderShelf(){
-    const terms = searchQuery.trim().toLowerCase().split(/\s+/).filter(Boolean);
-    let filtered = terms.length ? notes.filter(n => matchesSearch(n, terms)) : notes.slice();
-    if (activeTags.size) filtered = filtered.filter(n => n.tags.some(t => activeTags.has(t)));
-    if (!filtered.length){ shelfContainer.innerHTML = '<div class="shelf-empty">Keine Notiz gefunden.</div>'; return; }
-    if (sortMode === 'kategorie'){
-      const by = {};
-      filtered.forEach(n => (by[n.category] = by[n.category]||[]).push(n));
-      shelfContainer.innerHTML = Object.keys(by).sort((a,b)=>a.localeCompare(b,'de'))
-        .map(c => `<div class="shelf-label">${c}</div>${rowsHtml(by[c])}`).join('');
-    } else {
-      const l = filtered.slice();
-      if (sortMode==='az') l.sort((a,b)=>a.title.localeCompare(b.title,'de'));
-      if (sortMode==='neu') l.sort((a,b)=>b.modifiedSort-a.modifiedSort);
-      if (sortMode==='erstellt') l.sort((a,b)=>(b.createdSort||b.modifiedSort)-(a.createdSort||a.modifiedSort));
-      shelfContainer.innerHTML = rowsHtml(l);
-    }
-  }
-  shelfContainer.addEventListener('click', e => {
-    const btn = e.target.closest('.spine');
-    if (btn && !isPicking) takeBook(btn, +btn.dataset.note);
-  });
-  document.getElementById('shelfSearch').addEventListener('input', e => { searchQuery = e.target.value; renderShelf(); });
-  document.querySelectorAll('.sort-toggle button').forEach(b => b.addEventListener('click', () => {
-    sortMode = b.dataset.sort;
-    document.querySelectorAll('.sort-toggle button').forEach(x=>x.classList.toggle('active', x===b));
-    renderShelf();
-  }));
-
-  function allTags(){
-    const s = new Set();
-    notes.forEach(n => n.tags.forEach(t => s.add(t)));
-    return Array.from(s).sort((a,b)=>a.localeCompare(b,'de'));
-  }
-  function updateTagFilterBtn(){
-    const btn = document.getElementById('tagFilterBtn');
-    btn.textContent = activeTags.size ? `Tags (${activeTags.size})` : 'Tags';
-    btn.classList.toggle('active', activeTags.size > 0);
-  }
-  function renderTagFilterMenu(){
-    const menu = document.getElementById('tagFilterMenu');
-    const tags = allTags();
-    const head = '<div class="tag-filter-head"><span>Nach Tags filtern</span>' +
-                 '<button class="tag-filter-close" id="tagFilterClose" aria-label="Schließen">✕</button></div>';
-    menu.innerHTML = head + (tags.length
-      ? tags.map(t => `<button class="tag-chip${activeTags.has(t)?' selected':''}" data-tag="${t}"><span>${t}</span><span class="check">✓</span></button>`).join('')
-        + (activeTags.size ? '<button class="tag-filter-clear" id="tagFilterClear">Filter zurücksetzen</button>' : '')
-      : '<div class="tag-filter-empty">Noch keine Tags vorhanden.</div>');
-  }
-  document.getElementById('tagFilterBtn').addEventListener('click', e => {
-    e.stopPropagation();
-    const menu = document.getElementById('tagFilterMenu'), btn = e.currentTarget;
-    const r = btn.getBoundingClientRect();
-    menu.style.left = Math.max(8, Math.min(r.left, innerWidth - 296)) + 'px';
-    menu.style.top = (r.bottom + 6) + 'px';
-    renderTagFilterMenu();
-    menu.hidden = !menu.hidden;
-  });
-  /* one robust closer for every popover. Several event types in the capture phase, because
-     no single one reaches document reliably across mobile browsers and embedded webviews. */
-  const POPOVERS = [
-    ['tagFilterMenu','tagFilterBtn'], ['addMenu','addBtn'],
-    ['printMenu','printBtn'], ['folderMenu','folderBtn']
-  ];
-  function closePopoversExcept(target){
-    POPOVERS.forEach(([menuId, btnId]) => {
-      const m = document.getElementById(menuId);
-      if (!m || m.hidden) return;
-      const keep = target && target.closest && target.closest(`#${menuId}, #${btnId}`);
-      if (!keep) m.hidden = true;
-    });
-  }
-  ['pointerdown','click','touchstart'].forEach(evt =>
-    document.addEventListener(evt, e => closePopoversExcept(e.target), true));
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopoversExcept(null); });
-
-  document.getElementById('tagFilterMenu').addEventListener('click', e => {
-    e.stopPropagation();
-    if (e.target.closest('#tagFilterClose')){
-      document.getElementById('tagFilterMenu').hidden = true;
-      return;
-    }
-    const chip = e.target.closest('.tag-chip');
-    if (chip){
-      activeTags.has(chip.dataset.tag) ? activeTags.delete(chip.dataset.tag) : activeTags.add(chip.dataset.tag);
-      renderTagFilterMenu(); updateTagFilterBtn(); renderShelf();
-      return;
-    }
-    if (e.target.id === 'tagFilterClear'){
-      activeTags.clear();
-      renderTagFilterMenu(); updateTagFilterBtn(); renderShelf();
-    }
-  });
-
-  let wasWide = spreadMode();
-  addEventListener('resize', () => {
-    renderShelf();
-    if (spreadMode() !== wasWide){
-      wasWide = spreadMode();
-      if (wasWide && rightIdx % 2 === 0){ leftIdx = rightIdx; rightIdx = Math.min(rightIdx+1, notes.length-1); }
-      else if (wasWide){ leftIdx = rightIdx - 1; }
-      renderRegisters(); renderPages();
-    }
-  });
-
-  /* ---------------- book rendering ---------------- */
-  const spread = document.getElementById('spread'), leaf = document.getElementById('leaf');
-  const rightHolder = document.getElementById('rightHolder'), bookView = document.getElementById('bookView');
-
-  function inlineMdToHtml(text){
-    return text
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-  }
-  function contentToHtml(lines){
-    let html = '', i = 0;
-    while (i < lines.length){
-      const line = lines[i];
-      if (line.startsWith('- ')){
-        let items=''; while (i<lines.length && lines[i].startsWith('- ')){ items+=`<li>${inlineMdToHtml(lines[i].slice(2))}</li>`; i++; }
-        html += `<ul>${items}</ul>`;
-      } else if (/^\d+\.\s/.test(line)){
-        let items=''; while (i<lines.length && /^\d+\.\s/.test(lines[i])){ items+=`<li>${inlineMdToHtml(lines[i].replace(/^\d+\.\s/,''))}</li>`; i++; }
-        html += `<ol>${items}</ol>`;
-      } else if (line.startsWith('### ')){ html += `<h3>${inlineMdToHtml(line.slice(4))}</h3>`; i++; }
-      else if (line.startsWith('## ')){ html += `<h2>${inlineMdToHtml(line.slice(3))}</h2>`; i++; }
-      else if (line.startsWith('# ')){ html += `<h1>${inlineMdToHtml(line.slice(2))}</h1>`; i++; }
-      else if (line.startsWith('> ')){ html += `<blockquote>${inlineMdToHtml(line.slice(2))}</blockquote>`; i++; }
-      else { html += `<p>${inlineMdToHtml(line)}</p>`; i++; }
-    }
-    return html;
-  }
-  function pageHtml(n, side){
-    const sourceHtml = n.source ? `<div class="meta-source">Importiert aus: ${n.source}</div>` : '';
-    return `<div class="page-head">
-      <div class="page-head-row"><h1>${n.title}</h1><div class="page-actions">
-        <button class="edit-btn" data-side="${side}" title="Bearbeiten" aria-label="Notiz bearbeiten">✎</button>
-        <button class="del-btn" data-side="${side}" title="In den Papierkorb" aria-label="Notiz in den Papierkorb">🗑</button>
-      </div></div>
-      <div class="meta-line"><span>Erstellt: ${n.created}</span><span>Geändert: ${n.modified}</span><span>Autor: ${n.author}</span></div>
-      ${sourceHtml}
-      <div class="tags">${n.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div></div>
-      <div class="page-body">${contentToHtml(n.content)}</div>
-      <div class="page-foot">
-        <button class="slide-btn" data-side="${side}" data-dir="-1" ${n.id - (spreadMode()?2:1) < 0 ?'disabled':''} aria-label="Vorherige Notiz">‹</button>
-        <span>Notiz ${n.id+1} von ${notes.length}</span>
-        <button class="slide-btn" data-side="${side}" data-dir="1" ${n.id + (spreadMode()?2:1) >= notes.length ?'disabled':''} aria-label="Nächste Notiz">›</button>
-      </div>`;
-  }
-  function renderRegisters(){
-    const tab = (n, side, cur) =>
-      `<li><button class="ordner-tab${n.id===cur?' active':''}" style="--tab-color:${n.spineColor}" data-side="${side}" data-note="${n.id}">${n.title}</button></li>`;
-    if (!spreadMode()){
-      document.getElementById('regLeft').innerHTML = notes.map(n => tab(n,'single',rightIdx)).join('');
-      document.getElementById('regRight').innerHTML = '';
-      return;
-    }
-    document.getElementById('regLeft').innerHTML = leftNotes().map(n => tab(n,'left',leftIdx)).join('');
-    document.getElementById('regRight').innerHTML = rightNotes().map(n => tab(n,'right',rightIdx)).join('');
-  }
-  function emptyPageHtml(){
-    return notes.length
-      ? '<div class="page-empty">—</div>'
-      : '<div class="page-empty">Noch keine Notiz. Tippe oben auf "+".</div>';
-  }
-  function renderPage(side){
-    if (side === 'left'){
-      document.getElementById('pageLeft').innerHTML =
-        notes[leftIdx] ? pageHtml(notes[leftIdx], 'left') : emptyPageHtml();
-    } else {
-      document.getElementById('pageRight').innerHTML =
-        notes[rightIdx] ? pageHtml(notes[rightIdx], 'right') : emptyPageHtml();
-    }
-  }
-  function renderPages(){ renderPage('left'); renderPage('right'); }
-
-  /* page turn: hinge stays at the spine, 0.5 s out + 0.5 s in */
-  /* a turn in progress is finished immediately when the next one starts,
-     so quick successive taps stay responsive instead of being swallowed */
-  const turning = { left:null, right:null };
-  function finishTurn(key){
-    const t = turning[key];
-    if (!t) return;
-    clearTimeout(t.timer);
-    t.flip.remove();
-    t.holder.classList.remove('turning-active');
-    turning[key] = null;
-  }
-  function turnPage(side, noteId){
-    const isLeft = side === 'left';
-    const lockKey = isLeft ? 'left' : 'right';
-    finishTurn(lockKey);
-    if ((isLeft ? leftIdx : rightIdx) === noteId) return;
-    if (!notes[noteId]) return;
-    /* narrow mode labels its register entries "single", so match on the actual layout */
-    const tabSide = spreadMode() ? side : 'single';
-    document.querySelectorAll(`.ordner-tab[data-side="${tabSide}"]`)
-      .forEach(el => el.classList.toggle('active', +el.dataset.note === noteId));
-
-    const pageEl = document.getElementById(isLeft ? 'pageLeft' : 'pageRight');
-    const holder = isLeft ? document.querySelector('.leaf-slot') : rightHolder;
-    const set = v => { if (isLeft) leftIdx = v; else rightIdx = v; };
-
-    if (reduced()){ set(noteId); renderPages(); return; }
-
-    const oldHtml = pageEl.innerHTML;
-    set(noteId);
-    renderPage(side === 'single' ? 'right' : side);   /* only the turning page, not both */
-
-    const flip = document.createElement('div');
-    flip.className = 'flipper ' + (isLeft ? 'flip-left' : 'flip-right');
-    flip.innerHTML =
-      `<div class="flipper-face flipper-front"><article class="page">${oldHtml}</article><div class="flipper-shade"></div></div>
-       <div class="flipper-face flipper-back"><article class="page"></article><div class="flipper-shade"></div></div>`;
-    holder.appendChild(flip);
-    holder.classList.add('turning-active');
-    requestAnimationFrame(()=>requestAnimationFrame(()=>flip.classList.add('turning')));
-
-    /* sheet is fully faded by 1000 ms, so removing at 1080 ms is never visible */
-    turning[lockKey] = { flip, holder, timer: setTimeout(() => finishTurn(lockKey), 1080) };
-  }
-  function slidePage(side, dir){
-    const isLeft = side === 'left';
-    const cur = isLeft ? leftIdx : rightIdx;
-    const step = spreadMode() ? 2 : 1;   /* spread: stay on this side's parity */
-    const next = cur + dir*step;
-    if (next < 0 || next >= notes.length) return;
-    turnPage(side, next);
-  }
-  function attachSwipe(el, side){
-    let sx = 0, sy = 0, tracking = false;
-    el.addEventListener('touchstart', e => {
-      if (e.touches.length !== 1) return;
-      sx = e.touches[0].clientX; sy = e.touches[0].clientY; tracking = true;
-    }, {passive:true});
-    el.addEventListener('touchend', e => {
-      if (!tracking) return; tracking = false;
-      const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
-      if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)*1.5) slidePage(side, dx < 0 ? 1 : -1);
-    }, {passive:true});
-  }
-  attachSwipe(leaf, 'left');
-  attachSwipe(rightHolder, 'right');
-
-  spread.addEventListener('click', e => {
-    const tab = e.target.closest('.ordner-tab');
-    if (tab){ turnPage(tab.dataset.side, +tab.dataset.note); return; }
-    const editBtn = e.target.closest('.edit-btn');
-    if (editBtn){ openEditForNote(editBtn.dataset.side); return; }
-    const delBtn = e.target.closest('.del-btn');
-    if (delBtn){ deleteNote(delBtn.dataset.side); return; }
-    const slideBtn = e.target.closest('.slide-btn');
-    if (slideBtn && !slideBtn.disabled) slidePage(slideBtn.dataset.side, +slideBtn.dataset.dir);
-  });
-
-  /* keyboard: turn the whole spread, like flipping a real page */
-  function turnSpread(dir){
-    if (!bookView.classList.contains('active')) return;
-    if (!spreadMode()){ slidePage('right', dir); return; }
-    const last = notes.length - 1;
-    const nl = leftIdx + dir*2;
-    if (nl < 0 || nl > last) return;               /* left page anchors the spread */
-    turnPage('left', nl);
-    const nr = rightIdx >= 0 ? rightIdx + dir*2 : nl + 1;   /* recover from an empty right page */
-    if (nr >= 0 && nr <= last) turnPage('right', nr);
-    else { rightIdx = -1; renderPage('right'); }   /* odd count: last spread has no facing page */
-  }
-  addEventListener('keydown', e => {
-    const keys = { ArrowLeft:-1, PageUp:-1, ArrowRight:1, PageDown:1 };
-    const dir = keys[e.key];
-    if (dir === undefined) return;
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
-    if (!bookView.classList.contains('active')) return;
-    if (editorView.classList.contains('active')) return;
-    if (!document.getElementById('confirmOverlay').hidden) return;
-    if (POPOVERS.some(([menuId]) => { const m = document.getElementById(menuId); return m && !m.hidden; })) return;
-    const t = e.target;
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
-    e.preventDefault();
-    turnSpread(dir);
-  });
-
-  /* ---------------- take book off shelf, then fold open ---------------- */
-  function takeBook(spineEl, noteId){
-    try{
-      takeBookAnimated(spineEl, noteId);
-    }catch(err){
-      /* never let a failed animation leave the shelf permanently unclickable */
-      isPicking = false;
-      spineEl.classList.remove('spine-hidden');
-      const row = spineEl.closest('.shelf-row'); if (row) row.classList.remove('picking');
-      document.querySelectorAll('.fly-stage').forEach(s => s.remove());
-      spread.classList.remove('closed'); spread.style.transform = '';
-      leaf.classList.remove('opening'); leaf.style.setProperty('--lt','3px');
-      bookView.classList.add('active');
-      document.getElementById('printBtn').disabled = false;
-    }
-  }
-  function takeBookAnimated(spineEl, noteId){
-    isPicking = true;
-    const n = notes[noteId];
-    const rect = spineEl.getBoundingClientRect();
-
-    /* wide: pick the spread this note sits on · narrow: it is simply the one page */
-    if (!spreadMode()){ rightIdx = noteId; leftIdx = noteId; }
-    else if (noteId % 2 === 0){ leftIdx = noteId; rightIdx = Math.min(noteId+1, notes.length-1); }
-    else { rightIdx = noteId; leftIdx = noteId-1; }
-    renderRegisters(); renderPages();
-    document.getElementById('leafCover').innerHTML =
-      `<div class="cover-art"><div class="cover-rule"></div><h2>${n.title}</h2><div class="cover-rule"></div></div>
-       <div class="face-shade"></div>`;
-    document.getElementById('leafCover').style.setProperty('--spine-color', n.spineColor);
-    document.getElementById('leafEdge').style.setProperty('--spine-color', n.spineColor);
-
-    /* measure where the closed book will sit (book view keeps layout while hidden) */
-    spread.classList.remove('closed'); spread.style.transform = '';
-    const rightRect = rightHolder.getBoundingClientRect();
-    const spreadRect = spread.getBoundingClientRect();
-    const dx = (spreadRect.left + spreadRect.width/2) - (rightRect.left + rightRect.width/2);
-    const wide = spreadMode();
-    const closedLeft = wide ? rightRect.left + dx : rightRect.left;
-    const targetW = rightRect.width, targetH = Math.max(rightRect.height, 300);
-    const targetTop = wide ? rightRect.top : Math.max(60, innerHeight/2 - targetH/2);
-
-    /* --- solid book body: final cover box is fixed, motion is pure transform --- */
-    const W = targetW, H = targetH;
-    const s0 = rect.height / H;          // uniform scale, no stretching
-    const D  = rect.width / s0;          // thickness so the spine face matches the shelf exactly
-    const dx0 = (rect.left+rect.width/2) - (closedLeft+W/2);
-    const dy0 = (rect.top+rect.height/2) - (targetTop+H/2);
-    const zSpine = s => -(W/2)*s;        // keep the face we look at near the camera plane
-    const zCover = s => -(D/2)*s;
-    const tf = ({x=0,y=0,z=0,rx=0,ry=0,rz=0,s=1}) =>
-      `translate3d(${x}px,${y}px,${z}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${s})`;
-
-    const stage = document.createElement('div');
-    stage.className = 'fly-stage';
-    const fly = document.createElement('div');
-    fly.className = 'book3d';
-    fly.style.setProperty('--spine-color', n.spineColor);
-    fly.style.setProperty('--w', W+'px');
-    fly.style.setProperty('--h', H+'px');
-    fly.style.setProperty('--d', D+'px');
-    fly.style.cssText += `left:${closedLeft}px; top:${targetTop}px; width:${W}px; height:${H}px;`;
-    fly.style.transform = tf({x:dx0, y:dy0, z:zSpine(s0), ry:90, s:s0});
-    fly.innerHTML = `
-      <div class="bf bf-back"></div>
-      <div class="bf bf-edge"></div>
-      <div class="bf bf-top"></div>
-      <div class="bf bf-bottom"></div>
-      <div class="bf bf-spine"><span class="spine-title">${n.title}</span></div>
-      <div class="bf bf-cover"><div class="cover-art"><div class="cover-rule"></div><h2>${n.title}</h2><div class="cover-rule"></div></div></div>`;
-    stage.appendChild(fly);
-    document.body.appendChild(stage);
-    spineEl.classList.add('spine-hidden');
-    spineEl.closest('.shelf-row').classList.add('picking');
-
-    /* book view waits in closed state underneath */
-    if (wide){ spread.style.transform = `translateX(${dx}px)`; spread.classList.add('closed'); }
-    leaf.style.transform = '';
-
-    const cleanup = () => {
-      stage.remove();
-      spineEl.classList.remove('spine-hidden');
-      const row = spineEl.closest('.shelf-row'); if (row) row.classList.remove('picking');
-      isPicking = false;
-    };
-    const openUp = () => {
-      bookView.classList.add('active');
-      document.getElementById('printBtn').disabled = false;
-      stage.style.transition = 'opacity .35s ease'; stage.style.opacity = '0';
-      leaf.style.setProperty('--lt','12px');           /* hardcover board while opening */
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        spread.classList.remove('closed');
-        spread.style.transform = '';
-        leaf.classList.add('opening');                 /* cover swings on the spine */
-      }));
-      setTimeout(()=>{
-        leaf.classList.remove('opening');
-        leaf.style.setProperty('--lt','3px');          /* back to single-sheet thickness */
-      }, 1400);
-    };
-
-    if (reduced()){
-      fly.style.transition = 'transform .18s linear';
-      requestAnimationFrame(()=>{ fly.style.transform = tf({z:zCover(1)}); });
-      setTimeout(()=>{ openUp(); cleanup(); }, 220);
-      return;
-    }
-
-    const s1 = s0 + (1-s0)*0.55, s2 = s0 + (1-s0)*0.85;
-
-    /* 0–800 ms · oben ankippen und aus der Reihe lösen */
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      fly.style.transition = 'transform 800ms cubic-bezier(.34,.2,.4,1)';
-      fly.style.transform = tf({x:dx0, y:dy0-12, z:zSpine(s0)+16, rx:-11, ry:90, rz:-4, s:s0*1.05});
-    }));
-    /* 800–1900 ms · zum Betrachter herausziehen, Rücken noch vorn */
-    setTimeout(()=>{
-      fly.style.transition = 'transform 1100ms cubic-bezier(.3,0,.3,1)';
-      fly.style.transform = tf({x:dx0*0.34, y:dy0*0.34-18, z:zSpine(s1)+80, rx:-7, ry:90, rz:-2, s:s1});
-    }, 800);
-    /* 1900–3100 ms · in der Hand drehen, Cover kommt nach vorn (mit leichtem Überschwingen) */
-    setTimeout(()=>{
-      fly.style.transition = 'transform 1200ms cubic-bezier(.45,0,.2,1)';
-      fly.style.transform = tf({x:dx0*0.10, y:dy0*0.10-6, z:zCover(s2)+60, rx:-3, ry:-7, rz:1, s:s2});
-    }, 1900);
-    /* 3100–3700 ms · aufrichten und in die Mitte legen */
-    setTimeout(()=>{
-      fly.style.transition = 'transform 600ms cubic-bezier(.22,.61,.36,1)';
-      fly.style.transform = tf({z:zCover(1)});
-    }, 3100);
-    /* 3700–5000 ms · aufklappen */
-    setTimeout(openUp, 3700);
-    setTimeout(cleanup, 4100);
-  }
-
-  document.querySelector('.back-to-shelf').addEventListener('click', () => {
-    bookView.classList.remove('active');
-    document.getElementById('printBtn').disabled = true;
-  });
-  document.querySelectorAll('[data-mode-choice]').forEach(b => b.addEventListener('click', () => {
-    document.body.setAttribute('data-mode', b.dataset.modeChoice);
-    document.querySelectorAll('[data-mode-choice]').forEach(x=>x.classList.toggle('active', x===b));
-  }));
-
-  /* ---------------- create / import new notes ---------------- */
-  const addBtn = document.getElementById('addBtn'), addMenu = document.getElementById('addMenu');
-  const editorView = document.getElementById('editorView'), editorBody = document.getElementById('editorBody');
-  const editorTitle = document.getElementById('editorTitle'), editorCategory = document.getElementById('editorCategory');
-  const editorTags = document.getElementById('editorTags');
-  const editorSource = document.getElementById('editorSource'), editorHint = document.getElementById('editorHint');
-  const importInput = document.getElementById('importInput');
-  let pendingSource = null;
-  let editingNoteId = null;
-
-  Object.keys(CATS).sort((a,b)=>a.localeCompare(b,'de')).forEach(c=>{
-    const o = document.createElement('option'); o.value = c; o.textContent = c; editorCategory.appendChild(o);
-  });
-
-  addBtn.addEventListener('click', e => { e.stopPropagation(); addMenu.hidden = !addMenu.hidden; });
-
-  let importToken = 0;
-  let editorSnapshot = null;
-  function snapshotEditor(){
-    return JSON.stringify({ t:editorTitle.value, c:editorCategory.value,
-                            g:editorTags.value, b:editorBody.innerHTML });
-  }
-  function editorIsDirty(){ return editorSnapshot !== null && snapshotEditor() !== editorSnapshot; }
-  function openEditor({title='', category='', bodyHtml='', source=null, editId=null, tags=[]} = {}){
-    importToken++;
-    addMenu.hidden = true;
-    editingNoteId = editId;
-    editorTitle.value = title;
-    editorCategory.value = category;
-    editorTags.value = tags.filter(t => t !== category).join(', ');
-    editorBody.innerHTML = bodyHtml;
-    pendingSource = source;
-    editorSource.textContent = source ? `Importiert aus: ${source}` : '';
-    editorHint.textContent = '';
-    document.getElementById('editorSave').textContent = editId===null ? 'Speichern' : 'Änderungen speichern';
-    editorView.classList.add('active');
-    editorSnapshot = snapshotEditor();
-    setTimeout(()=>editorTitle.focus(), 50);
-  }
-  function closeEditor(){ editorView.classList.remove('active'); editorSnapshot = null; }
-  function openEditForNote(side){
-    const n = notes[side === 'left' ? leftIdx : rightIdx];
-    openEditor({ title:n.title, category:n.category, bodyHtml:contentToHtml(n.content), source:n.source||null, editId:n.id, tags:n.tags });
-  }
-
-  document.getElementById('addBlank').addEventListener('click', () => openEditor());
-  document.getElementById('addImport').addEventListener('click', () => { addMenu.hidden = true; importInput.click(); });
-  document.getElementById('editorCancel').addEventListener('click', async () => {
-    if (editorIsDirty()){
-      const ok = await confirmDialog('Ungespeicherte Änderungen verwerfen?', 'Verwerfen');
-      if (!ok) return;
-    }
-    closeEditor();
-  });
-  addEventListener('beforeunload', e => {
-    if (editorView.classList.contains('active') && editorIsDirty()){ e.preventDefault(); e.returnValue = ''; }
-  });
-
-  function loadScript(src){
-    return new Promise((resolve, reject) => {
-      if (document.querySelector(`script[src="${src}"]`)){ resolve(); return; }
-      const s = document.createElement('script');
-      s.src = src; s.onload = () => resolve(); s.onerror = () => reject(new Error('load failed: '+src));
-      document.head.appendChild(s);
-    });
-  }
-  async function loadPdfJs(){
-    if (window.pdfjsLib) return window.pdfjsLib;
-    const base = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/';
-    const mod = await import(base + 'pdf.min.mjs');
-    mod.GlobalWorkerOptions.workerSrc = base + 'pdf.worker.min.mjs';
-    window.pdfjsLib = mod;
-    return mod;
-  }
-  async function loadMammoth(){
-    if (window.mammoth) return window.mammoth;
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.11.0/mammoth.browser.min.js');
-    return window.mammoth;
-  }
-  async function extractPdfText(file){
-    const pdfjsLib = await loadPdfJs();
-    const doc = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
-    const paragraphs = [];
-    for (let i=1; i<=doc.numPages; i++){
-      const tc = await (await doc.getPage(i)).getTextContent();
-      const text = tc.items.map(it => it.str).join(' ').replace(/\s+/g,' ').trim();
-      if (text) paragraphs.push(text);
-    }
-    return contentToHtml(paragraphs.length ? paragraphs : ['(Kein Text im PDF gefunden – evtl. ein gescanntes Dokument ohne Textebene.)']);
-  }
-  async function extractDocxHtml(file){
-    const mammothLib = await loadMammoth();
-    const result = await mammothLib.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
-    return result.value;
-  }
-
-  importInput.addEventListener('change', () => {
-    const file = importInput.files[0]; if (!file) return;
-    const ext = file.name.split('.').pop().toLowerCase();
-    const titleGuess = file.name.replace(/\.[^.]+$/, '');
-
-    if (ext === 'txt' || ext === 'md'){
-      const reader = new FileReader();
-      reader.onload = () => {
-        const lines = String(reader.result).split(/\r?\n+/).map(l=>l.trim()).filter(Boolean);
-        openEditor({ title: titleGuess, bodyHtml: contentToHtml(lines.length ? lines : ['']), source: file.name });
-      };
-      reader.readAsText(file);
-    } else if (ext === 'pdf' || ext === 'docx'){
-      openEditor({ title: titleGuess, bodyHtml: `<p><em>${ext.toUpperCase()} wird eingelesen …</em></p>`, source: file.name });
-      const myToken = importToken;
-      (ext === 'pdf' ? extractPdfText(file) : extractDocxHtml(file))
-        .then(html => {
-          if (importToken !== myToken) return;
-          editorBody.innerHTML = html || '<p></p>';
-          editorSnapshot = snapshotEditor();   /* extracted text is not a user edit */
-        })
-        .catch(() => {
-          if (importToken !== myToken) return;
-          editorBody.innerHTML =
-            `<p><em>Extraktion fehlgeschlagen – die ${ext==='pdf'?'pdf.js':'mammoth.js'}-Bibliothek konnte nicht geladen werden (evtl. blockiert durch diese Vorschau) oder die Datei ist beschädigt. Inhalt bitte manuell einfügen, oder Datei direkt in einem eigenen Browser-Tab öffnen.</em></p>`;
-          editorSnapshot = snapshotEditor();
-        });
-    } else {
-      openEditor({ title: titleGuess, bodyHtml: '<p><em>Dateityp nicht unterstützt.</em></p>', source: file.name });
-    }
-    importInput.value = '';
-  });
-
-  document.getElementById('editorToolbar').addEventListener('mousedown', e => {
-    if (e.target.closest('button')) e.preventDefault();   /* keep caret/selection in the text */
-  });
-  document.getElementById('editorToolbar').addEventListener('click', e => {
-    const btn = e.target.closest('button[data-cmd]'); if (!btn) return;
-    editorBody.focus();
-    if (btn.dataset.cmd === 'formatBlock') document.execCommand('formatBlock', false, `<${btn.dataset.val.toLowerCase()}>`);
-    else document.execCommand(btn.dataset.cmd, false, null);
-  });
-  document.getElementById('tbLink').addEventListener('click', () => {
-    const url = prompt('Link-Ziel (URL):', 'https://');
-    if (url){ editorBody.focus(); document.execCommand('createLink', false, url); }
-  });
-
-  function inlineToMd(node){
-    let out = '';
-    node.childNodes.forEach(child => {
-      if (child.nodeType === 3){ out += child.textContent; return; }
-      const tag = child.tagName;
-      if (tag==='B'||tag==='STRONG') out += `**${inlineToMd(child)}**`;
-      else if (tag==='I'||tag==='EM') out += `*${inlineToMd(child)}*`;
-      else if (tag==='A') out += `[${inlineToMd(child)}](${child.getAttribute('href')||''})`;
-      else if (tag==='BR') out += ' ';
-      else out += inlineToMd(child);
-    });
-    return out;
-  }
-  function htmlToMarkdown(root){
-    const lines = [];
-    root.childNodes.forEach(node => {
-      if (node.nodeType !== 1){ const t=(node.textContent||'').trim(); if (t) lines.push(t); return; }
-      const tag = node.tagName;
-      if (tag==='H1') lines.push('# '+inlineToMd(node).trim());
-      else if (tag==='H2') lines.push('## '+inlineToMd(node).trim());
-      else if (tag==='H3') lines.push('### '+inlineToMd(node).trim());
-      else if (tag==='BLOCKQUOTE') lines.push('> '+inlineToMd(node).trim());
-      else if (tag==='UL') node.querySelectorAll(':scope > li').forEach(li=>lines.push('- '+inlineToMd(li).trim()));
-      else if (tag==='OL') { let i=1; node.querySelectorAll(':scope > li').forEach(li=>lines.push((i++)+'. '+inlineToMd(li).trim())); }
-      else { const t=inlineToMd(node).trim(); if (t) lines.push(t); }
-    });
-    return lines.filter(Boolean);
-  }
-
-  function savedToast(title){
-    if (fsMode === 'fs') toast(`„${title}" gespeichert.`);
-    else if (fsMode === 'idb') toast(`„${title}" im Browser gesichert.`);
-    else toast(`„${title}" angelegt – ohne verbundenen Ordner nur für diese Sitzung.`);
-  }
-  document.getElementById('editorSave').addEventListener('click', async () => {
-    const title = editorTitle.value.trim(), category = editorCategory.value;
-    if (!title || !category){ editorHint.textContent = 'Bitte Titel und Kategorie angeben.'; return; }
-    const extraTags = editorTags.value.split(',').map(t=>t.trim()).filter(Boolean).filter(t=>t!==category);
-    const tags = [category, ...extraTags];
-    const content = htmlToMarkdown(editorBody);
-    const now = new Date();
-    const saveBtn = document.getElementById('editorSave');
-    saveBtn.disabled = true;
-
-    try{
-      if (editingNoteId !== null){
-        const n = notes[editingNoteId];
-        const oldTitle = n.title, oldFilename = n.filename;
-        n.title = title; n.category = category; n.tags = tags;
-        n.spineColor = shade(colorForCategory(category), ((n.id%5)-2)*0.035);
-        n.modified = fmt(now); n.modifiedSort = now.getTime();
-        n.content = content.length ? content : ['(Kein Inhalt)'];
-        n.source = pendingSource;
-        searchCache.delete(n);              /* content changed, rebuild search text */
-
-        /* title changed → give the file a matching name, avoiding other notes' names */
-        let newFilename = oldFilename;
-        if (title !== oldTitle && fsMode !== 'none'){
-          const taken = new Set(notes.filter(x => x !== n).map(x => x.filename).filter(Boolean));
-          newFilename = slugify(title, taken);
-        }
-        if (!newFilename && fsMode !== 'none'){
-          const taken = new Set(notes.filter(x => x !== n).map(x => x.filename).filter(Boolean));
-          newFilename = slugify(title, taken);
-        }
-        const renamed = !!(oldFilename && newFilename && newFilename !== oldFilename);
-
-        let conflict = false;
-        if (fsMode === 'fs'){
-          if (renamed) conflict = await renameNoteFile(n, newFilename);
-          else { n.filename = newFilename; conflict = await writeNoteFile(n); }
-        } else if (fsMode === 'idb'){
-          n.filename = newFilename;
-          if (renamed) await idbRenameNote(n, oldFilename);
-          else await idbPutNote(n);
-        }
-        closeEditor();
-        renderPages(); renderRegisters(); renderShelf();
-        if (conflict) toast(`„${n.title}" war extern geändert – fremde Fassung liegt im Ordner „Konflikte".`);
-        else if (renamed && fsMode === 'fs') toast(`Gespeichert, Datei heißt jetzt „${newFilename}".`);
-        else savedToast(n.title);
-        return;
-      }
-      const id = notes.length;
-      const taken = new Set(notes.map(n=>n.filename).filter(Boolean));
-      const newNote = {
-        id, title, category, tags,
-        spineColor: shade(colorForCategory(category), ((id%5)-2)*0.035),
-        spineWidth: 36+(id*7)%22, spineHeight: 212+(id*11)%42,
-        created: fmt(now), createdSort: now.getTime(), modified: fmt(now), modifiedSort: now.getTime(),
-        author:'Du', source: pendingSource, content: content.length ? content : ['(Kein Inhalt)'],
-        filename: slugify(title, taken)
-      };
-      if (fsMode === 'fs') await writeNoteFile(newNote);
-      else if (fsMode === 'idb') await idbPutNote(newNote);
-      notes.push(newNote);
-      closeEditor();
-      if (activeTags.size && !newNote.tags.some(t => activeTags.has(t))){
-        activeTags.clear(); updateTagFilterBtn();   /* else the new book would be filtered away */
-      }
-      renderShelf();
-      landNewBook(newNote);
-      savedToast(newNote.title);
-    }catch(err){
-      editorHint.textContent = 'Speichern fehlgeschlagen (Ordnerzugriff verloren?). Bitte Ordner-Status prüfen.';
-      toast('Speichern fehlgeschlagen – Notiz nicht gesichert.');
-    }finally{
-      saveBtn.disabled = false;
-    }
-  });
-
-  function landNewBook(note){
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      const el = shelfContainer.querySelector(`.spine[data-note="${note.id}"]`);
-      if (!el || reduced()) return;
-      el.style.transition = 'none';
-      el.style.transform = 'translateY(-160px) scale(1.15)';
-      el.style.opacity = '0';
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        el.style.transition = 'transform .85s cubic-bezier(.34,1.4,.4,1), opacity .45s ease';
-        el.style.transform = 'translateY(0) scale(1)';
-        el.style.opacity = '1';
-        if (el.scrollIntoView) el.scrollIntoView({behavior:'smooth', block:'center'});
-      }));
-    }));
-  }
-
-  /* ---------------- print & export ---------------- */
-  const printBtn = document.getElementById('printBtn'), printMenu = document.getElementById('printMenu');
-  const printSheet = document.getElementById('printSheet');
-
-  let printSide = 'right';
-  function currentPrintNote(){
-    return notes[printSide === 'left' ? leftIdx : rightIdx];
-  }
-  function renderPrintMenu(){
-    const wide = spreadMode();
-    if (!wide) printSide = 'right';
-    if (printSide === 'left'  && !notes[leftIdx])  printSide = 'right';
-    if (printSide === 'right' && !notes[rightIdx]) printSide = 'left';
-    const n = currentPrintNote();
-    let html = '';
-    if (wide && notes[leftIdx] && notes[rightIdx]){
-      html += '<div class="pm-note">Welche Seite?</div>'
-            + `<button class="pm-side${printSide==='left'?' selected':''}" data-pmside="left">Links: ${notes[leftIdx].title}</button>`
-            + `<button class="pm-side${printSide==='right'?' selected':''}" data-pmside="right">Rechts: ${notes[rightIdx].title}</button>`;
-    } else {
-      html += `<div class="pm-note">„${n ? n.title : '—'}"</div>`;
-    }
-    html += '<button class="pm-sep" data-fmt="a4">Drucken (A4)</button>'
-          + '<button data-fmt="a5">Drucken (A5)</button>'
-          + '<button id="pmExport">Als Markdown exportieren (.md)</button>';
-    printMenu.innerHTML = html;
-  }
-
-  printBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    if (printBtn.disabled) return;
-    const r = printBtn.getBoundingClientRect();
-    printMenu.style.left = Math.max(8, Math.min(r.left, innerWidth - 250)) + 'px';
-    renderPrintMenu();
-    printMenu.hidden = !printMenu.hidden;
-  });
-
-  function noteToMarkdown(n){
-    const fm = ['---', `title: ${n.title}`,
-      `created: ${n.created}`, `created_iso: ${new Date(n.createdSort||Date.now()).toISOString()}`,
-      `modified: ${n.modified}`, `modified_iso: ${new Date(n.modifiedSort||Date.now()).toISOString()}`,
-      `author: ${n.author}`, `tags: [${n.tags.join(', ')}]`];
-    if (n.source) fm.push(`source: ${n.source}`);
-    fm.push('---', '');
-    return fm.join('\n') + n.content.join('\n\n');
-  }
-  function parseMarkdownFile(text, filename, fileLastMod){
-    const m = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-    let meta = {}, body = text;
-    if (m){
-      body = m[2];
-      m[1].split(/\r?\n/).forEach(line => {
-        const mm = line.match(/^(\w+):\s*(.*)$/); if (!mm) return;
-        const key = mm[1], val = mm[2].trim();
-        meta[key] = key === 'tags' ? val.replace(/^\[|\]$/g,'').split(',').map(s=>s.trim()).filter(Boolean) : val;
+    reader2.readAsText(file);
+  } else if (ext === 'pdf' || ext === 'docx'){
+    openEditor({ title:titleGuess, bodyHtml:'<p><em>'+ext.toUpperCase()+' wird eingelesen …</em></p>', source:file.name });
+    const myToken = importToken;
+    (ext === 'pdf' ? extractPdfText(file) : extractDocxHtml(file))
+      .then(html => { if (importToken !== myToken) return; editorBody.innerHTML = html || '<p></p>'; editorSnapshot = snapshotEditor(); })
+      .catch(() => {
+        if (importToken !== myToken) return;
+        editorBody.innerHTML = '<p><em>Extraktion fehlgeschlagen – die '+(ext==='pdf'?'pdf.js':'mammoth.js')+'-Bibliothek konnte nicht geladen werden (evtl. blockiert durch diese Vorschau) oder die Datei ist beschädigt. Inhalt bitte manuell einfügen.</em></p>';
+        editorSnapshot = snapshotEditor();
       });
-    }
-    const contentLines = body.split(/\r?\n+/).map(l=>l.trim()).filter(Boolean);
-    const category = (meta.tags && meta.tags[0]) || 'Ohne Kategorie';
-    const modSort = meta.modified_iso ? Date.parse(meta.modified_iso) : fileLastMod;
-    const creSort = meta.created_iso ? Date.parse(meta.created_iso) : fileLastMod;
-    return {
-      title: meta.title || filename.replace(/\.md$/,''),
-      category, tags: meta.tags && meta.tags.length ? meta.tags : [category],
-      created: meta.created || fmt(new Date(creSort)), createdSort: creSort,
-      modified: meta.modified || fmt(new Date(modSort)), modifiedSort: modSort,
-      author: meta.author || 'Du', source: meta.source || null,
-      content: contentLines.length ? contentLines : ['(Kein Inhalt)'],
-      filename, fileMtime: fileLastMod
-    };
+  } else {
+    openEditor({ title:titleGuess, bodyHtml:'<p><em>Dateityp nicht unterstützt.</em></p>', source:file.name });
   }
-  function exportMarkdown(n){
-    const blob = new Blob([noteToMarkdown(n)], {type:'text/markdown'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = (n.title.replace(/[\\/:*?"<>|]/g,'').trim() || 'notiz') + '.md';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url), 1000);
-  }
+  importInput.value = '';
+});
 
-  function printNote(n, format){
-    let sizeTag = document.getElementById('printPageSize');
-    if (!sizeTag){ sizeTag = document.createElement('style'); sizeTag.id = 'printPageSize'; document.head.appendChild(sizeTag); }
-    sizeTag.textContent = format === 'a5'
-      ? '@page{ size:A5; margin:14mm; }'
-      : '@page{ size:A4; margin:20mm; }';
-    const tagsHtml = n.tags.map(t=>`<span class="p-tag">${t}</span>`).join('');
-    const sourceHtml = n.source ? `<div class="p-source">Importiert aus: ${n.source}</div>` : '';
-    printSheet.innerHTML = `
-      <h1>${n.title}</h1>
-      <div class="p-meta">Erstellt: ${n.created} · Geändert: ${n.modified} · Autor: ${n.author}</div>
-      ${sourceHtml}
-      <div class="p-tags">${tagsHtml}</div>
-      <div class="p-body">${contentToHtml(n.content)}</div>
-    `;
-    window.print();
-  }
+/* ───────── HTML → Markdown ───────── */
+function inlineToMd(node){
+  let out = '';
+  node.childNodes.forEach(child => {
+    if (child.nodeType === 3){ out += child.textContent; return; }
+    const tag = child.tagName;
+    if (tag==='B'||tag==='STRONG') out += '**'+inlineToMd(child)+'**';
+    else if (tag==='I'||tag==='EM') out += '*'+inlineToMd(child)+'*';
+    else if (tag==='A') out += '['+inlineToMd(child)+']('+(child.getAttribute('href')||'')+')';
+    else if (tag==='BR') out += ' ';
+    else out += inlineToMd(child);
+  });
+  return out;
+}
+function htmlToMarkdown(rootEl){
+  const lines = [];
+  rootEl.childNodes.forEach(node => {
+    if (node.nodeType !== 1){ const t = (node.textContent||'').trim(); if (t) lines.push(t); return; }
+    const tag = node.tagName;
+    if (tag==='H1') lines.push('# '+inlineToMd(node).trim());
+    else if (tag==='H2') lines.push('## '+inlineToMd(node).trim());
+    else if (tag==='H3') lines.push('### '+inlineToMd(node).trim());
+    else if (tag==='BLOCKQUOTE') lines.push('> '+inlineToMd(node).trim());
+    else if (tag==='UL') node.querySelectorAll(':scope > li').forEach(li => lines.push('- '+inlineToMd(li).trim()));
+    else if (tag==='OL'){ let i=1; node.querySelectorAll(':scope > li').forEach(li => lines.push((i++)+'. '+inlineToMd(li).trim())); }
+    else { const t = inlineToMd(node).trim(); if (t) lines.push(t); }
+  });
+  return lines.filter(Boolean);
+}
 
-  printMenu.addEventListener('click', e => {
-    e.stopPropagation();
-    const sideBtn = e.target.closest('[data-pmside]');
-    if (sideBtn){ printSide = sideBtn.dataset.pmside; renderPrintMenu(); return; }
-    const n = currentPrintNote();
-    const fmtBtn = e.target.closest('button[data-fmt]');
-    if (fmtBtn){
-      printMenu.hidden = true;
-      if (n) printNote(n, fmtBtn.dataset.fmt); else toast('Keine Notiz zum Drucken.');
+/* ───────── Speichern ───────── */
+function savedToast(title, isNew){
+  if (fsMode === 'fs') toast('„'+title+'" gespeichert.');
+  else if (fsMode === 'idb') toast('„'+title+'" im Browser gesichert.');
+  else toast('„'+title+(isNew ? '" angelegt' : '" geändert')+' – ohne verbundenen Ordner nur für diese Sitzung.');
+}
+$('#editorSave').addEventListener('click', async () => {
+  const title = editorTitle.value.trim(), category = editorCategory.value;
+  if (!title || !category){ editorHint.textContent = 'Bitte Titel und Kategorie angeben.'; return; }
+  const extraTags = editorTags.value.split(',').map(t=>t.trim()).filter(Boolean).filter(t=>t!==category);
+  const tags = [category, ...extraTags];
+  const content = htmlToMarkdown(editorBody);
+  const now = new Date();
+  const saveBtn = $('#editorSave');
+  saveBtn.disabled = true;
+  try{
+    if (editingNoteId !== null){
+      const n = notes[editingNoteId];
+      const oldTitle = n.title, oldFilename = n.filename;
+      n.title = title; n.category = category; n.tags = tags;
+      n.accent = shade(colorForCategory(category), ((n.id%5)-2)*0.025);
+      n.modified = fmt(now); n.modifiedSort = now.getTime();
+      n.content = content.length ? content : ['(Kein Inhalt)'];
+      n.source = pendingSource;
+      searchCache.delete(n);
+
+      let newFilename = oldFilename;
+      if (fsMode !== 'none' && (title !== oldTitle || !newFilename)){
+        const taken = new Set(notes.filter(x => x !== n).map(x => x.filename).filter(Boolean));
+        newFilename = slugify(title, taken);
+      }
+      const renamed = !!(oldFilename && newFilename && newFilename !== oldFilename);
+      let conflict = false;
+      if (fsMode === 'fs'){
+        if (renamed) conflict = await renameNoteFile(n, newFilename);
+        else { n.filename = newFilename; conflict = await writeNoteFile(n); }
+      } else if (fsMode === 'idb'){
+        n.filename = newFilename;
+        if (renamed) await idbRenameNote(n, oldFilename);
+        else await idbPutNote(n);
+      }
+      closeEditor();
+      renderDeck();
+      if (reading) renderSheet();
+      WB.melden('noteos', { was:'geaendert' });
+      if (conflict) toast('„'+n.title+'" war extern geändert – fremde Fassung liegt im Ordner „Konflikte".');
+      else if (renamed && fsMode === 'fs') toast('Gespeichert, Datei heißt jetzt „'+newFilename+'".');
+      else savedToast(n.title, false);
       return;
     }
-    if (e.target.id === 'pmExport'){
-      printMenu.hidden = true;
-      if (n) exportMarkdown(n); else toast('Keine Notiz zum Exportieren.');
-    }
+    const id = notes.length;
+    const taken = new Set(notes.map(n => n.filename).filter(Boolean));
+    const newNote = {
+      id, title, category, tags,
+      accent: shade(colorForCategory(category), ((id%5)-2)*0.025),
+      created: fmt(now), createdSort: now.getTime(), modified: fmt(now), modifiedSort: now.getTime(),
+      author:'Du', source: pendingSource, content: content.length ? content : ['(Kein Inhalt)'],
+      filename: slugify(title, taken)
+    };
+    if (fsMode === 'fs') await writeNoteFile(newNote);
+    else if (fsMode === 'idb') await idbPutNote(newNote);
+    notes.push(newNote);
+    closeEditor();
+    if (activeTags.size && !newNote.tags.some(t => activeTags.has(t))){ activeTags.clear(); updateTagBtn(); }
+    renderDeck();
+    landNewCard(newNote);
+    WB.melden('noteos', { was:'neu' });
+    savedToast(newNote.title, true);
+  }catch(err){
+    editorHint.textContent = 'Speichern fehlgeschlagen (Ordnerzugriff verloren?). Bitte Ordner-Status prüfen.';
+    toast('Speichern fehlgeschlagen – Notiz nicht gesichert.');
+  }finally{
+    saveBtn.disabled = false;
+  }
+});
+function landNewCard(note){
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const el = deck.querySelector('.card[data-note="'+note.id+'"]');
+    if (!el) return;
+    if (el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'center' });
+    if (reduced() || !el.animate) return;
+    el.animate([{ transform:'translateY(-22px) scale(1.03)', opacity:0 }, { transform:'none', opacity:1 }],
+      { duration:620, easing:'cubic-bezier(.34,1.3,.4,1)' });
+  }));
+}
+
+/* ───────── Drucken & Export ───────── */
+const printBtn = $('#printBtn'), printMenu = $('#printMenu'), printSheet = $('#printSheet');
+printBtn.disabled = true;
+function renderPrintMenu(){
+  const n = notes[curIdx];
+  printMenu.innerHTML = '<div class="m-note">„'+esc(n ? n.title : '—')+'"</div>'
+    + '<button data-fmt="a4">Drucken (A4)</button>'
+    + '<button data-fmt="a5">Drucken (A5)</button>'
+    + '<button id="pmExport">Als Markdown exportieren (.md)</button>';
+}
+printBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  if (printBtn.disabled) return;
+  placeMenu(printMenu, printBtn, 250);
+  renderPrintMenu();
+  printMenu.hidden = !printMenu.hidden;
+});
+function noteToMarkdown(n){
+  const fm = ['---', 'title: '+n.title,
+    'created: '+n.created, 'created_iso: '+new Date(n.createdSort||Date.now()).toISOString(),
+    'modified: '+n.modified, 'modified_iso: '+new Date(n.modifiedSort||Date.now()).toISOString(),
+    'author: '+n.author, 'tags: ['+n.tags.join(', ')+']'];
+  if (n.source) fm.push('source: '+n.source);
+  fm.push('---', '');
+  return fm.join('\n') + n.content.join('\n\n');
+}
+function parseMarkdownFile(text, filename, fileLastMod){
+  const m = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  let meta = {}, body = text;
+  if (m){
+    body = m[2];
+    m[1].split(/\r?\n/).forEach(line => {
+      const mm = line.match(/^(\w+):\s*(.*)$/); if (!mm) return;
+      const key = mm[1], val = mm[2].trim();
+      meta[key] = key === 'tags' ? val.replace(/^\[|\]$/g,'').split(',').map(s=>s.trim()).filter(Boolean) : val;
+    });
+  }
+  const contentLines = body.split(/\r?\n+/).map(l=>l.trim()).filter(Boolean);
+  const category = (meta.tags && meta.tags[0]) || 'Ohne Kategorie';
+  const modSort = meta.modified_iso ? Date.parse(meta.modified_iso) : fileLastMod;
+  const creSort = meta.created_iso ? Date.parse(meta.created_iso) : fileLastMod;
+  return {
+    title: meta.title || filename.replace(/\.md$/,''),
+    category, tags: meta.tags && meta.tags.length ? meta.tags : [category],
+    created: meta.created || fmt(new Date(creSort)), createdSort: creSort,
+    modified: meta.modified || fmt(new Date(modSort)), modifiedSort: modSort,
+    author: meta.author || 'Du', source: meta.source || null,
+    content: contentLines.length ? contentLines : ['(Kein Inhalt)'],
+    filename, fileMtime: fileLastMod
+  };
+}
+function exportMarkdown(n){
+  const blob = new Blob([noteToMarkdown(n)], { type:'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = (n.title.replace(/[\\/:*?"<>|]/g,'').trim() || 'notiz') + '.md';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function printNote(n, format){
+  let sizeTag = document.getElementById('printPageSize');
+  if (!sizeTag){ sizeTag = document.createElement('style'); sizeTag.id = 'printPageSize'; document.head.appendChild(sizeTag); }
+  sizeTag.textContent = format === 'a5' ? '@page{ size:A5; margin:14mm; }' : '@page{ size:A4; margin:20mm; }';
+  printSheet.innerHTML =
+    '<h1>'+esc(n.title)+'</h1>'
+    + '<div class="p-meta">Erstellt: '+esc(n.created)+' · Geändert: '+esc(n.modified)+' · Autor: '+esc(n.author)+'</div>'
+    + (n.source ? '<div class="p-source">Importiert aus: '+esc(n.source)+'</div>' : '')
+    + '<div class="p-tags">'+n.tags.map(t=>'<span class="p-tag">'+esc(t)+'</span>').join('')+'</div>'
+    + '<div class="p-body">'+contentToHtml(n.content)+'</div>';
+  window.print();
+}
+printMenu.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = notes[curIdx];
+  const fmtBtn = e.target.closest('button[data-fmt]');
+  if (fmtBtn){ printMenu.hidden = true; n ? printNote(n, fmtBtn.dataset.fmt) : toast('Keine Notiz zum Drucken.'); return; }
+  if (e.target.id === 'pmExport'){ printMenu.hidden = true; n ? exportMarkdown(n) : toast('Keine Notiz zum Exportieren.'); }
+});
+
+/* ───────── Speicherort: echter Ordner (Chromium) + IndexedDB ───────── */
+const hasFSAccess = 'showDirectoryPicker' in window;
+let dirHandle = null;
+let fsMode = 'none';   /* 'fs' | 'idb' | 'none' */
+let idbPromise = null;
+
+function idbOpen(){
+  if (idbPromise) return idbPromise;
+  idbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open('noteos-store', 2);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('notes')) db.createObjectStore('notes', { keyPath:'filename' });
+      if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta');
+      if (!db.objectStoreNames.contains('trash')) db.createObjectStore('trash', { keyPath:'filename' });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
   });
+  return idbPromise;
+}
+const idbGetAllNotes = () => idbOpen().then(db => new Promise((res, rej) => {
+  const req = db.transaction('notes','readonly').objectStore('notes').getAll();
+  req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error);
+}));
+const idbPutNote = note => idbOpen().then(db => new Promise((res, rej) => {
+  const tx = db.transaction('notes','readwrite'); tx.objectStore('notes').put(note);
+  tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+}));
+const idbSetMeta = (key, val) => idbOpen().then(db => new Promise((res, rej) => {
+  const tx = db.transaction('meta','readwrite'); tx.objectStore('meta').put(val, key);
+  tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+}));
+const idbGetMeta = key => idbOpen().then(db => new Promise((res, rej) => {
+  const req = db.transaction('meta','readonly').objectStore('meta').get(key);
+  req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error);
+}));
+const idbRenameNote = (note, oldFilename) => idbOpen().then(db => new Promise((res, rej) => {
+  const tx = db.transaction('notes','readwrite');
+  tx.objectStore('notes').put(note);
+  tx.objectStore('notes').delete(oldFilename);
+  tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+}));
+const idbMoveToTrash = n => idbOpen().then(db => new Promise((res, rej) => {
+  const tx = db.transaction(['notes','trash'],'readwrite');
+  tx.objectStore('trash').put(n);
+  tx.objectStore('notes').delete(n.filename);
+  tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+}));
 
-  /* ---------------- persistence: real folder (Chromium) + IndexedDB fallback ---------------- */
-  const hasFSAccess = 'showDirectoryPicker' in window;
-  let dirHandle = null;
-  let fsMode = 'none'; // 'fs' | 'idb' | 'none'
-
-  let idbPromise = null;
-  function idbOpen(){
-    if (idbPromise) return idbPromise;
-    idbPromise = new Promise((resolve, reject) => {
-      const req = indexedDB.open('noteos-store', 2);
-      req.onupgradeneeded = () => {
-        const db = req.result;
-        if (!db.objectStoreNames.contains('notes')) db.createObjectStore('notes', {keyPath:'filename'});
-        if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta');
-        if (!db.objectStoreNames.contains('trash')) db.createObjectStore('trash', {keyPath:'filename'});
-      };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-    return idbPromise;
-  }
-  function idbGetAllNotes(){
-    return idbOpen().then(db => new Promise((resolve, reject) => {
-      const req = db.transaction('notes','readonly').objectStore('notes').getAll();
-      req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error);
-    }));
-  }
-  function idbPutNote(note){
-    return idbOpen().then(db => new Promise((resolve, reject) => {
-      const tx = db.transaction('notes','readwrite'); tx.objectStore('notes').put(note);
-      tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
-    }));
-  }
-  function idbSetMeta(key, val){
-    return idbOpen().then(db => new Promise((resolve, reject) => {
-      const tx = db.transaction('meta','readwrite'); tx.objectStore('meta').put(val, key);
-      tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
-    }));
-  }
-  function idbGetMeta(key){
-    return idbOpen().then(db => new Promise((resolve, reject) => {
-      const req = db.transaction('meta','readonly').objectStore('meta').get(key);
-      req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error);
-    }));
-  }
-
-  function replaceNotes(list){
-    notes.length = 0;
-    list.forEach((n,i) => { n.id = i; notes.push(n); });
-    leftIdx = 0; rightIdx = notes.length > 1 ? 1 : 0;
-  }
-  function rebuildSpines(list){
-    list.forEach((n,i) => {
-      n.spineColor = shade(colorForCategory(n.category), ((i%5)-2)*0.035);
-      n.spineWidth = 36 + (i*7)%22; n.spineHeight = 212 + (i*11)%42;
-    });
-  }
-
-  async function loadNotesFromFolder(){
-    const loaded = [];
-    for await (const [name, handle] of dirHandle.entries()){
-      if (handle.kind !== 'file' || !name.toLowerCase().endsWith('.md')) continue;
-      try{
-        const file = await handle.getFile();
-        loaded.push(parseMarkdownFile(await file.text(), name, file.lastModified));
-      }catch(e){ /* skip unreadable file */ }
-    }
-    loaded.sort((a,b)=>a.title.localeCompare(b.title,'de'));
-    rebuildSpines(loaded);
-    replaceNotes(loaded);
-  }
-
-  async function saveConflictCopy(filename, text){
-    const dir = await dirHandle.getDirectoryHandle('Konflikte', {create:true});
-    const stamp = new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
-    const fh = await dir.getFileHandle(filename.replace(/\.md$/, `.${stamp}.md`), {create:true});
-    const wr = await fh.createWritable();
-    await wr.write(text);
-    await wr.close();
-  }
-
-  /* write the new file first, remove the old one only afterwards — never lose the note */
-  async function renameNoteFile(note, newFilename){
-    let conflict = false;
-    const oldName = note.filename;
+function replaceNotes(list){
+  notes.length = 0;
+  list.forEach((n,i) => { n.id = i; notes.push(n); });
+  curIdx = 0;
+}
+function rebuildAccents(list){
+  list.forEach((n,i) => { n.accent = shade(colorForCategory(n.category), ((i%5)-2)*0.025); });
+}
+async function loadNotesFromFolder(){
+  const loaded = [];
+  for await (const [name, handle] of dirHandle.entries()){
+    if (handle.kind !== 'file' || !name.toLowerCase().endsWith('.md')) continue;
     try{
-      const oldHandle = await dirHandle.getFileHandle(oldName);
-      const existing = await oldHandle.getFile();
-      if (note.fileMtime && existing.lastModified > note.fileMtime + 1500){
-        await saveConflictCopy(oldName, await existing.text());
+      const file = await handle.getFile();
+      loaded.push(parseMarkdownFile(await file.text(), name, file.lastModified));
+    }catch(e){}
+  }
+  loaded.sort((a,b)=>a.title.localeCompare(b.title,'de'));
+  rebuildAccents(loaded);
+  replaceNotes(loaded);
+}
+async function saveConflictCopy(filename, text){
+  const dir = await dirHandle.getDirectoryHandle('Konflikte', { create:true });
+  const stamp = new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+  const fh = await dir.getFileHandle(filename.replace(/\.md$/, '.'+stamp+'.md'), { create:true });
+  const wr = await fh.createWritable();
+  await wr.write(text);
+  await wr.close();
+}
+/* neue Datei zuerst schreiben, alte erst danach entfernen – nie eine Notiz verlieren */
+async function renameNoteFile(note, newFilename){
+  let conflict = false;
+  const oldName = note.filename;
+  try{
+    const oldHandle = await dirHandle.getFileHandle(oldName);
+    const existing = await oldHandle.getFile();
+    if (note.fileMtime && existing.lastModified > note.fileMtime + 1500){
+      await saveConflictCopy(oldName, await existing.text());
+      conflict = true;
+    }
+  }catch(e){}
+  note.filename = newFilename;
+  note.fileMtime = null;
+  await writeNoteFile(note);
+  try{ await dirHandle.removeEntry(oldName); }catch(e){}
+  return conflict;
+}
+async function writeNoteFile(note){
+  if (fsMode !== 'fs' || !dirHandle) return false;
+  const handle = await dirHandle.getFileHandle(note.filename, { create:true });
+  let conflict = false;
+  if (note.fileMtime){
+    try{
+      const existing = await handle.getFile();
+      if (existing.lastModified > note.fileMtime + 1500){
+        await saveConflictCopy(note.filename, await existing.text());
         conflict = true;
       }
-    }catch(e){ /* old file already gone */ }
-    note.filename = newFilename;
-    note.fileMtime = null;                 /* new path has no baseline yet */
-    await writeNoteFile(note);
-    try{ await dirHandle.removeEntry(oldName); }catch(e){ /* leave the old file rather than fail */ }
-    return conflict;
+    }catch(e){}
   }
-  function idbRenameNote(note, oldFilename){
-    return idbOpen().then(db => new Promise((resolve, reject) => {
-      const tx = db.transaction('notes','readwrite');
-      tx.objectStore('notes').put(note);
-      tx.objectStore('notes').delete(oldFilename);
-      tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
-    }));
-  }
+  const writable = await handle.createWritable();
+  await writable.write(noteToMarkdown(note));
+  await writable.close();
+  try{ note.fileMtime = (await handle.getFile()).lastModified; }catch(e){}
+  return conflict;
+}
+const folderErrorMsg = () => 'Ordnerzugriff nicht möglich. Das kann an einer eingebetteten Vorschau liegen – öffne die Seite dazu einmal direkt in einem eigenen Browser-Tab.';
 
-  /* returns true if the file had been changed outside NoteOS and was rescued first */
-  async function writeNoteFile(note){
-    if (fsMode !== 'fs' || !dirHandle) return false;
-    const handle = await dirHandle.getFileHandle(note.filename, {create:true});
-    let conflict = false;
-    if (note.fileMtime){
-      try{
-        const existing = await handle.getFile();
-        if (existing.lastModified > note.fileMtime + 1500){
-          await saveConflictCopy(note.filename, await existing.text());
-          conflict = true;
-        }
-      }catch(e){ /* file missing or unreadable — nothing to rescue */ }
-    }
-    const writable = await handle.createWritable();
-    await writable.write(noteToMarkdown(note));
-    await writable.close();
-    try{ note.fileMtime = (await handle.getFile()).lastModified; }catch(e){}
-    return conflict;
+async function connectFolder(){
+  try{
+    dirHandle = await window.showDirectoryPicker({ mode:'readwrite' });
+    await idbSetMeta('dirHandle', dirHandle);
+    await loadNotesFromFolder();
+    fsMode = 'fs';
+    renderDeck(); updateFolderStatus();
+  }catch(err){
+    if (err && err.name === 'AbortError') return;
+    updateFolderStatus(folderErrorMsg());
   }
-
-  const folderErrorMsg = () => 'Ordnerzugriff nicht möglich. Das kann an dieser eingebetteten Vorschau liegen – öffne die Datei dazu einmal direkt in einem eigenen Browser-Tab statt in der Vorschau hier.';
-
-  async function connectFolder(){
-    try{
-      dirHandle = await window.showDirectoryPicker({ mode:'readwrite' });
-      await idbSetMeta('dirHandle', dirHandle);
-      await loadNotesFromFolder();
-      fsMode = 'fs';
-      renderShelf(); renderRegisters(); renderPages();
-      updateFolderStatus();
-    }catch(err){
-      if (err && err.name === 'AbortError') return;
-      updateFolderStatus(folderErrorMsg());
-    }
-  }
-  async function tryRestoreFolder(){
-    try{
-      const handle = await idbGetMeta('dirHandle');
-      if (!handle) return false;
-      dirHandle = handle;
-      const perm = await handle.queryPermission({mode:'readwrite'});
-      if (perm === 'granted'){ await loadNotesFromFolder(); fsMode = 'fs'; return true; }
-      return 'needs-permission';
-    }catch(e){ return false; }
-  }
-  async function reconnectFolder(){
-    try{
-      const perm = await dirHandle.requestPermission({mode:'readwrite'});
-      if (perm !== 'granted'){ updateFolderStatus(); return; }
-      await loadNotesFromFolder();
-      fsMode = 'fs';
-      renderShelf(); renderRegisters(); renderPages();
-      updateFolderStatus();
-    }catch(e){ updateFolderStatus(folderErrorMsg()); }
-  }
-  function disconnectFolder(){
-    dirHandle = null; fsMode = 'none';
-    idbSetMeta('dirHandle', null).catch(()=>{});
-    document.getElementById('folderMenu').hidden = true;
-    updateFolderStatus();
-  }
-
-  document.getElementById('bulkImportInput').addEventListener('change', async () => {
-    const input = document.getElementById('bulkImportInput');
-    const files = Array.from(input.files).filter(f=>f.name.toLowerCase().endsWith('.md'));
-    const loaded = [];
-    for (const file of files){
-      try{ loaded.push(parseMarkdownFile(await file.text(), file.name, file.lastModified)); }catch(e){}
-    }
-    if (loaded.length){
-      loaded.sort((a,b)=>a.title.localeCompare(b.title,'de'));
-      rebuildSpines(loaded);
-      replaceNotes(loaded);
-      for (const n of loaded){ try{ await idbPutNote(n); }catch(e){} }
-      fsMode = 'idb';
-      renderShelf(); renderRegisters(); renderPages();
-    }
-    updateFolderStatus();
-    input.value = '';
-  });
-
-  function updateFolderStatus(errorMsg){
-    const dot = document.getElementById('folderDot'), text = document.getElementById('folderStatusText');
-    const bConnect = document.getElementById('folderConnect'), bReconnect = document.getElementById('folderReconnect');
-    const bBulk = document.getElementById('folderBulkImport'), bDisconnect = document.getElementById('folderDisconnect');
-    const bReload = document.getElementById('folderReload');
-    [bConnect,bReconnect,bBulk,bDisconnect,bReload].forEach(b=>b.hidden = true);
-    dot.className = 'folder-dot';
-    if (errorMsg){ text.textContent = errorMsg; dot.classList.add('warn'); bConnect.hidden = !hasFSAccess; bBulk.hidden = false; return; }
-    if (!hasFSAccess){
-      text.textContent = fsMode==='idb'
-        ? `Firefox/Safari-Modus: ${notes.length} Notiz(en) im Browser-Speicher dieses Geräts. Zusätzlich über „⎙ → Markdown exportieren" sichern.`
-        : 'Kein Live-Ordnerzugriff in diesem Browser. Ordner einmalig einlesen – Speichern läuft dann über den Browser-Speicher plus manuellen Export.';
-      bBulk.hidden = false; return;
-    }
-    if (fsMode === 'fs'){
-      text.textContent = `Verbunden: „${dirHandle ? dirHandle.name : '…'}" – Notizen werden direkt als .md-Dateien gespeichert.`;
-      dot.classList.add('on'); bDisconnect.hidden = false; bReload.hidden = false; return;
-    }
-    if (dirHandle){
-      text.textContent = `Zuletzt verbunden: „${dirHandle.name}" – Berechtigung erneut bestätigen.`;
-      dot.classList.add('warn'); bReconnect.hidden = false; return;
-    }
-    text.textContent = 'Noch kein Ordner verbunden – Notizen liegen nur im Speicher dieser Vorschau.';
-    bConnect.hidden = false;
-  }
-
-  document.getElementById('folderBtn').addEventListener('click', e => {
-    e.stopPropagation();
-    document.getElementById('folderMenu').hidden = !document.getElementById('folderMenu').hidden;
-  });
-  document.getElementById('folderConnect').addEventListener('click', () => { document.getElementById('folderMenu').hidden = true; connectFolder(); });
-  document.getElementById('folderReconnect').addEventListener('click', () => { document.getElementById('folderMenu').hidden = true; reconnectFolder(); });
-  document.getElementById('folderBulkImport').addEventListener('click', () => { document.getElementById('folderMenu').hidden = true; document.getElementById('bulkImportInput').click(); });
-  async function reloadFolder(){
-    if (editorView.classList.contains('active') && editorIsDirty()){
-      const ok = await confirmDialog('Der Editor hat ungespeicherte Änderungen. Trotzdem neu einlesen?', 'Neu einlesen');
-      if (!ok) return;
-      closeEditor();
-    }
-    /* remember by filename, since positions shift when files were added or removed */
-    const keepLeft  = notes[leftIdx]  && notes[leftIdx].filename;
-    const keepRight = notes[rightIdx] && notes[rightIdx].filename;
-    try{
-      await loadNotesFromFolder();
-    }catch(err){ toast('Neu einlesen fehlgeschlagen.'); return; }
-    const li = notes.findIndex(n => n.filename === keepLeft);
-    const ri = notes.findIndex(n => n.filename === keepRight);
-    if (li >= 0) leftIdx = li;
-    if (ri >= 0) rightIdx = ri;
-    clampIndices();
-    finishTurn('left'); finishTurn('right');
-    renderShelf(); renderRegisters(); renderPages();
-    toast(`${notes.length} Notiz${notes.length===1?'':'en'} neu eingelesen.`);
-  }
-  document.getElementById('folderReload').addEventListener('click', () => {
-    document.getElementById('folderMenu').hidden = true; reloadFolder();
-  });
-  document.getElementById('folderDisconnect').addEventListener('click', disconnectFolder);
-
-  async function initStorage(){
-    if (hasFSAccess){
-      const restored = await tryRestoreFolder();
-      if (restored === true){ renderShelf(); renderRegisters(); renderPages(); }
-      updateFolderStatus();
-      return;
-    }
-    try{
-      const cached = await idbGetAllNotes();
-      if (cached && cached.length){
-        cached.sort((a,b)=>a.title.localeCompare(b.title,'de'));
-        rebuildSpines(cached);
-        replaceNotes(cached);
-        fsMode = 'idb';
-        renderShelf(); renderRegisters(); renderPages();
-      }
-    }catch(e){ /* IndexedDB unavailable — demo notes stay visible */ }
-    updateFolderStatus();
-  }
-
-  renderShelf(); renderRegisters(); renderPages();
-  /* ---------------- confirmation dialog + toast ---------------- */
-  let confirmResolve = null;
-  function confirmDialog(text, okLabel='In den Papierkorb'){
-    return new Promise(resolve => {
-      confirmResolve = resolve;
-      document.getElementById('confirmText').textContent = text;
-      document.getElementById('confirmOk').textContent = okLabel;
-      document.getElementById('confirmOverlay').hidden = false;
-    });
-  }
-  function closeConfirm(result){
-    document.getElementById('confirmOverlay').hidden = true;
-    if (confirmResolve){ const r = confirmResolve; confirmResolve = null; r(result); }
-  }
-  document.getElementById('confirmOk').addEventListener('click', ()=>closeConfirm(true));
-  document.getElementById('confirmCancel').addEventListener('click', ()=>closeConfirm(false));
-  document.getElementById('confirmOverlay').addEventListener('click', e => {
-    if (e.target.id === 'confirmOverlay') closeConfirm(false);
-  });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !document.getElementById('confirmOverlay').hidden) closeConfirm(false);
-  });
-
-  let toastTimer = null;
-  function toast(msg){
-    const t = document.getElementById('toast');
-    t.textContent = msg; t.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
-  }
-
-  /* ---------------- delete: move the file into a "Papierkorb" subfolder ---------------- */
-  async function moveFileToTrash(n){
-    const trashDir = await dirHandle.getDirectoryHandle('Papierkorb', {create:true});
-    const fh = await trashDir.getFileHandle(n.filename, {create:true});
-    const wr = await fh.createWritable();
-    await wr.write(noteToMarkdown(n));
-    await wr.close();
-    await dirHandle.removeEntry(n.filename);
-  }
-  function idbMoveToTrash(n){
-    return idbOpen().then(db => new Promise((resolve, reject) => {
-      const tx = db.transaction(['notes','trash'],'readwrite');
-      tx.objectStore('trash').put(n);
-      tx.objectStore('notes').delete(n.filename);
-      tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
-    }));
-  }
-
-  /* note ids are array positions, so removing one shifts every id after it */
-  function reindexNotes(){ notes.forEach((n,i) => n.id = i); }
-  function clampIndices(){
-    if (!notes.length){ leftIdx = 0; rightIdx = -1; return; }
-    const last = notes.length - 1;
-    if (!spreadMode()){
-      rightIdx = Math.max(0, Math.min(rightIdx, last));
-      leftIdx = rightIdx;
-      return;
-    }
-    leftIdx = Math.max(0, Math.min(leftIdx, last));
-    if (leftIdx % 2 !== 0) leftIdx = Math.max(0, leftIdx - 1);
-    rightIdx = Math.min(rightIdx, last);
-    if (rightIdx % 2 !== 1){
-      if (rightIdx + 1 <= last) rightIdx += 1;
-      else if (rightIdx - 1 >= 1) rightIdx -= 1;
-      else rightIdx = -1;                 /* no odd page left to show */
-    }
-  }
-
-  async function deleteNote(side){
-    const idx = side === 'left' ? leftIdx : rightIdx;
-    const n = notes[idx];
-    if (!n) return;
-    const ok = await confirmDialog(`„${n.title}" in den Papierkorb verschieben?`);
+}
+async function tryRestoreFolder(){
+  try{
+    const handle = await idbGetMeta('dirHandle');
+    if (!handle) return false;
+    dirHandle = handle;
+    const perm = await handle.queryPermission({ mode:'readwrite' });
+    if (perm === 'granted'){ await loadNotesFromFolder(); fsMode = 'fs'; return true; }
+    return 'needs-permission';
+  }catch(e){ return false; }
+}
+async function reconnectFolder(){
+  try{
+    const perm = await dirHandle.requestPermission({ mode:'readwrite' });
+    if (perm !== 'granted'){ updateFolderStatus(); return; }
+    await loadNotesFromFolder();
+    fsMode = 'fs';
+    renderDeck(); updateFolderStatus();
+  }catch(e){ updateFolderStatus(folderErrorMsg()); }
+}
+function disconnectFolder(){
+  dirHandle = null; fsMode = 'none';
+  idbSetMeta('dirHandle', null).catch(()=>{});
+  $('#folderMenu').hidden = true;
+  updateFolderStatus();
+}
+async function reloadFolder(){
+  if (editorView.classList.contains('active') && editorIsDirty()){
+    const ok = await confirmDialog('Der Editor hat ungespeicherte Änderungen. Trotzdem neu einlesen?', 'Neu einlesen');
     if (!ok) return;
-    try{
-      if (fsMode === 'fs' && dirHandle && n.filename) await moveFileToTrash(n);
-      else if (fsMode === 'idb' && n.filename) await idbMoveToTrash(n);
-    }catch(err){
-      toast('Verschieben fehlgeschlagen – Notiz bleibt erhalten.');
-      return;
-    }
-    notes.splice(idx, 1);
-    reindexNotes();
-    clampIndices();
-    finishTurn('left'); finishTurn('right');
-    renderShelf(); renderRegisters(); renderPages();
-    toast(fsMode === 'fs'
-      ? `„${n.title}" liegt jetzt im Ordner „Papierkorb".`
-      : `„${n.title}" in den Papierkorb verschoben.`);
+    closeEditor();
   }
+  const keep = notes[curIdx] && notes[curIdx].filename;
+  try{ await loadNotesFromFolder(); }
+  catch(err){ toast('Neu einlesen fehlgeschlagen.'); return; }
+  const i = notes.findIndex(n => n.filename === keep);
+  curIdx = i >= 0 ? i : 0;
+  renderDeck();
+  if (reading){ if (notes[curIdx]) renderSheet(); else closeNote(); }
+  toast(notes.length + ' Notiz' + (notes.length === 1 ? '' : 'en') + ' neu eingelesen.');
+}
+function updateFolderStatus(errorMsg){
+  const dot = $('#folderDot'), text = $('#folderStatusText');
+  const bConnect = $('#folderConnect'), bReconnect = $('#folderReconnect');
+  const bBulk = $('#folderBulkImport'), bDisconnect = $('#folderDisconnect'), bReload = $('#folderReload');
+  [bConnect,bReconnect,bBulk,bDisconnect,bReload].forEach(b => b.hidden = true);
+  dot.className = 'dot-state';
+  if (errorMsg){ text.textContent = errorMsg; dot.classList.add('warn'); bConnect.hidden = !hasFSAccess; bBulk.hidden = false; return; }
+  if (!hasFSAccess){
+    text.textContent = fsMode === 'idb'
+      ? 'Firefox/Safari-Modus: '+notes.length+' Notiz(en) im Browser-Speicher dieses Geräts. Zusätzlich über „⎙ → Markdown exportieren" sichern.'
+      : 'Kein Live-Ordnerzugriff in diesem Browser. Ordner einmalig einlesen – Speichern läuft dann über den Browser-Speicher plus manuellen Export.';
+    bBulk.hidden = false; return;
+  }
+  if (fsMode === 'fs'){
+    text.textContent = 'Verbunden: „'+(dirHandle ? dirHandle.name : '…')+'" – Notizen werden direkt als .md-Dateien gespeichert.';
+    dot.classList.add('on'); bDisconnect.hidden = false; bReload.hidden = false; return;
+  }
+  if (dirHandle){
+    text.textContent = 'Zuletzt verbunden: „'+dirHandle.name+'" – Berechtigung erneut bestätigen.';
+    dot.classList.add('warn'); bReconnect.hidden = false; return;
+  }
+  text.textContent = 'Noch kein Ordner verbunden – Notizen liegen nur im Speicher dieser Sitzung.';
+  bConnect.hidden = false;
+}
+$('#folderBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  const m = $('#folderMenu');
+  placeMenu(m, e.currentTarget, 300);
+  m.hidden = !m.hidden;
+});
+$('#folderConnect').addEventListener('click', () => { $('#folderMenu').hidden = true; connectFolder(); });
+$('#folderReconnect').addEventListener('click', () => { $('#folderMenu').hidden = true; reconnectFolder(); });
+$('#folderBulkImport').addEventListener('click', () => { $('#folderMenu').hidden = true; $('#bulkImportInput').click(); });
+$('#folderReload').addEventListener('click', () => { $('#folderMenu').hidden = true; reloadFolder(); });
+$('#folderDisconnect').addEventListener('click', disconnectFolder);
+$('#bulkImportInput').addEventListener('change', async () => {
+  const input = $('#bulkImportInput');
+  const files = Array.from(input.files).filter(f => f.name.toLowerCase().endsWith('.md'));
+  const loaded = [];
+  for (const file of files){
+    try{ loaded.push(parseMarkdownFile(await file.text(), file.name, file.lastModified)); }catch(e){}
+  }
+  if (loaded.length){
+    loaded.sort((a,b)=>a.title.localeCompare(b.title,'de'));
+    rebuildAccents(loaded);
+    replaceNotes(loaded);
+    for (const n of loaded){ try{ await idbPutNote(n); }catch(e){} }
+    fsMode = 'idb';
+    renderDeck();
+  }
+  updateFolderStatus();
+  input.value = '';
+});
+async function initStorage(){
+  if (hasFSAccess){
+    const restored = await tryRestoreFolder();
+    if (restored === true) renderDeck();
+    updateFolderStatus();
+    return;
+  }
+  try{
+    const cached = await idbGetAllNotes();
+    if (cached && cached.length){
+      cached.sort((a,b)=>a.title.localeCompare(b.title,'de'));
+      rebuildAccents(cached);
+      replaceNotes(cached);
+      fsMode = 'idb';
+      renderDeck();
+    }
+  }catch(e){}
+  updateFolderStatus();
+}
 
-  initStorage();
+/* ───────── Dialog & Toast ───────── */
+let confirmResolve = null;
+function confirmDialog(text, okLabel='In den Papierkorb'){
+  return new Promise(resolve => {
+    confirmResolve = resolve;
+    $('#confirmText').textContent = text;
+    $('#confirmOk').textContent = okLabel;
+    $('#confirmOverlay').hidden = false;
+  });
+}
+function closeConfirm(result){
+  $('#confirmOverlay').hidden = true;
+  if (confirmResolve){ const r = confirmResolve; confirmResolve = null; r(result); }
+}
+$('#confirmOk').addEventListener('click', () => closeConfirm(true));
+$('#confirmCancel').addEventListener('click', () => closeConfirm(false));
+$('#confirmOverlay').addEventListener('click', e => { if (e.target.id === 'confirmOverlay') closeConfirm(false); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('#confirmOverlay').hidden) closeConfirm(false);
+});
+let toastTimer = null;
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ───────── Löschen ───────── */
+async function moveFileToTrash(n){
+  const trashDir = await dirHandle.getDirectoryHandle('Papierkorb', { create:true });
+  const fh = await trashDir.getFileHandle(n.filename, { create:true });
+  const wr = await fh.createWritable();
+  await wr.write(noteToMarkdown(n));
+  await wr.close();
+  await dirHandle.removeEntry(n.filename);
+}
+$('#delBtn').addEventListener('click', async () => {
+  const n = notes[curIdx];
+  if (!n) return;
+  const ok = await confirmDialog('„'+n.title+'" in den Papierkorb verschieben?');
+  if (!ok) return;
+  try{
+    if (fsMode === 'fs' && dirHandle && n.filename) await moveFileToTrash(n);
+    else if (fsMode === 'idb' && n.filename) await idbMoveToTrash(n);
+  }catch(err){
+    toast('Verschieben fehlgeschlagen – Notiz bleibt erhalten.');
+    return;
+  }
+  const idx = curIdx;
+  notes.splice(idx, 1);
+  notes.forEach((x,i) => x.id = i);       /* ids sind Array-Positionen */
+  renderDeck();
+  WB.melden('noteos', { was:'geloescht' });
+  if (!notes.length){ closeNote(); }
+  else {
+    curIdx = Math.min(idx, notes.length - 1);
+    if (reading) renderSheet();
+  }
+  toast(fsMode === 'fs'
+    ? '„'+n.title+'" liegt jetzt im Ordner „Papierkorb".'
+    : '„'+n.title+'" in den Papierkorb verschoben.');
+});
+
+/* ───────── Start ───────── */
+renderDeck();
+updateTagBtn();
+initStorage();
+const startHash = /^#n(\d+)$/.exec(location.hash);
+if (startHash && notes[+startHash[1]]){
+  history.replaceState(null, '', location.pathname + location.search);
+  requestAnimationFrame(() => openNote(+startHash[1]));
+}
+})();
 </script>
 </body>
 </html>
