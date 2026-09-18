@@ -130,16 +130,72 @@ h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--e
 .stats{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:24px;font-family:var(--mono);font-size:12.5px;color:var(--text-3)}
 .stats b{color:var(--text);font-weight:500}
 
-/* Fächer-Welle: der Bestand als gekippte Blätter */
-.wave{position:relative;height:clamp(96px,15vw,168px);margin:26px 0 0;overflow:hidden;
-  -webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);
-  mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
-.wave-in{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:2px;perspective:900px}
-.wave i{display:block;flex:1 1 0;min-width:4px;max-width:15px;border-radius:2px;
-  background:linear-gradient(180deg,var(--wc,#F2B33D),color-mix(in srgb,var(--wc,#F2B33D) 55%,var(--void)));
+/* Glasscheiben: der ganze Bestand als Kamm – eine Scheibe je Notiz.
+   Die Scheibe im Ziel steht offen; darunter zoomt die Notiz heraus. */
+.scope{margin:26px 0 0;--pw:26px}
+.scope-wrap{position:relative}
+.panes{position:relative;height:clamp(104px,15vw,172px);overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;cursor:grab;touch-action:pan-x pinch-zoom;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+.panes::-webkit-scrollbar{display:none}
+.panes.dragging{cursor:grabbing;scroll-snap-type:none}
+.panes-track{display:flex;align-items:center;gap:4px;height:100%;padding-inline:50%;perspective:900px;width:max-content}
+.pane{position:relative;flex:0 0 auto;width:var(--pw);height:var(--h,58%);padding:0;border:0;background:none;
+  scroll-snap-align:center;cursor:pointer;border-radius:3px;transform:translateY(var(--y,0px)) rotate(var(--rot,0deg));
+  transition:height var(--t-m) cubic-bezier(.2,.8,.2,1),transform var(--t-m) cubic-bezier(.2,.8,.2,1)}
+.pane:focus-visible{outline:none}
+.pane-glass{position:absolute;inset:0;border-radius:3px;
+  background:linear-gradient(180deg,var(--wc,#F2B33D),color-mix(in srgb,var(--wc,#F2B33D) 52%,var(--void)));
   box-shadow:1px 0 0 rgba(0,0,0,.35),-1px 0 0 rgba(255,255,255,.10);
-  animation:waveIn .9s cubic-bezier(.2,.8,.2,1) both}
-@keyframes waveIn{from{opacity:0;transform:translateY(18px) scaleY(.2)}}
+  opacity:.6;transition:opacity var(--t-m),box-shadow var(--t-m)}
+.pane:hover .pane-glass{opacity:.85}
+/* Beschriftung im Farbblock: Kategorie – bzw. Tags, wenn gefiltert wird */
+.pane-label{position:absolute;inset:6px 0 6px;display:flex;align-items:flex-start;justify-content:center;
+  writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);
+  font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(12,16,22,.78);opacity:.7;white-space:nowrap;overflow:hidden;pointer-events:none}
+/* der aufgeschwenkte Flügel der offenen Scheibe */
+.pane::after{content:"";position:absolute;left:100%;top:8%;bottom:8%;width:0;border-radius:0 4px 4px 0;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--wc) 42%,transparent),transparent);
+  border:1px solid transparent;border-left:0;transform-origin:left center;opacity:0;
+  transition:width var(--t-m) cubic-bezier(.2,.8,.2,1),opacity var(--t-m),transform var(--t-m)}
+.pane.is-active{height:var(--ha,88%);transform:translateY(0) rotate(0deg);z-index:3}
+.pane.is-active .pane-glass{opacity:1;
+  box-shadow:0 0 0 1px rgba(255,255,255,.34),0 16px 32px -18px rgba(0,0,0,.9),
+             0 0 26px -6px color-mix(in srgb,var(--wc) 72%,transparent)}
+.pane.is-active .pane-label{opacity:1;font-weight:600}
+.pane.is-active::after{width:34px;opacity:1;transform:rotateY(-58deg);
+  border-color:color-mix(in srgb,var(--wc) 55%,transparent);
+  box-shadow:inset 1px 0 0 rgba(255,255,255,.22)}
+/* Ziel: die Fassung in der Mitte, in der die Scheibe steht */
+.scope-aim{position:absolute;left:50%;top:6px;bottom:6px;width:calc(var(--pw) + 16px);transform:translateX(-50%);
+  pointer-events:none;z-index:4}
+.scope-aim i{position:absolute;left:0;right:0;height:10px;border:1px solid var(--line-hi);opacity:.85}
+.scope-aim i:first-child{top:0;border-bottom:0;border-radius:5px 5px 0 0}
+.scope-aim i:last-child{bottom:0;border-top:0;border-radius:0 0 5px 5px}
+/* Herausgezoomte Notiz */
+.scope-detail{position:relative;margin:16px 0 0;border-radius:16px;border:1px solid var(--line);background:var(--glass);
+  box-shadow:var(--shadow-lg);-webkit-backdrop-filter:blur(15px) saturate(1.3);backdrop-filter:blur(15px) saturate(1.3);
+  overflow:hidden;display:flex;gap:18px;align-items:center;padding:16px 18px 16px 24px;text-align:left;
+  transform-origin:top center}
+.scope-detail::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--acc,var(--amber))}
+.sd-main{flex:1;min-width:0}
+.sd-kick{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;font-family:var(--mono);font-size:11px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--text-3)}
+.sd-cat{border:1px solid color-mix(in srgb,var(--acc) 45%,transparent);color:var(--acc);border-radius:100px;
+  padding:2px 9px;font-size:10.5px;letter-spacing:.12em;background:none;cursor:pointer;font-family:inherit}
+.sd-cat:hover{background:color-mix(in srgb,var(--acc) 16%,transparent)}
+.scope-detail h2{margin:8px 0 0;font-size:clamp(19px,2.4vw,24px);letter-spacing:-.02em;line-height:1.2;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sd-text{margin:7px 0 0;color:var(--text-2);font-size:14px;line-height:1.55;overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.sd-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
+.sd-tags .tag{font-size:10px;padding:1px 7px}
+.sd-side{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.sd-hint{font-family:var(--mono);font-size:11px;color:var(--text-3);white-space:nowrap}
+.sd-empty{color:var(--text-3);font-style:italic;padding:6px 0}
 
 /* ── Steuerleiste ──────────────────────────────────────────── */
 .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:0 0 18px;
@@ -351,13 +407,16 @@ footer a:hover{color:var(--text)}
   .nav-in{padding-left:14px}
   .grid{grid-template-columns:1fr}
   .hero-top{flex-direction:column;align-items:flex-start;gap:6px}
-  .wave{height:90px}
+  .scope{--pw:20px}
+  .panes{height:96px}
+  .scope-detail{flex-direction:column;align-items:stretch;gap:12px;padding:14px 16px 14px 20px}
+  .sd-side{flex-direction:row;align-items:center;justify-content:space-between}
   .bar-title{justify-content:flex-start}
   .sheet{margin:16px auto 60px;border-radius:14px}
 }
 @media (prefers-reduced-motion:reduce){
-  .card,.wave i{animation:none;opacity:1}
-  .leaf-stack,.card-bg{transition:none}
+  .card{animation:none;opacity:1}
+  .leaf-stack,.card-bg,.pane,.pane-glass,.pane::after{transition:none}
 }
 
 /* ── Druck ─────────────────────────────────────────────────── */
@@ -404,9 +463,17 @@ footer a:hover{color:var(--text)}
       <div class="hero-count" id="heroCount">001 — 000</div>
     </div>
     <h1><span>Alles Notierte</span><br><em>auf einen Griff.</em></h1>
-    <p class="lead">Jede Karte ist eine Notiz – als Markdown-Datei in deinem Ordner. Antippen liest, <span class="mono">←</span> <span class="mono">→</span> blättert, <span class="mono">Esc</span> legt zurück.</p>
+    <p class="lead">Jede Scheibe ist eine Notiz – als Markdown-Datei in deinem Ordner. Der Kamm zeigt den ganzen Bestand: scrollen bringt eine Scheibe ins Ziel, sie steht offen und zoomt darunter heraus. <span class="mono">←</span> <span class="mono">→</span> blättert, Klick auf die offene Scheibe liest, <span class="mono">Esc</span> legt zurück.</p>
     <div class="stats" id="stats"></div>
-    <div class="wave" aria-hidden="true"><div class="wave-in" id="wave"></div></div>
+    <div class="scope" id="scope">
+      <div class="scope-wrap">
+        <div class="panes" id="panes" aria-label="Notizen als Glasscheiben – seitlich scrollen">
+          <div class="panes-track" id="panesTrack"></div>
+        </div>
+        <div class="scope-aim" aria-hidden="true"><i></i><i></i></div>
+      </div>
+      <div class="scope-detail" id="scopeDetail"></div>
+    </div>
   </section>
 
   <section class="controls">
@@ -418,6 +485,7 @@ footer a:hover{color:var(--text)}
       <button data-sort="erstellt">Erstellt</button>
     </div>
     <button class="pill" id="tagBtn" type="button">Tags</button>
+    <button class="pill" id="catBtn" type="button" hidden></button>
   </section>
 
   <section class="deck" id="deck" aria-label="Notizen"></section>
@@ -670,6 +738,7 @@ const notes = RAW.map(([cat,title,d], i) => {
 
 /* ───────── Zustand ───────── */
 let curIdx = 0, sortMode = 'kategorie', searchQuery = '';
+let activeCategory = null;     /* gesetzter Kategoriefilter – dann zeigen die Scheiben Tags */
 const activeTags = new Set();
 let view = [];                 /* aktuell sichtbare Notizen in Anzeigereihenfolge */
 let reading = false;
@@ -722,6 +791,7 @@ const deck = $('#deck');
 function filtered(){
   const terms = searchQuery.trim().toLowerCase().split(/\s+/).filter(Boolean);
   let list = terms.length ? notes.filter(n => matchesSearch(n, terms)) : notes.slice();
+  if (activeCategory) list = list.filter(n => n.category === activeCategory);
   if (activeTags.size) list = list.filter(n => n.tags.some(t => activeTags.has(t)));
   return list;
 }
@@ -782,7 +852,7 @@ function updateHero(){
     + '<span><b>'+cats.size+'</b> Kategorien</span>'
     + (view.length !== notes.length ? '<span><b>'+view.length+'</b> gefiltert</span>' : '')
     + (newest ? '<span>Zuletzt: <b>'+esc(newest.modified)+'</b></span>' : '');
-  buildWave();
+  buildScope();
   /* Je Kategorie mitzählen: das Auftragsbuch erkennt daran, wie viele
      Notizen unter dem Namen eines Auftraggebers liegen. */
   const jeKategorie = {};
@@ -790,22 +860,185 @@ function updateHero(){
   WB.schreiben(WB_NOTES_LS, { anzahl: notes.length, kategorien: cats.size,
     jeKategorie, zuletzt: newest ? newest.modified : null, zeit: Date.now() });
 }
-/* Die Welle ist der Bestand: ein Blatt je Notiz, in Kategoriefarbe. */
-function buildWave(){
-  const el = $('#wave');
-  if (!el) return;
-  const max = innerWidth < 820 ? 30 : 56;
-  const src = notes.slice(0, max);
-  const n = src.length || 1;
-  el.innerHTML = src.map((note,i) => {
-    const p = i/(n-1 || 1);
-    const h = 34 + Math.sin(p*Math.PI*2.1)*22 + Math.sin(p*Math.PI*5.5)*7;
-    const rot = Math.cos(p*Math.PI*2.1)*13;
-    const y = Math.sin(p*Math.PI*2.1)*-9;
-    return '<i style="--wc:'+note.accent+';height:'+Math.max(16,h+38)+'%;'
-      + 'transform:translateY('+y.toFixed(1)+'px) rotate('+rot.toFixed(1)+'deg);'
-      + 'animation-delay:'+(i*14)+'ms"></i>';
+/* ───────── Glasscheiben: ein Scheibenkamm über den Bestand ─────────
+   Eine Scheibe je Notiz, Farbe = Kategorie. Die Scheibe im Ziel steht
+   offen; ihre Notiz zoomt darunter heraus. Scrollen wechselt die Notiz. */
+const panesEl = $('#panes'), trackEl = $('#panesTrack'), detailEl = $('#scopeDetail');
+let paneIdx = 0;            /* Position im aktuellen View */
+let paneCenters = [];       /* Mittelpunkte der Scheiben, für das Ziel */
+let paneNote = null;        /* Notiz, die gerade im Ziel steht */
+
+/* Im Farbblock steht die Kategorie – filtert man nach Kategorie, die Tags. */
+function paneLabel(n){
+  if (!activeCategory) return n.category;
+  const rest = n.tags.filter(t => t !== n.category);
+  return rest.length ? rest.join(' · ') : '–';
+}
+function buildScope(){
+  if (!trackEl) return;
+  const keep = paneNote ? paneNote.id : null;
+  trackEl.innerHTML = view.map((n,i) => {
+    const h = 46 + Math.sin(i/3.1)*15 + Math.sin(i/7.7)*9;      /* die alte Welle, jetzt endlos */
+    const rot = Math.cos(i/3.1)*9;
+    const y = Math.sin(i/3.1)*-6;
+    return '<button class="pane" type="button" data-i="'+i+'" data-note="'+n.id+'" tabindex="-1"'
+      + ' style="--wc:'+n.accent+';--h:'+h.toFixed(1)+'%;--rot:'+rot.toFixed(1)+'deg;--y:'+y.toFixed(1)+'px"'
+      + ' aria-label="'+esc(n.title)+' – '+esc(n.category)+'">'
+      + '<span class="pane-glass"></span><span class="pane-label">'+esc(paneLabel(n))+'</span></button>';
   }).join('');
+  measurePanes();
+  let i = 0;
+  if (keep !== null){ const k = view.findIndex(n => n.id === keep); if (k >= 0) i = k; }
+  setActivePane(i, { animate:false });
+  centerPane(i, 'auto');
+}
+function measurePanes(){
+  paneCenters = Array.from(trackEl.children).map(el => el.offsetLeft + el.offsetWidth/2);
+}
+function nearestPane(){
+  if (!paneCenters.length) return 0;
+  const c = panesEl.scrollLeft + panesEl.clientWidth/2;
+  let best = 0, bd = Infinity;
+  for (let i = 0; i < paneCenters.length; i++){
+    const d = Math.abs(paneCenters[i] - c);
+    if (d < bd){ bd = d; best = i; } else if (paneCenters[i] > c) break;
+  }
+  return best;
+}
+function centerPane(i, behavior){
+  if (!paneCenters.length) return;
+  const left = paneCenters[Math.max(0,Math.min(i,paneCenters.length-1))] - panesEl.clientWidth/2;
+  panesEl.scrollTo({ left, behavior: (behavior === 'smooth' && !reduced()) ? 'smooth' : 'auto' });
+}
+function setActivePane(i, { animate = true } = {}){
+  const kids = trackEl.children;
+  if (!kids.length){ paneIdx = 0; paneNote = null; renderScopeDetail(null); updateScopeCount(); return; }
+  i = Math.max(0, Math.min(i, kids.length - 1));
+  const prev = trackEl.querySelector('.pane.is-active');
+  if (prev){ prev.classList.remove('is-active'); prev.tabIndex = -1; }
+  const el = kids[i];
+  el.classList.add('is-active');
+  el.tabIndex = 0;
+  paneIdx = i;
+  paneNote = view[i] || null;
+  renderScopeDetail(paneNote, animate);
+  updateScopeCount();
+}
+function updateScopeCount(){
+  const c = $('#heroCount');
+  if (c) c.textContent = pad3(view.length ? paneIdx+1 : 0) + ' — ' + pad3(view.length);
+}
+function renderScopeDetail(n, animate){
+  if (!detailEl) return;
+  if (!n){
+    detailEl.style.removeProperty('--acc');
+    detailEl.innerHTML = '<div class="sd-empty">Keine Notiz im Ziel – Filter zurücksetzen.</div>';
+    return;
+  }
+  detailEl.style.setProperty('--acc', n.accent);
+  const tags = n.tags.filter(t => t !== n.category).map(t => '<span class="tag">'+esc(t)+'</span>').join('');
+  detailEl.innerHTML =
+    '<div class="sd-main">'
+    + '<div class="sd-kick"><span>'+pad3(paneIdx+1)+' — '+pad3(view.length)+'</span>'
+    +   '<button class="sd-cat" type="button" data-cat="'+esc(n.category)+'" '
+    +     'title="Nur diese Kategorie zeigen">'+esc(n.category)+'</button>'
+    +   '<span>'+esc(n.modified)+'</span><span>'+(n.filename ? esc(n.filename) : 'nicht gespeichert')+'</span></div>'
+    + '<h2>'+esc(n.title)+'</h2>'
+    + '<p class="sd-text">'+esc(plainExcerpt(n))+'</p>'
+    + (tags ? '<div class="sd-tags">'+tags+'</div>' : '')
+    + '</div>'
+    + '<div class="sd-side"><button class="pill primary" type="button" data-open="'+n.id+'">Lesen ↗</button>'
+    +   '<span class="sd-hint">← → blättert</span></div>';
+  if (animate && !reduced() && detailEl.animate){
+    detailEl.animate([{ opacity:0, transform:'translateY(-10px) scale(.965)' }, { opacity:1, transform:'none' }],
+      { duration:300, easing:'cubic-bezier(.2,.8,.2,1)' });
+  }
+}
+/* Scrollen im Kamm setzt das Ziel neu */
+let scopeRaf = 0, snapTimer = null;
+panesEl.addEventListener('scroll', () => {
+  if (scopeRaf) return;
+  scopeRaf = requestAnimationFrame(() => {
+    scopeRaf = 0;
+    const i = nearestPane();
+    if (i !== paneIdx) setActivePane(i);
+  });
+}, { passive:true });
+/* Mausrad: senkrechtes Rad schiebt den Kamm – am Ende scrollt die Seite weiter */
+panesEl.addEventListener('wheel', e => {
+  const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+  const max = panesEl.scrollWidth - panesEl.clientWidth;
+  if ((d <= 0 && panesEl.scrollLeft <= 0) || (d >= 0 && panesEl.scrollLeft >= max - 1)) return;
+  e.preventDefault();
+  panesEl.scrollLeft += d;
+  clearTimeout(snapTimer);
+  snapTimer = setTimeout(() => centerPane(nearestPane(), 'smooth'), 140);
+}, { passive:false });
+/* Ziehen mit Maus oder Finger */
+(function(){
+  let down = false, sx = 0, sl = 0, moved = 0;
+  panesEl.addEventListener('pointerdown', e => {
+    if (e.button !== undefined && e.button !== 0) return;
+    down = true; moved = 0; sx = e.clientX; sl = panesEl.scrollLeft;
+    panesEl.classList.add('dragging');
+  });
+  panesEl.addEventListener('pointermove', e => {
+    if (!down) return;
+    const dx = e.clientX - sx;
+    if (Math.abs(dx) > 3){ moved = Math.max(moved, Math.abs(dx)); panesEl.scrollLeft = sl - dx; }
+  });
+  const end = () => {
+    if (!down) return;
+    down = false;
+    panesEl.classList.remove('dragging');
+    if (moved > 3) centerPane(nearestPane(), 'smooth');
+    panesEl.dataset.dragged = moved > 6 ? '1' : '';     /* Ziehen ist kein Klick */
+    setTimeout(() => { panesEl.dataset.dragged = ''; }, 300);
+  };
+  ['pointerup','pointercancel','pointerleave'].forEach(ev => panesEl.addEventListener(ev, end));
+})();
+/* Klick: Scheibe ins Ziel holen – die Scheibe im Ziel öffnet die Notiz */
+trackEl.addEventListener('click', e => {
+  const p = e.target.closest('.pane');
+  if (!p || panesEl.dataset.dragged === '1') return;
+  const i = +p.dataset.i;
+  if (i === paneIdx) openNote(+p.dataset.note, p);
+  else { setActivePane(i); centerPane(i, 'smooth'); }
+});
+panesEl.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft'){ e.preventDefault(); stepPane(-1); }
+  else if (e.key === 'ArrowRight'){ e.preventDefault(); stepPane(1); }
+  else if (e.key === 'Home'){ e.preventDefault(); setActivePane(0); centerPane(0,'smooth'); }
+  else if (e.key === 'End'){ e.preventDefault(); const l = view.length-1; setActivePane(l); centerPane(l,'smooth'); }
+});
+function stepPane(dir){
+  const i = Math.max(0, Math.min(paneIdx + dir, view.length - 1));
+  if (i === paneIdx) return;
+  setActivePane(i); centerPane(i, 'smooth');
+  const el = trackEl.children[i];
+  if (el && document.activeElement && document.activeElement.closest && document.activeElement.closest('#panes')) el.focus({ preventScroll:true });
+}
+/* Detailkarte: lesen oder nach Kategorie filtern */
+detailEl.addEventListener('click', e => {
+  const cat = e.target.closest('.sd-cat');
+  if (cat){ setCategoryFilter(activeCategory === cat.dataset.cat ? null : cat.dataset.cat); return; }
+  const open = e.target.closest('[data-open]');
+  if (open) openNote(+open.dataset.open, trackEl.children[paneIdx]);
+});
+function setCategoryFilter(cat){
+  activeCategory = cat || null;
+  const btn = $('#catBtn');
+  btn.hidden = !activeCategory;
+  if (activeCategory){ btn.textContent = 'Kategorie: ' + activeCategory + '  ✕'; btn.classList.add('on'); }
+  renderDeck();
+}
+$('#catBtn').addEventListener('click', () => setCategoryFilter(null));
+/* Geöffnete Notiz und Ziel laufen synchron */
+function syncScope(id){
+  const i = view.findIndex(n => n.id === id);
+  if (i < 0 || i === paneIdx) return;
+  setActivePane(i, { animate:false });
+  centerPane(i, 'auto');
 }
 deck.addEventListener('click', e => {
   const c = e.target.closest('.card');
@@ -822,7 +1055,10 @@ $('#home').addEventListener('click', e => {
   if (reading) closeNote(); else scrollTo({ top:0, behavior:'smooth' });
 });
 let waveTimer = null;
-addEventListener('resize', () => { clearTimeout(waveTimer); waveTimer = setTimeout(buildWave, 200); });
+addEventListener('resize', () => {
+  clearTimeout(waveTimer);
+  waveTimer = setTimeout(() => { measurePanes(); centerPane(paneIdx, 'auto'); }, 200);
+});
 
 /* ───────── Tag-Filter ───────── */
 function allTags(){
@@ -915,6 +1151,7 @@ function renderSheet(){
   $('#barIdx').textContent = pad3(pos);
   $('#barName').textContent = n.title;
   $('#barTag').textContent = n.category;
+  syncScope(n.id);
   const i = view.indexOf(n);
   $('#prevBtn').disabled = i <= 0;
   $('#nextBtn').disabled = i < 0 || i >= view.length - 1;
@@ -990,7 +1227,13 @@ addEventListener('keydown', e => {
   const t = e.target;
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
   if (e.key === 'Escape' && reading){ closeNote(); return; }
-  if (!reading) return;
+  if (!reading){
+    /* In der Kartei blättern die Pfeiltasten durch die Glasscheiben. */
+    if (t && t.closest && t.closest('#panes')) return;   /* dort greift der eigene Handler */
+    if (e.key === 'ArrowLeft'){ e.preventDefault(); stepPane(-1); }
+    else if (e.key === 'ArrowRight'){ e.preventDefault(); stepPane(1); }
+    return;
+  }
   if (e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); stepNote(-1); }
   else if (e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); stepNote(1); }
 });
@@ -1270,7 +1513,9 @@ $('#editorSave').addEventListener('click', async () => {
     notes.push(newNote);
     closeEditor();
     if (activeTags.size && !newNote.tags.some(t => activeTags.has(t))){ activeTags.clear(); updateTagBtn(); }
+    if (activeCategory && newNote.category !== activeCategory){ setCategoryFilter(null); }
     renderDeck();
+    syncScope(newNote.id);
     landNewCard(newNote);
     WB.melden('noteos', { was:'neu' });
     savedToast(newNote.title, true);
