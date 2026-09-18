@@ -551,6 +551,16 @@ const WB = (function(){
 })();
 const WB_NOTES_LS = 'wb-noteos-stand';
 
+/* Aussehen gilt für die ganze Werkbank. Geschrieben werden beide
+   Schlüssel — jedes Werkzeug liest beim Start seinen eigenen, und so
+   finden alle denselben Stand vor. Gemeldet wird zusätzlich über den
+   Bus, damit offene Fenster sofort mitziehen. */
+const WB_THEME_KEYS = ['wb-theme', 'wb-cockpit-theme'];
+function wbThemeSichern(t){
+  WB_THEME_KEYS.forEach(k => { try { localStorage.setItem(k, t); } catch (e) {} });
+}
+const WB_AB_LS = 'wb-auftragsbuch-data';
+
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 const root = document.documentElement;
@@ -566,7 +576,7 @@ const store = {
 function setTheme(t, persist){
   root.setAttribute('data-theme', t);
   $('meta[name="theme-color"]').content = t === 'light' ? '#EEF1F6' : '#06090E';
-  if (persist){ store.set('wb-cockpit-theme', t); WB.melden('theme', { theme:t }); }
+  if (persist){ wbThemeSichern(t); WB.melden('theme', { theme:t }); }
 }
 setTheme(root.getAttribute('data-theme'), false);
 $('#themeBtn').addEventListener('click', () => {
@@ -773,7 +783,12 @@ function updateHero(){
     + (view.length !== notes.length ? '<span><b>'+view.length+'</b> gefiltert</span>' : '')
     + (newest ? '<span>Zuletzt: <b>'+esc(newest.modified)+'</b></span>' : '');
   buildWave();
-  WB.schreiben(WB_NOTES_LS, { anzahl: notes.length, kategorien: cats.size, zeit: Date.now() });
+  /* Je Kategorie mitzählen: das Auftragsbuch erkennt daran, wie viele
+     Notizen unter dem Namen eines Auftraggebers liegen. */
+  const jeKategorie = {};
+  notes.forEach(n => { jeKategorie[n.category] = (jeKategorie[n.category] || 0) + 1; });
+  WB.schreiben(WB_NOTES_LS, { anzahl: notes.length, kategorien: cats.size,
+    jeKategorie, zuletzt: newest ? newest.modified : null, zeit: Date.now() });
 }
 /* Die Welle ist der Bestand: ein Blatt je Notiz, in Kategoriefarbe. */
 function buildWave(){
@@ -1000,9 +1015,41 @@ const editorSource = $('#editorSource'), editorHint = $('#editorHint');
 const addBtn = $('#addBtn'), addMenu = $('#addMenu'), importInput = $('#importInput');
 let pendingSource = null, editingNoteId = null, importToken = 0, editorSnapshot = null;
 
-Object.keys(CATS).sort((a,b)=>a.localeCompare(b,'de')).forEach(c => {
-  const o = document.createElement('option'); o.value = c; o.textContent = c; editorCategory.appendChild(o);
-});
+/* ═══════ Auftraggeber aus dem Auftragsbuch ═══════
+   Unter derselben Herkunft liegt der Bestand des Auftragsbuchs. Seine
+   Auftraggeber stehen hier als Kategorie zur Wahl — so lässt sich eine
+   Notiz einem Kunden zuordnen, ohne dass NoteOS etwas über Aufträge
+   wissen müsste. Fehlt das Auftragsbuch, bleibt die Liste wie zuvor. */
+function auftraggeberNamen(){
+  const d = WB.lesen(WB_AB_LS);
+  if (!d || !Array.isArray(d.auftraggeber)) return [];
+  return d.auftraggeber.filter(x => x && x.name && x.aktiv !== false)
+    .map(x => String(x.name)).sort((a,b) => a.localeCompare(b,'de'));
+}
+function kategorienAufbauen(){
+  const gewaehlt = editorCategory.value;
+  editorCategory.innerHTML = '<option value="">Kategorie wählen …</option>';
+  const eigene = new Set(notes.map(n => n.category));
+  const fest = new Set(Object.keys(CATS));
+  [...new Set([...fest, ...eigene])].sort((a,b)=>a.localeCompare(b,'de')).forEach(c => {
+    const o = document.createElement('option'); o.value = c; o.textContent = c;
+    editorCategory.appendChild(o);
+  });
+  const kunden = auftraggeberNamen().filter(n => !fest.has(n));
+  if (kunden.length){
+    const g = document.createElement('optgroup'); g.label = 'Auftraggeber';
+    kunden.forEach(n => {
+      const o = document.createElement('option'); o.value = n; o.textContent = n;
+      g.appendChild(o);
+    });
+    editorCategory.appendChild(g);
+  }
+  if (gewaehlt) editorCategory.value = gewaehlt;
+}
+kategorienAufbauen();
+/* Wird im Auftragsbuch ein Kunde angelegt oder umbenannt, steht er
+   hier beim nächsten Öffnen des Editors bereit — ohne Neuladen. */
+WB.horchen('auftragsbuch', () => kategorienAufbauen());
 addBtn.addEventListener('click', e => {
   e.stopPropagation();
   placeMenu(addMenu, addBtn, 210);
