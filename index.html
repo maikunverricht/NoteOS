@@ -130,57 +130,113 @@ h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--e
 .stats{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:24px;font-family:var(--mono);font-size:12.5px;color:var(--text-3)}
 .stats b{color:var(--text);font-weight:500}
 
+/* ── Bühne: immer nur eine Ansicht, weich überblendet ──────── */
+.stage{position:relative;will-change:height}
+.view{display:none}
+.view.is-on{display:block}
+.view-ghost{position:absolute;left:0;right:0;top:0;z-index:2;pointer-events:none}
+.lead{transition:opacity var(--t-s)}
+
 /* Glasscheiben: der ganze Bestand als Kamm – eine Scheibe je Notiz.
-   Die Scheibe im Ziel steht offen; darunter zoomt die Notiz heraus. */
-.scope{margin:26px 0 0;--pw:26px}
+   Die Scheibe im Ziel schwenkt als Vollkörperglas auf wie ein Buchdeckel;
+   darunter läuft die Notiz aus dem Glas heraus. */
+.scope{margin:0;--pw:26px;padding-bottom:70px}
 .scope-wrap{position:relative}
-.panes{position:relative;height:clamp(104px,15vw,172px);overflow-x:auto;overflow-y:hidden;
+.panes{position:relative;height:clamp(150px,19vw,224px);overflow-x:auto;overflow-y:hidden;
   scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;
   scrollbar-width:none;cursor:grab;touch-action:pan-x pinch-zoom;
-  -webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);
-  mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent)}
 .panes::-webkit-scrollbar{display:none}
 .panes.dragging{cursor:grabbing;scroll-snap-type:none}
-.panes-track{display:flex;align-items:center;gap:4px;height:100%;padding-inline:50%;perspective:900px;width:max-content}
+.panes-track{display:flex;align-items:center;gap:3px;height:100%;padding-inline:50%;perspective:1100px;width:max-content}
 .pane{position:relative;flex:0 0 auto;width:var(--pw);height:var(--h,58%);padding:0;border:0;background:none;
-  scroll-snap-align:center;cursor:pointer;border-radius:3px;transform:translateY(var(--y,0px)) rotate(var(--rot,0deg));
+  scroll-snap-align:center;cursor:pointer;border-radius:2px;transform-style:preserve-3d;
+  transform:translateY(var(--y,0px)) rotate(var(--rot,0deg));
   transition:height var(--t-m) cubic-bezier(.2,.8,.2,1),transform var(--t-m) cubic-bezier(.2,.8,.2,1)}
 .pane:focus-visible{outline:none}
-.pane-glass{position:absolute;inset:0;border-radius:3px;
-  background:linear-gradient(180deg,var(--wc,#F2B33D),color-mix(in srgb,var(--wc,#F2B33D) 52%,var(--void)));
-  box-shadow:1px 0 0 rgba(0,0,0,.35),-1px 0 0 rgba(255,255,255,.10);
-  opacity:.6;transition:opacity var(--t-m),box-shadow var(--t-m)}
-.pane:hover .pane-glass{opacity:.85}
-/* Beschriftung im Farbblock: Kategorie – bzw. Tags, wenn gefiltert wird */
-.pane-label{position:absolute;inset:6px 0 6px;display:flex;align-items:flex-start;justify-content:center;
+/* geschliffenes Glas: heller Kopf, sattes Mittelstück, dunkler Fuß, Kanten wie Schliff */
+.pane-glass{position:absolute;inset:0;border-radius:2px;
+  background:linear-gradient(180deg,
+    color-mix(in srgb,var(--wc,#F2B33D) 55%,#fff) 0%,
+    var(--wc,#F2B33D) 22%,
+    color-mix(in srgb,var(--wc,#F2B33D) 74%,var(--void)) 62%,
+    color-mix(in srgb,var(--wc,#F2B33D) 38%,var(--void)) 100%);
+  box-shadow:inset 1.5px 0 0 rgba(255,255,255,.42),inset -1.5px 0 0 rgba(0,0,0,.5),
+             2px 0 7px -4px rgba(0,0,0,.85);
+  transition:filter var(--t-m),box-shadow var(--t-m),opacity var(--t-m)}
+/* Lichtkante, die über die Scheibe läuft */
+.pane-glass::after{content:"";position:absolute;left:26%;top:0;bottom:0;width:22%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.30),transparent);opacity:.75}
+.pane:hover .pane-glass{filter:brightness(1.14)}
+/* Beschriftung im Farbblock: nur die erste Scheibe einer Kategorie trägt sie */
+.pane-label{position:absolute;inset:7px 0 7px;display:flex;align-items:flex-start;justify-content:center;
   writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);
-  font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
-  color:rgba(12,16,22,.78);opacity:.7;white-space:nowrap;overflow:hidden;pointer-events:none}
-/* der aufgeschwenkte Flügel der offenen Scheibe */
-.pane::after{content:"";position:absolute;left:100%;top:8%;bottom:8%;width:0;border-radius:0 4px 4px 0;
-  background:linear-gradient(90deg,color-mix(in srgb,var(--wc) 42%,transparent),transparent);
-  border:1px solid transparent;border-left:0;transform-origin:left center;opacity:0;
-  transition:width var(--t-m) cubic-bezier(.2,.8,.2,1),opacity var(--t-m),transform var(--t-m)}
-.pane.is-active{height:var(--ha,88%);transform:translateY(0) rotate(0deg);z-index:3}
-.pane.is-active .pane-glass{opacity:1;
-  box-shadow:0 0 0 1px rgba(255,255,255,.34),0 16px 32px -18px rgba(0,0,0,.9),
-             0 0 26px -6px color-mix(in srgb,var(--wc) 72%,transparent)}
-.pane.is-active .pane-label{opacity:1;font-weight:600}
-.pane.is-active::after{width:34px;opacity:1;transform:rotateY(-58deg);
-  border-color:color-mix(in srgb,var(--wc) 55%,transparent);
-  box-shadow:inset 1px 0 0 rgba(255,255,255,.22)}
+  font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;
+  color:rgba(10,14,20,.8);white-space:nowrap;overflow:hidden;pointer-events:none}
+.pane.is-active{height:var(--ha,86%);transform:translateY(0) rotate(0deg);z-index:6}
+.pane.is-active .pane-glass{filter:brightness(1.09) saturate(1.16);
+  box-shadow:inset 1.5px 0 0 rgba(255,255,255,.6),inset -1.5px 0 0 rgba(0,0,0,.45),
+             0 18px 34px -20px rgba(0,0,0,.95),0 0 30px -8px color-mix(in srgb,var(--wc) 75%,transparent)}
+/* Vollkörperglas: der aufgeschwenkte Buchdeckel mit dem Titel */
+.pane-body{position:absolute;left:calc(var(--pw) - 2px);top:50%;z-index:5;
+  width:clamp(158px,18vw,216px);height:clamp(112px,13vw,148px);
+  display:flex;flex-direction:column;justify-content:flex-end;gap:7px;padding:14px 16px 13px;
+  border-radius:3px 9px 9px 3px;overflow:hidden;text-align:left;pointer-events:none;
+  transform-origin:left center;transform:translateY(-50%) rotateY(-88deg);opacity:0;
+  background:linear-gradient(126deg,
+    color-mix(in srgb,var(--wc) 52%,transparent) 0%,
+    color-mix(in srgb,var(--wc) 20%,transparent) 46%,
+    rgba(255,255,255,.16) 100%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.34),inset 2px 0 0 rgba(255,255,255,.5),
+             0 28px 46px -26px rgba(0,0,0,.95),0 0 40px -14px color-mix(in srgb,var(--wc) 70%,transparent);
+  -webkit-backdrop-filter:blur(8px) saturate(1.3);backdrop-filter:blur(8px) saturate(1.3);
+  transition:transform .5s cubic-bezier(.2,.8,.2,1),opacity .35s ease}
+.pane-body::after{content:"";position:absolute;left:0;top:0;bottom:0;width:34%;pointer-events:none;
+  background:linear-gradient(100deg,rgba(255,255,255,.22),transparent 78%)}
+/* Lesegrund im Glas: unten eingetrübt, damit der Titel trägt */
+.pane-body::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(0deg,color-mix(in srgb,var(--void) 82%,transparent) 4%,
+             color-mix(in srgb,var(--void) 40%,transparent) 46%,transparent 78%)}
+.pane.is-active .pane-body{opacity:1;transform:translateY(-50%) rotateY(-31deg)}
+.body-kick{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:color-mix(in srgb,var(--text) 68%,transparent);position:relative}
+.body-title{font-size:clamp(14px,1.5vw,16.5px);font-weight:700;line-height:1.24;letter-spacing:-.015em;position:relative;
+  color:var(--text);text-shadow:0 1px 12px color-mix(in srgb,var(--void) 70%,transparent);
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 /* Ziel: die Fassung in der Mitte, in der die Scheibe steht */
-.scope-aim{position:absolute;left:50%;top:6px;bottom:6px;width:calc(var(--pw) + 16px);transform:translateX(-50%);
-  pointer-events:none;z-index:4}
+.scope-aim{position:absolute;left:50%;top:10px;bottom:10px;width:calc(var(--pw) + 16px);transform:translateX(-50%);
+  pointer-events:none;z-index:7}
 .scope-aim i{position:absolute;left:0;right:0;height:10px;border:1px solid var(--line-hi);opacity:.85}
 .scope-aim i:first-child{top:0;border-bottom:0;border-radius:5px 5px 0 0}
 .scope-aim i:last-child{bottom:0;border-top:0;border-radius:0 0 5px 5px}
+/* Der Guss: die Notiz läuft als geschmolzenes Glas nach unten heraus */
+.melt{position:relative;height:56px;pointer-events:none;z-index:2}
+.melt-stream{position:absolute;left:50%;top:-14px;width:clamp(30px,3.4vw,40px);height:76px;margin-left:calc(clamp(30px,3.4vw,40px) / -2);
+  transform-origin:top center;
+  clip-path:polygon(34% 0,66% 0,72% 22%,88% 58%,80% 82%,50% 100%,20% 82%,12% 58%,28% 22%);
+  background:linear-gradient(180deg,
+    color-mix(in srgb,var(--acc) 90%,transparent) 0%,
+    color-mix(in srgb,var(--acc) 58%,transparent) 48%,
+    color-mix(in srgb,var(--acc) 12%,transparent) 100%);
+  filter:drop-shadow(0 8px 16px color-mix(in srgb,var(--acc) 45%,transparent))}
+.melt-drop{position:absolute;left:50%;top:34px;width:13px;height:15px;margin-left:-6.5px;opacity:0;
+  border-radius:50% 50% 54% 54%/62% 62% 38% 38%;background:color-mix(in srgb,var(--acc) 82%,transparent);
+  filter:drop-shadow(0 4px 10px color-mix(in srgb,var(--acc) 50%,transparent))}
+.melt.pour .melt-stream{animation:pour .72s cubic-bezier(.3,.7,.2,1) both}
+.melt.pour .melt-drop{animation:drip .8s .16s cubic-bezier(.4,.1,.7,1) both}
+@keyframes pour{0%{transform:scaleY(.06);opacity:.25}58%{transform:scaleY(1.14);opacity:1}100%{transform:scaleY(1);opacity:1}}
+@keyframes drip{0%{opacity:0;transform:translateY(-6px) scale(.5)}28%{opacity:1}100%{opacity:0;transform:translateY(30px) scale(1.25)}}
 /* Herausgezoomte Notiz */
-.scope-detail{position:relative;margin:16px 0 0;border-radius:16px;border:1px solid var(--line);background:var(--glass);
+.scope-detail{position:relative;margin:0;transform-origin:top center;border-radius:16px;border:1px solid var(--line);background:var(--glass);
   box-shadow:var(--shadow-lg);-webkit-backdrop-filter:blur(15px) saturate(1.3);backdrop-filter:blur(15px) saturate(1.3);
   overflow:hidden;display:flex;gap:18px;align-items:center;padding:16px 18px 16px 24px;text-align:left;
   transform-origin:top center}
 .scope-detail::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--acc,var(--amber))}
+.scope-detail::after{content:"";position:absolute;left:50%;top:0;width:clamp(120px,22vw,260px);height:2px;
+  transform:translateX(-50%);pointer-events:none;
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--acc) 85%,transparent),transparent);
+  box-shadow:0 0 22px 3px color-mix(in srgb,var(--acc) 35%,transparent)}
 .sd-main{flex:1;min-width:0}
 .sd-kick{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;font-family:var(--mono);font-size:11px;
   letter-spacing:.14em;text-transform:uppercase;color:var(--text-3)}
@@ -210,40 +266,15 @@ h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--e
 .seg button:hover{color:var(--text)}
 .seg button.active{background:var(--amber);color:var(--on-accent);font-weight:600}
 
-/* ── Kartei: kompakte Liste ────────────────────────────────── */
+/* ── Whiteboard 1: Haufen aus Glaskörpern je Kategorie ─────── */
 .deck{padding-bottom:90px}
-.group-head{display:flex;align-items:center;gap:14px;margin:26px 0 10px}
-.group-head:first-child{margin-top:0}
-.group-head .eyebrow{flex:none}
-.group-head .rule{flex:1;height:1px;background:var(--line)}
-.group-head .n{font-family:var(--mono);font-size:11.5px;color:var(--text-3);letter-spacing:.12em}
-.rows{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden;
-  background:var(--glass);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-.row{position:relative;display:grid;align-items:center;gap:0 14px;width:100%;padding:0 14px 0 0;min-height:44px;
-  grid-template-columns:3px 46px minmax(0,1fr) auto minmax(0,170px) 96px 16px;
-  border:0;border-top:1px solid var(--line);background:none;text-align:left;font:inherit;color:inherit;cursor:pointer;
-  opacity:0;animation:fade .4s ease forwards;transition:background var(--t-s)}
-.row:first-child{border-top:0}
-.row::before{content:"";grid-column:1;justify-self:stretch;height:100%;background:var(--acc);opacity:.85}
-.row:hover,.row:focus-visible{background:color-mix(in srgb,var(--acc) 10%,transparent);outline:none}
-.row:focus-visible{box-shadow:inset 0 0 0 2px var(--amber)}
-@keyframes fade{to{opacity:1}}
-.r-idx{font-family:var(--mono);font-size:11.5px;color:var(--text-3);letter-spacing:.06em;padding-left:11px}
-.r-title{font-size:14.5px;font-weight:600;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.r-cat{flex:none}
-.r-tags{display:flex;gap:4px;overflow:hidden}
-.r-tags .tag{font-size:10px;padding:1px 7px}
-.r-date{font-family:var(--mono);font-size:11.5px;color:var(--text-3);white-space:nowrap;text-align:right}
-.r-go{color:var(--text-3);font-size:13px;text-align:right;transition:color var(--t-s)}
-.row:hover .r-go{color:var(--acc)}
-
-/* ── Whiteboard: Haufen je Kategorie ───────────────────────── */
 .board{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px;
   padding:22px;border-radius:18px;border:1px solid var(--line);
   background-image:
-    repeating-linear-gradient(0deg,transparent 0 25px,color-mix(in srgb,var(--text-3) 16%,transparent) 25px 26px),
-    repeating-linear-gradient(90deg,transparent 0 25px,color-mix(in srgb,var(--text-3) 16%,transparent) 25px 26px);
-  background-color:var(--glass);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+    repeating-linear-gradient(0deg,transparent 0 25px,color-mix(in srgb,var(--text-3) 14%,transparent) 25px 26px),
+    repeating-linear-gradient(90deg,transparent 0 25px,color-mix(in srgb,var(--text-3) 14%,transparent) 25px 26px);
+  background-color:color-mix(in srgb,var(--void) 58%,transparent);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
 .pile{display:flex;flex-direction:column;gap:10px;min-width:0}
 .pile.open{grid-column:1/-1}
 .pile-head{display:flex;align-items:center;gap:10px;width:100%;padding:0;border:0;background:none;cursor:pointer;
@@ -255,29 +286,95 @@ h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--e
 .pile-n{font-family:var(--mono);font-size:11.5px;color:var(--text-3);letter-spacing:.12em}
 .pile-hint{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--text-3);white-space:nowrap}
 .pile-head:hover .pile-hint{color:var(--acc)}
+.cat-filter{border:1px solid var(--line);background:none;padding:2px 8px;border-radius:100px;cursor:pointer;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);
+  transition:color var(--t-s),border-color var(--t-s)}
+.cat-filter:hover{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 50%,transparent)}
 .pile-stack{position:relative;height:196px;cursor:pointer}
-.pile.open .pile-stack{height:auto;display:flex;flex-wrap:wrap;gap:14px;cursor:default;padding:4px 0}
-.sticky{position:absolute;left:50%;top:10px;width:158px;height:158px;margin-left:-79px;padding:12px 12px 10px;
+.pile.open .pile-stack{height:auto;display:flex;flex-wrap:wrap;gap:16px;cursor:default;padding:4px 0}
+
+/* Notizkörper: Glas statt Papier */
+.sticky{position:absolute;left:50%;top:10px;width:162px;height:158px;margin-left:-81px;padding:13px 14px 12px;
   display:flex;flex-direction:column;gap:6px;border:0;text-align:left;font:inherit;cursor:pointer;
-  color:#171b22;background-color:color-mix(in srgb,var(--acc) 62%,#fff);
-  background-image:linear-gradient(160deg,rgba(255,255,255,.34),rgba(0,0,0,.07));
-  box-shadow:0 12px 24px -14px rgba(0,0,0,.85),0 1px 0 rgba(255,255,255,.4) inset;
   transform:translate(var(--dx,0px),var(--dy,0px)) rotate(var(--rot,0deg));
   transition:transform var(--t-m) cubic-bezier(.2,.8,.2,1),box-shadow var(--t-m),opacity var(--t-m)}
-.sticky::after{content:"";position:absolute;right:0;bottom:0;width:18px;height:18px;
-  background:linear-gradient(135deg,transparent 50%,rgba(0,0,0,.16) 50%)}
+.sticky.glass{color:var(--text);border-radius:4px 11px 11px 4px;overflow:hidden;
+  background:linear-gradient(132deg,
+    color-mix(in srgb,var(--acc) 48%,transparent) 0%,
+    color-mix(in srgb,var(--acc) 16%,transparent) 52%,
+    rgba(255,255,255,.16) 100%);
+  -webkit-backdrop-filter:blur(8px) saturate(1.3);backdrop-filter:blur(8px) saturate(1.3);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.3),inset 2px 0 0 rgba(255,255,255,.45),
+             0 22px 36px -24px rgba(0,0,0,.95),0 0 30px -14px color-mix(in srgb,var(--acc) 62%,transparent)}
+.sticky.glass::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(0deg,color-mix(in srgb,var(--void) 74%,transparent) 2%,
+             color-mix(in srgb,var(--void) 30%,transparent) 48%,transparent 82%)}
+.sticky.glass::after{content:"";position:absolute;left:0;top:0;bottom:0;width:32%;pointer-events:none;
+  background:linear-gradient(100deg,rgba(255,255,255,.2),transparent 76%)}
 .pile:not(.open) .sticky:nth-child(n+6){opacity:0;pointer-events:none}
 .pile:not(.open) .pile-stack:hover .sticky{transform:translate(var(--dx,0px),calc(var(--dy,0px) - 5px)) rotate(var(--rot,0deg))}
 .pile.open .sticky{position:relative;left:auto;top:auto;margin:0;opacity:1;pointer-events:auto;
   transform:rotate(var(--rot,0deg))}
 .pile.open .sticky:hover,.sticky:focus-visible{outline:none;
-  transform:rotate(0deg) translateY(-4px) scale(1.03);box-shadow:0 16px 30px -14px rgba(0,0,0,.9)}
-.sticky:focus-visible{box-shadow:0 0 0 2px var(--amber),0 16px 30px -14px rgba(0,0,0,.9)}
-.s-date{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(23,27,34,.62)}
-.s-title{font-size:13.5px;font-weight:700;line-height:1.3;letter-spacing:-.01em;overflow:hidden;
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
-.s-text{font-size:11.5px;line-height:1.45;color:rgba(23,27,34,.76);overflow:hidden;
+  transform:rotate(0deg) translateY(-4px) scale(1.03);box-shadow:0 18px 32px -16px rgba(0,0,0,.9)}
+.sticky:focus-visible{box-shadow:0 0 0 2px var(--amber),0 18px 32px -16px rgba(0,0,0,.9)}
+.s-date{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;position:relative;
+  color:color-mix(in srgb,var(--text) 58%,transparent)}
+.s-title{font-size:13.5px;font-weight:700;line-height:1.3;letter-spacing:-.01em;overflow:hidden;position:relative;
+  overflow-wrap:anywhere;hyphens:auto;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.s-text{font-size:11.5px;line-height:1.45;overflow:hidden;position:relative;
+  color:color-mix(in srgb,var(--text) 74%,transparent);
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;margin-top:auto}
+
+/* ── Whiteboard 2: echte Tafeln im Halbkreis ───────────────── */
+.arena{position:relative;height:clamp(430px,56vh,580px);perspective:1500px;overflow:hidden;
+  touch-action:pan-y;cursor:grab;--r:640px}
+.arena.dragging{cursor:grabbing}
+.ring{position:absolute;inset:0;transform-style:preserve-3d;
+  transform:translateZ(calc(var(--r) * -1)) rotateY(var(--rot,0deg));
+  transition:transform .62s cubic-bezier(.2,.8,.2,1)}
+.arena.dragging .ring{transition:none}
+.wb{position:absolute;left:50%;top:50%;width:min(560px,80vw);height:clamp(350px,44vh,460px);
+  transform:translate(-50%,-50%) rotateY(var(--a)) translateZ(calc(var(--r) - var(--dz,0px)));
+  transition:transform .62s cubic-bezier(.2,.8,.2,1),filter var(--t-m),opacity var(--t-m)
+  display:flex;flex-direction:column;border-radius:12px;padding:10px;backface-visibility:hidden;
+  background:linear-gradient(180deg,#D8DDE4,#B9C0CB);
+  box-shadow:0 34px 60px -30px rgba(0,0,0,.85),0 0 0 1px rgba(0,0,0,.25)}
+.wb:not(.is-front){opacity:.5;filter:saturate(.8) brightness(.95);cursor:pointer}
+.wb:not(.is-front) .wb-face,.wb:not(.is-front) .wb-head{pointer-events:none}
+.wb-face{flex:1;border-radius:6px;padding:16px;overflow:auto;background:#FBFCFD;
+  box-shadow:inset 0 2px 10px rgba(16,22,31,.16);
+  display:flex;flex-wrap:wrap;align-content:flex-start;gap:14px}
+.wb-face::-webkit-scrollbar{width:8px}
+.wb-face::-webkit-scrollbar-thumb{background:rgba(16,22,31,.2);border-radius:8px}
+.wb-head{display:flex;align-items:baseline;gap:12px;padding:4px 8px 9px}
+.wb-title{font-family:var(--display);font-size:21px;font-weight:700;letter-spacing:-.02em;color:#20262F;
+  text-shadow:0 1px 0 rgba(255,255,255,.5)}
+.wb-cat{margin-left:auto;border:1px solid rgba(16,22,31,.22);background:none;padding:3px 10px;border-radius:100px;
+  cursor:pointer;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#4A5260}
+.wb-cat:hover{color:#11151c;border-color:rgba(16,22,31,.45)}
+.wb-n{font-family:var(--mono);font-size:11px;color:#69707B;letter-spacing:.12em}
+/* Zettel auf der Tafel: Papier, bunt, schon ausgebreitet */
+.sticky.paper{position:relative;left:auto;top:auto;margin:0;width:118px;height:118px;padding:10px 11px 9px;
+  color:#171b22;border-radius:2px;
+  background-color:color-mix(in srgb,var(--acc) 66%,#fff);
+  background-image:linear-gradient(160deg,rgba(255,255,255,.4),rgba(0,0,0,.08));
+  box-shadow:0 8px 14px -8px rgba(16,22,31,.6),0 1px 0 rgba(255,255,255,.5) inset;
+  transform:rotate(var(--rot,0deg))}
+.sticky.paper::after{content:"";position:absolute;right:0;bottom:0;width:15px;height:15px;
+  background:linear-gradient(135deg,transparent 50%,rgba(0,0,0,.14) 50%)}
+.sticky.paper:hover{transform:rotate(0deg) translateY(-4px) scale(1.05);box-shadow:0 14px 22px -10px rgba(16,22,31,.7);z-index:3}
+.sticky.paper .s-date{font-size:8.5px;color:rgba(23,27,34,.6)}
+.sticky.paper .s-title{font-size:12px;-webkit-line-clamp:4}
+.sticky.paper .s-text{display:none}
+.arena-nav{position:absolute;left:50%;bottom:8px;z-index:20;transform:translateX(-50%);
+  display:flex;align-items:center;gap:12px;padding:5px 8px;border-radius:100px;
+  background:var(--glass-2);border:1px solid var(--glass-edge);box-shadow:var(--shadow);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.arena-dots{display:flex;gap:6px}
+.arena-dots i{width:7px;height:7px;border-radius:50%;background:var(--line-hi);transition:background var(--t-s),transform var(--t-s)}
+.arena-dots i.on{background:var(--amber);transform:scale(1.35)}
+.arena-hint{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3)}
 .deck-empty{text-align:center;color:var(--text-3);font-style:italic;padding:60px 20px;border:1px dashed var(--line);border-radius:17px}
 
 /* ── Leseansicht ───────────────────────────────────────────── */
@@ -424,10 +521,16 @@ footer a:hover{color:var(--text)}
   .row{grid-template-columns:3px 40px minmax(0,1fr) auto 14px;padding-right:12px}
   .r-tags,.r-date{display:none}
   .board{padding:14px;gap:16px;grid-template-columns:1fr}
-  .sticky{width:140px;height:140px;margin-left:-70px}
+  .sticky{width:142px;height:142px;margin-left:-71px}
+  .arena{height:clamp(380px,64vh,520px)}
+  .wb{width:84vw;height:clamp(300px,46vh,390px);padding:8px}
+  .wb-face{padding:12px;gap:11px}
+  .sticky.paper{width:104px;height:104px}
   .hero-top{flex-direction:column;align-items:flex-start;gap:6px}
   .scope{--pw:20px}
-  .panes{height:96px}
+  .panes{height:168px}
+  .pane-body{width:150px;height:104px;padding:11px 12px 10px}
+  .melt{height:44px}
   .scope-detail{flex-direction:column;align-items:stretch;gap:12px;padding:14px 16px 14px 20px}
   .sd-side{flex-direction:row;align-items:center;justify-content:space-between}
   .bar-title{justify-content:flex-start}
@@ -482,17 +585,8 @@ footer a:hover{color:var(--text)}
       <div class="hero-count" id="heroCount">001 — 000</div>
     </div>
     <h1><span>Alles Notierte</span><br><em>auf einen Griff.</em></h1>
-    <p class="lead">Jede Scheibe ist eine Notiz – als Markdown-Datei in deinem Ordner. Der Kamm zeigt den ganzen Bestand: scrollen bringt eine Scheibe ins Ziel, sie steht offen und zoomt darunter heraus. <span class="mono">←</span> <span class="mono">→</span> blättert, Klick auf die offene Scheibe liest, <span class="mono">Esc</span> legt zurück.</p>
+    <p class="lead" id="lead">Jede Scheibe ist eine Notiz – als Markdown-Datei in deinem Ordner. Der Kamm zeigt den ganzen Bestand: scrollen bringt eine Scheibe ins Ziel, sie steht offen und zoomt darunter heraus. <span class="mono">←</span> <span class="mono">→</span> blättert, Klick auf die offene Scheibe liest, <span class="mono">Esc</span> legt zurück.</p>
     <div class="stats" id="stats"></div>
-    <div class="scope" id="scope">
-      <div class="scope-wrap">
-        <div class="panes" id="panes" aria-label="Notizen als Glasscheiben – seitlich scrollen">
-          <div class="panes-track" id="panesTrack"></div>
-        </div>
-        <div class="scope-aim" aria-hidden="true"><i></i><i></i></div>
-      </div>
-      <div class="scope-detail" id="scopeDetail"></div>
-    </div>
   </section>
 
   <section class="controls">
@@ -506,12 +600,29 @@ footer a:hover{color:var(--text)}
     <button class="pill" id="tagBtn" type="button">Tags</button>
     <button class="pill" id="catBtn" type="button" hidden></button>
     <div class="seg" role="group" aria-label="Ansicht">
-      <button data-view="liste" class="active">Liste</button>
-      <button data-view="board">Whiteboard</button>
+      <button data-view="kamm" class="active">Kamm<span class="kbd hide-sm">1</span></button>
+      <button data-view="board">Haufen<span class="kbd hide-sm">2</span></button>
+      <button data-view="arena">Tafeln<span class="kbd hide-sm">3</span></button>
     </div>
   </section>
 
-  <section class="deck" id="deck" aria-label="Notizen"></section>
+  <section class="stage" id="stage">
+    <div class="view" id="viewKamm">
+      <div class="scope" id="scope">
+        <div class="scope-wrap">
+          <div class="panes" id="panes" aria-label="Notizen als Glasscheiben – seitlich scrollen">
+            <div class="panes-track" id="panesTrack"></div>
+          </div>
+          <div class="scope-aim" aria-hidden="true"><i></i><i></i></div>
+        </div>
+        <div class="melt" id="melt" aria-hidden="true"><span class="melt-stream"></span><span class="melt-drop"></span></div>
+        <div class="scope-detail" id="scopeDetail"></div>
+      </div>
+    </div>
+    <div class="view" id="viewDeck">
+      <div class="deck" id="deck" aria-label="Notizen"></div>
+    </div>
+  </section>
 </main>
 
 <footer>
@@ -762,9 +873,15 @@ const notes = RAW.map(([cat,title,d], i) => {
 /* ───────── Zustand ───────── */
 let curIdx = 0, sortMode = 'kategorie', searchQuery = '';
 let activeCategory = null;     /* gesetzter Kategoriefilter – dann zeigen die Scheiben Tags */
-let viewMode = 'liste';        /* 'liste' oder 'board' (Whiteboard mit Haufen) */
+let viewMode = 'kamm';         /* sichtbare Ansicht: 'kamm', 'board' (Haufen) oder 'arena' (Tafeln) */
+let deckMode = 'board';        /* welche Ansicht in der Bühne unter #deck liegt */
 const openPiles = new Set();   /* ausgebreitete Haufen im Whiteboard */
-try { const v = localStorage.getItem('noteos.view'); if (v === 'board' || v === 'liste') viewMode = v; } catch(e){}
+try {
+  const v = localStorage.getItem('noteos.view');
+  if (v === 'board' || v === 'arena' || v === 'kamm') viewMode = v;
+  if (v === 'liste') viewMode = 'board';                  /* die alte Liste ist abgelöst */
+  if (viewMode !== 'kamm') deckMode = viewMode;
+} catch(e){}
 const activeTags = new Set();
 let view = [];                 /* aktuell sichtbare Notizen in Anzeigereihenfolge */
 let reading = false;
@@ -822,25 +939,15 @@ function filtered(){
   return list;
 }
 /* Kompakte Zeile: ein Bildschirm zeigt jetzt drei- bis viermal so viel. */
-function rowHtml(n, pos, delay){
-  const tags = n.tags.filter(t => t !== n.category).slice(0,3)
-    .map(t => '<span class="tag">'+esc(t)+'</span>').join('');
-  return '<button class="row" type="button" data-note="'+n.id+'" style="--acc:'+n.accent+';animation-delay:'+delay+'ms"'
-    + ' aria-label="'+esc(n.title)+' öffnen">'
-    + '<span class="r-idx">'+pad3(pos)+'</span>'
-    + '<span class="r-title">'+esc(n.title)+'</span>'
-    + '<span class="tag c-cat r-cat">'+esc(n.category)+'</span>'
-    + '<span class="r-tags">'+tags+'</span>'
-    + '<span class="r-date">'+esc(n.modified)+'</span>'
-    + '<span class="r-go">↗</span></button>';
-}
-/* Zettel für das Whiteboard – im Haufen leicht verdreht gestapelt. */
-function stickyHtml(n, i){
-  const rot = ((n.id*37 % 9) - 4) * 1.1;
+/* Notizkörper – im Haufen (Glas) oder auf der Tafel (Papier). */
+function stickyHtml(n, i, kind){
+  const rot = ((n.id*37 % 9) - 4) * 1.2;
   const dx = ((n.id*53 % 7) - 3) * 2.2 + i*1.5;
   const dy = i * 7;
-  return '<button class="sticky" type="button" data-note="'+n.id+'" style="--acc:'+n.accent+';'
-    + '--rot:'+rot.toFixed(1)+'deg;--dx:'+dx.toFixed(1)+'px;--dy:'+dy+'px;z-index:'+(40-i)+'"'
+  const paper = kind === 'paper';
+  return '<button class="sticky '+(paper ? 'paper' : 'glass')+'" type="button" data-note="'+n.id+'"'
+    + ' style="--acc:'+n.accent+';--rot:'+rot.toFixed(1)+'deg;'
+    + (paper ? '' : '--dx:'+dx.toFixed(1)+'px;--dy:'+dy+'px;z-index:'+(40-i)+';')+'"'
     + ' aria-label="'+esc(n.title)+' öffnen">'
     + '<span class="s-date">'+esc(n.modified)+'</span>'
     + '<span class="s-title">'+esc(n.title)+'</span>'
@@ -859,26 +966,7 @@ function groupByCategory(list){
   return Object.keys(by).sort((a,b)=>a.localeCompare(b,'de'))
     .map(cat => ({ cat, notes: sortList(by[cat].slice()) }));
 }
-/* Liste: nach Kategorie gruppiert oder als eine durchgehende Reihe. */
-function renderList(list){
-  let html = '', pos = 0, d = 0;
-  if (sortMode === 'kategorie'){
-    const order = [];
-    groupByCategory(list).forEach(g => {
-      html += '<div class="group-head"><div class="eyebrow">'+esc(g.cat)+'</div><div class="rule"></div>'
-            + '<div class="n">'+pad3(g.notes.length)+'</div></div><div class="rows">';
-      g.notes.forEach(n => { order.push(n); html += rowHtml(n, ++pos, Math.min(d += 14, 420)); });
-      html += '</div>';
-    });
-    view = order;
-  } else {
-    const l = sortList(list.slice());
-    view = l;
-    html = '<div class="rows">' + l.map(n => rowHtml(n, ++pos, Math.min(d += 14, 420))).join('') + '</div>';
-  }
-  return html;
-}
-/* Whiteboard: je Kategorie ein Haufen Notizzettel. */
+/* Whiteboard 1: je Kategorie ein Haufen Glaskörper. */
 function renderBoard(list){
   const groups = groupByCategory(list);
   const order = [];
@@ -886,16 +974,47 @@ function renderBoard(list){
     g.notes.forEach(n => order.push(n));
     const open = openPiles.has(g.cat);
     return '<div class="pile'+(open ? ' open' : '')+'" data-cat="'+esc(g.cat)+'" style="--acc:'+g.notes[0].accent+'">'
+      + '<div class="pile-head-row" style="display:flex;align-items:center;gap:10px">'
       + '<button class="pile-head" type="button" aria-expanded="'+(open?'true':'false')+'">'
       +   '<span class="pile-dot"></span><span class="pile-name">'+esc(g.cat)+'</span>'
       +   '<span class="pile-n">'+pad3(g.notes.length)+'</span>'
       +   '<span class="pile-hint">'+(open ? 'stapeln' : 'ausbreiten')+'</span></button>'
+      + '<button class="cat-filter" type="button" data-cat="'+esc(g.cat)+'" title="Nur diese Kategorie zeigen">nur</button>'
+      + '</div>'
       + '<div class="pile-stack">'
-      +   g.notes.map((n,i) => stickyHtml(n, open ? 0 : i)).join('')
+      +   g.notes.map((n,i) => stickyHtml(n, open ? 0 : i, 'glass')).join('')
       + '</div></div>';
   }).join('') + '</div>';
   view = order;
   return html;
+}
+/* Whiteboard 2: je Kategorie eine Tafel, im Halbkreis aufgestellt. */
+function renderArena(list){
+  const groups = groupByCategory(list);
+  const order = [];
+  const n = groups.length;
+  const step = n > 1 ? Math.min(30, 160 / (n - 1)) : 0;
+  arenaStep = step;
+  arenaCount = n;
+  if (arenaIdx >= n) arenaIdx = n ? n - 1 : 0;
+  const boards = groups.map((g, i) => {
+    g.notes.forEach(x => order.push(x));
+    return '<section class="wb" data-i="'+i+'" data-cat="'+esc(g.cat)+'"'
+      + ' style="--acc:'+g.notes[0].accent+';--a:'+((i - 0) * step).toFixed(2)+'deg">'
+      + '<div class="wb-head"><span class="wb-title">'+esc(g.cat)+'</span>'
+      +   '<span class="wb-n">'+pad3(g.notes.length)+' Notizen</span>'
+      +   '<button class="wb-cat cat-filter" type="button" data-cat="'+esc(g.cat)+'"'
+      +     ' title="Nur diese Kategorie zeigen">nur diese</button></div>'
+      + '<div class="wb-face">' + g.notes.map(x => stickyHtml(x, 0, 'paper')).join('') + '</div>'
+      + '</section>';
+  }).join('');
+  view = order;
+  return '<div class="arena" id="arena"><div class="ring" id="ring">' + boards + '</div>'
+    + '<div class="arena-nav">'
+    +   '<button class="pill icon-btn" type="button" data-arena="-1" aria-label="Tafel zurück">‹</button>'
+    +   '<span class="arena-dots" id="arenaDots"></span>'
+    +   '<button class="pill icon-btn" type="button" data-arena="1" aria-label="Tafel weiter">›</button>'
+    + '</div></div>';
 }
 function togglePile(el){
   const cat = el.dataset.cat;
@@ -904,14 +1023,94 @@ function togglePile(el){
 }
 function renderDeck(){
   const list = filtered();
-  deck.dataset.mode = viewMode;
+  deck.dataset.mode = deckMode;
   if (!list.length){
     view = [];
     deck.innerHTML = '<div class="deck-empty">Keine Notiz gefunden.</div>';
     updateHero(); return;
   }
-  deck.innerHTML = viewMode === 'board' ? renderBoard(list) : renderList(list);
+  deck.innerHTML = deckMode === 'arena' ? renderArena(list) : renderBoard(list);
+  if (deckMode === 'arena') setupArena();
   updateHero();
+}
+/* ───────── Halbkreis: Tafeln drehen, wischen, einrasten ───────── */
+let arenaIdx = 0, arenaStep = 30, arenaCount = 0, arenaR = 640;
+function setupArena(){
+  const arena = $('#arena');
+  if (!arena) return;
+  /* Radius so wählen, dass die Tafeln sich leicht überlappen und der Bogen trägt. */
+  const w = arena.querySelector('.wb') ? arena.querySelector('.wb').getBoundingClientRect().width : 520;
+  arenaR = Math.round(Math.max(420, w * 1.5));
+  arena.style.setProperty('--r', arenaR + 'px');
+  applyArena(false);
+  bindArena(arena);
+}
+function applyArena(smooth){
+  const ring = $('#ring'), arena = $('#arena');
+  if (!ring || !arena) return;
+  ring.style.setProperty('--rot', (-arenaIdx * arenaStep).toFixed(2) + 'deg');
+  /* Hintere Tafeln zusätzlich nach hinten setzen, sonst schwingt ihre
+     Vorderkante vor die aktive Tafel. */
+  Array.from(ring.children).forEach((b,i) => {
+    const d = Math.abs(i - arenaIdx);
+    b.classList.toggle('is-front', i === arenaIdx);
+    /* nie weiter zurück als der halbe Radius – sonst kippt die Tafel nach vorn */
+    b.style.setProperty('--dz', Math.round(Math.min(d * 150, arenaR * 0.5)) + 'px');
+    b.style.zIndex = String(100 - d);
+    b.style.visibility = d > 3 ? 'hidden' : '';
+  });
+  const dots = $('#arenaDots');
+  if (dots) dots.innerHTML = Array.from({length:arenaCount}, (_,i) =>
+    '<i class="'+(i === arenaIdx ? 'on' : '')+'"></i>').join('');
+  if (!smooth) ring.getBoundingClientRect();
+}
+function stepArena(dir){
+  if (!arenaCount) return;
+  const next = Math.max(0, Math.min(arenaIdx + dir, arenaCount - 1));
+  if (next === arenaIdx) return;
+  arenaIdx = next;
+  applyArena(true);
+}
+function bindArena(arena){
+  const ring = $('#ring');
+  let down = false, sx = 0, moved = 0, base = 0;
+  arena.addEventListener('pointerdown', e => {
+    if (e.target.closest('button') && !e.target.closest('.sticky')) return;
+    down = true; moved = 0; sx = e.clientX; base = arenaIdx * arenaStep;
+    arena.classList.add('dragging');
+  });
+  arena.addEventListener('pointermove', e => {
+    if (!down) return;
+    const dx = e.clientX - sx;
+    moved = Math.max(moved, Math.abs(dx));
+    const rot = -(base - dx * 0.16);
+    ring.style.setProperty('--rot', rot.toFixed(2) + 'deg');
+  });
+  const end = e => {
+    if (!down) return;
+    down = false;
+    arena.classList.remove('dragging');
+    if (moved > 6){
+      const dx = (e && e.clientX !== undefined) ? e.clientX - sx : 0;
+      const shift = Math.round(-dx * 0.16 / arenaStep);
+      arenaIdx = Math.max(0, Math.min(arenaIdx + shift, arenaCount - 1));
+      arena.dataset.dragged = '1';
+      setTimeout(() => { arena.dataset.dragged = ''; }, 260);
+    }
+    applyArena(true);
+  };
+  ['pointerup','pointercancel','pointerleave'].forEach(ev => arena.addEventListener(ev, end));
+  arena.addEventListener('wheel', e => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;    /* senkrecht bleibt Seitenscrollen */
+    e.preventDefault();
+    if (Math.abs(e.deltaX) > 12) stepArena(e.deltaX > 0 ? 1 : -1);
+  }, { passive:false });
+  arena.addEventListener('click', e => {
+    const nav = e.target.closest('[data-arena]');
+    if (nav){ stepArena(+nav.dataset.arena); return; }
+    const wb = e.target.closest('.wb');
+    if (wb && !wb.classList.contains('is-front')){ arenaIdx = +wb.dataset.i; applyArena(true); }
+  });
 }
 function updateHero(){
   const cats = new Set(notes.map(n => n.category));
@@ -934,6 +1133,13 @@ function updateHero(){
    Eine Scheibe je Notiz, Farbe = Kategorie. Die Scheibe im Ziel steht
    offen; ihre Notiz zoomt darunter heraus. Scrollen wechselt die Notiz. */
 const panesEl = $('#panes'), trackEl = $('#panesTrack'), detailEl = $('#scopeDetail');
+const meltEl = $('#melt'), scopeEl = $('#scope');
+function playMelt(){
+  if (!meltEl || reduced()) return;
+  meltEl.classList.remove('pour');
+  void meltEl.offsetWidth;            /* Animation neu starten */
+  meltEl.classList.add('pour');
+}
 let paneIdx = 0;            /* Position im aktuellen View */
 let paneCenters = [];       /* Mittelpunkte der Scheiben, für das Ziel */
 let paneNote = null;        /* Notiz, die gerade im Ziel steht */
@@ -951,12 +1157,20 @@ function buildScope(){
     const h = 46 + Math.sin(i/3.1)*15 + Math.sin(i/7.7)*9;      /* die alte Welle, jetzt endlos */
     const rot = Math.cos(i/3.1)*9;
     const y = Math.sin(i/3.1)*-6;
+    const prev = view[i-1];
+    /* Nur die erste Scheibe einer Kategorie trägt die Beschriftung –
+       bei gesetztem Kategoriefilter steht dort stattdessen der Tag. */
+    const label = (activeCategory || !prev || prev.category !== n.category)
+      ? '<span class="pane-label">'+esc(paneLabel(n))+'</span>' : '';
     return '<button class="pane" type="button" data-i="'+i+'" data-note="'+n.id+'" tabindex="-1"'
       + ' style="--wc:'+n.accent+';--h:'+h.toFixed(1)+'%;--rot:'+rot.toFixed(1)+'deg;--y:'+y.toFixed(1)+'px"'
       + ' aria-label="'+esc(n.title)+' – '+esc(n.category)+'">'
-      + '<span class="pane-glass"></span><span class="pane-label">'+esc(paneLabel(n))+'</span></button>';
+      + '<span class="pane-glass"></span>' + label
+      + '<span class="pane-body"><span class="body-kick">'+esc(n.category)+' · '+esc(n.modified)+'</span>'
+      +   '<span class="body-title">'+esc(n.title)+'</span></span>'
+      + '</button>';
   }).join('');
-  measurePanes();
+  if (panesEl.clientWidth) measurePanes();
   let i = 0;
   if (keep !== null){ const k = view.findIndex(n => n.id === keep); if (k >= 0) i = k; }
   setActivePane(i, { animate:false });
@@ -976,7 +1190,7 @@ function nearestPane(){
   return best;
 }
 function centerPane(i, behavior){
-  if (!paneCenters.length) return;
+  if (!paneCenters.length || !panesEl.clientWidth) return;
   const left = paneCenters[Math.max(0,Math.min(i,paneCenters.length-1))] - panesEl.clientWidth/2;
   panesEl.scrollTo({ left, behavior: (behavior === 'smooth' && !reduced()) ? 'smooth' : 'auto' });
 }
@@ -991,12 +1205,17 @@ function setActivePane(i, { animate = true } = {}){
   el.tabIndex = 0;
   paneIdx = i;
   paneNote = view[i] || null;
+  if (scopeEl && paneNote) scopeEl.style.setProperty('--acc', paneNote.accent);
   renderScopeDetail(paneNote, animate);
+  if (animate) playMelt();
   updateScopeCount();
 }
 function updateScopeCount(){
   const c = $('#heroCount');
-  if (c) c.textContent = pad3(view.length ? paneIdx+1 : 0) + ' — ' + pad3(view.length);
+  if (!c) return;
+  c.textContent = (typeof viewMode !== 'undefined' && viewMode !== 'kamm')
+    ? pad3(view.length) + ' von ' + pad3(notes.length)
+    : pad3(view.length ? paneIdx+1 : 0) + ' — ' + pad3(view.length);
 }
 function renderScopeDetail(n, animate){
   if (!detailEl) return;
@@ -1020,8 +1239,10 @@ function renderScopeDetail(n, animate){
     + '<div class="sd-side"><button class="pill primary" type="button" data-open="'+n.id+'">Lesen ↗</button>'
     +   '<span class="sd-hint">← → blättert</span></div>';
   if (animate && !reduced() && detailEl.animate){
-    detailEl.animate([{ opacity:0, transform:'translateY(-10px) scale(.965)' }, { opacity:1, transform:'none' }],
-      { duration:300, easing:'cubic-bezier(.2,.8,.2,1)' });
+    detailEl.animate(
+      [{ opacity:0, transform:'translateY(-16px) scaleY(.82) scaleX(.97)' },
+       { opacity:1, transform:'none' }],
+      { duration:520, delay:90, easing:'cubic-bezier(.2,.85,.25,1)', fill:'backwards' });
   }
 }
 /* Scrollen im Kamm setzt das Ziel neu */
@@ -1111,15 +1332,17 @@ function syncScope(id){
   centerPane(i, 'auto');
 }
 deck.addEventListener('click', e => {
+  const cf = e.target.closest('.cat-filter');
+  if (cf){ setCategoryFilter(activeCategory === cf.dataset.cat ? null : cf.dataset.cat); return; }
   const sticky = e.target.closest('.sticky');
   const pileHead = e.target.closest('.pile-head');
   const stack = e.target.closest('.pile-stack');
   const pile = e.target.closest('.pile');
   if (pileHead && pile){ togglePile(pile); return; }
   if (pile && !pile.classList.contains('open') && (stack || sticky)){ togglePile(pile); return; }
+  const arena = e.target.closest('.arena');
+  if (arena && arena.dataset.dragged === '1') return;      /* Wischen ist kein Klick */
   if (sticky){ openNote(+sticky.dataset.note, sticky); return; }
-  const r = e.target.closest('.row');
-  if (r) openNote(+r.dataset.note, r);
 });
 $('#search').addEventListener('input', e => { searchQuery = e.target.value; renderDeck(); });
 $$('.seg button[data-sort]').forEach(b => b.addEventListener('click', () => {
@@ -1127,14 +1350,70 @@ $$('.seg button[data-sort]').forEach(b => b.addEventListener('click', () => {
   $$('.seg button[data-sort]').forEach(x => x.classList.toggle('active', x === b));
   renderDeck();
 }));
-/* Ansicht umschalten: kompakte Liste ↔ Whiteboard mit Haufen */
-$$('.seg button[data-view]').forEach(b => b.addEventListener('click', () => {
-  viewMode = b.dataset.view;
-  $$('.seg button[data-view]').forEach(x => x.classList.toggle('active', x === b));
+/* ───────── Bühne: eine Ansicht sichtbar, weicher Wechsel ─────────
+   Kamm, Liste und Whiteboard liegen übereinander. Beim Wechsel blendet
+   die alte Ansicht ab, die Bühne fährt auf die neue Höhe, die neue
+   Ansicht kommt herein – kein Sprung. */
+const stage = $('#stage');
+const VIEW_EL = { kamm:'#viewKamm', board:'#viewDeck', arena:'#viewDeck' };
+const LEADS = {
+  kamm:'Jede Scheibe ist eine Notiz. Der Kamm zeigt den ganzen Bestand: scrollen bringt eine Scheibe ins Ziel, sie steht offen und zoomt darunter heraus.',
+  board:'Die Werkbank: je Kategorie ein Haufen Glaskörper. Haufen antippen breitet ihn aus, ein Körper öffnet die Notiz.',
+  arena:'Die Tafeln stehen im Halbkreis – je Kategorie eine, die Zettel liegen schon ausgebreitet darauf. Wischen dreht weiter.'
+};
+let switching = false, pendingView = null;
+function viewEl(mode){ return $(VIEW_EL[mode]); }
+function applyView(){
+  $$('.view').forEach(v => v.classList.remove('is-on'));
+  viewEl(viewMode).classList.add('is-on');
+  $$('.seg button[data-view]').forEach(x => x.classList.toggle('active', x.dataset.view === viewMode));
+  const lead = $('#lead');
+  if (lead) lead.innerHTML = LEADS[viewMode];
+  if (viewMode === 'kamm'){ measurePanes(); centerPane(paneIdx, 'auto'); }
+  updateScopeCount();
+}
+function switchView(next){
+  if (!VIEW_EL[next]) return;
+  if (switching){ pendingView = next; return; }   /* schneller Zweitklick geht nicht verloren */
+  if (next === viewMode) return;
+  const prevEl = viewEl(viewMode);
+  const soft = !reduced() && !!stage.animate;
+  const from = stage.getBoundingClientRect().height;
+  switching = true;
+  /* Abbild der alten Ansicht: es blendet ab, während die neue schon da ist
+     – so bleibt beim Wechsel nie eine Lücke stehen. */
+  let ghost = null;
+  if (soft){
+    ghost = prevEl.cloneNode(true);
+    ghost.removeAttribute('id');
+    ghost.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
+    ghost.classList.add('view-ghost','is-on');
+    const gp = ghost.querySelector('.panes');
+    stage.appendChild(ghost);
+    if (gp) gp.scrollLeft = panesEl.scrollLeft;
+  }
+  viewMode = next;
+  if (next !== 'kamm') deckMode = next;
   try { localStorage.setItem('noteos.view', viewMode); } catch(e){}
   renderDeck();
-}));
-$$('.seg button[data-view]').forEach(x => x.classList.toggle('active', x.dataset.view === viewMode));
+  applyView();
+  const done = () => {
+    if (ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
+    stage.style.height = ''; stage.style.overflow = ''; switching = false;
+    if (pendingView){ const n = pendingView; pendingView = null; switchView(n); }
+  };
+  if (!soft){ done(); return; }
+  const to = stage.getBoundingClientRect().height;
+  stage.style.overflow = 'hidden';
+  ghost.animate([{ opacity:1, transform:'none' }, { opacity:0, transform:'translateY(-14px) scale(.985)' }],
+    { duration:260, easing:'cubic-bezier(.4,0,1,1)', fill:'forwards' });
+  viewEl(viewMode).animate([{ opacity:0, transform:'translateY(18px) scale(.99)' }, { opacity:1, transform:'none' }],
+    { duration:400, easing:'cubic-bezier(.2,.8,.2,1)', fill:'backwards' });
+  const h = stage.animate([{ height:from+'px' }, { height:to+'px' }],
+    { duration:430, easing:'cubic-bezier(.2,.8,.2,1)' });
+  h.onfinish = done; h.oncancel = done;
+}
+$$('.seg button[data-view]').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
 $('#home').addEventListener('click', e => {
   e.preventDefault();
   if (reading) closeNote(); else scrollTo({ top:0, behavior:'smooth' });
@@ -1313,7 +1592,16 @@ addEventListener('keydown', e => {
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
   if (e.key === 'Escape' && reading){ closeNote(); return; }
   if (!reading){
-    /* In der Kartei blättern die Pfeiltasten durch die Glasscheiben. */
+    /* 1 2 3 schalten die Ansicht, die Pfeile blättern im Kamm. */
+    if (e.key === '1'){ e.preventDefault(); switchView('kamm'); return; }
+    if (e.key === '2'){ e.preventDefault(); switchView('board'); return; }
+    if (e.key === '3'){ e.preventDefault(); switchView('arena'); return; }
+    if (viewMode === 'arena'){
+      if (e.key === 'ArrowLeft'){ e.preventDefault(); stepArena(-1); }
+      else if (e.key === 'ArrowRight'){ e.preventDefault(); stepArena(1); }
+      return;
+    }
+    if (viewMode !== 'kamm') return;
     if (t && t.closest && t.closest('#panes')) return;   /* dort greift der eigene Handler */
     if (e.key === 'ArrowLeft'){ e.preventDefault(); stepPane(-1); }
     else if (e.key === 'ArrowRight'){ e.preventDefault(); stepPane(1); }
@@ -2010,6 +2298,8 @@ $('#delBtn').addEventListener('click', async () => {
 
 /* ───────── Start ───────── */
 renderDeck();
+applyView();
+requestAnimationFrame(() => { if (viewMode === 'kamm'){ measurePanes(); centerPane(paneIdx, 'auto'); } });
 updateTagBtn();
 initStorage();
 const startHash = /^#n(\d+)$/.exec(location.hash);
