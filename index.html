@@ -342,7 +342,7 @@ h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--e
   box-shadow:0 34px 60px -30px rgba(0,0,0,.85),0 0 0 1px rgba(0,0,0,.25)}
 .wb:not(.is-front){opacity:.5;filter:saturate(.8) brightness(.95);cursor:pointer}
 .wb:not(.is-front) .wb-face,.wb:not(.is-front) .wb-head{pointer-events:none}
-.wb-face{flex:1;border-radius:6px;padding:16px;overflow:auto;background:#FBFCFD;
+.wb-face{flex:1;border-radius:6px;padding:16px;overflow-y:auto;overflow-x:hidden;touch-action:pan-y;background:#FBFCFD;
   box-shadow:inset 0 2px 10px rgba(16,22,31,.16);
   display:flex;flex-wrap:wrap;align-content:flex-start;gap:14px}
 .wb-face::-webkit-scrollbar{width:8px}
@@ -1073,33 +1073,73 @@ function stepArena(dir){
 }
 function bindArena(arena){
   const ring = $('#ring');
-  let down = false, sx = 0, moved = 0, base = 0;
-  arena.addEventListener('pointerdown', e => {
-    if (e.target.closest('button') && !e.target.closest('.sticky')) return;
-    down = true; moved = 0; sx = e.clientX; base = arenaIdx * arenaStep;
+  let down = false, sx = 0, sy = 0, lastX = 0, moved = 0, base = 0;
+  let capturedId = null, captured = false;
+  const begin = (x, y, target) => {
+    if (target.closest && target.closest('button') && !target.closest('.sticky')) return false;
+    down = true; moved = 0; sx = lastX = x; sy = y; base = arenaIdx * arenaStep;
     arena.classList.add('dragging');
-  });
-  arena.addEventListener('pointermove', e => {
+    return true;
+  };
+  const drag = x => {
     if (!down) return;
-    const dx = e.clientX - sx;
+    lastX = x;
+    const dx = x - sx;
     moved = Math.max(moved, Math.abs(dx));
-    const rot = -(base - dx * 0.16);
-    ring.style.setProperty('--rot', rot.toFixed(2) + 'deg');
-  });
-  const end = e => {
+    ring.style.setProperty('--rot', (-(base - dx * 0.16)).toFixed(2) + 'deg');
+  };
+  const finish = () => {
     if (!down) return;
     down = false;
     arena.classList.remove('dragging');
+    const dx = lastX - sx;
     if (moved > 6){
-      const dx = (e && e.clientX !== undefined) ? e.clientX - sx : 0;
-      const shift = Math.round(-dx * 0.16 / arenaStep);
+      let shift = Math.round(-dx * 0.16 / arenaStep);
+      if (!shift && Math.abs(dx) > 42) shift = dx < 0 ? 1 : -1;   /* kurzer Wisch zählt auch */
       arenaIdx = Math.max(0, Math.min(arenaIdx + shift, arenaCount - 1));
       arena.dataset.dragged = '1';
-      setTimeout(() => { arena.dataset.dragged = ''; }, 260);
+      setTimeout(() => { arena.dataset.dragged = ''; }, 280);
     }
     applyArena(true);
   };
-  ['pointerup','pointercancel','pointerleave'].forEach(ev => arena.addEventListener(ev, end));
+  /* Maus und Stift über Pointer-Events … */
+  arena.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch') return;
+    if (e.button !== undefined && e.button !== 0) return;
+    begin(e.clientX, e.clientY, e.target);
+    capturedId = e.pointerId;
+  });
+  arena.addEventListener('pointermove', e => {
+    if (e.pointerType === 'touch' || !down) return;
+    drag(e.clientX);
+    /* Zeiger erst einfangen, wenn wirklich gezogen wird – sonst geht der
+       Klick auf einen Zettel verloren. */
+    if (moved > 5 && capturedId !== null && !captured){
+      try { arena.setPointerCapture(capturedId); captured = true; } catch(err){}
+    }
+  });
+  ['pointerup','pointercancel'].forEach(ev =>
+    arena.addEventListener(ev, e => {
+      if (e.pointerType === 'touch') return;
+      if (captured){ try { arena.releasePointerCapture(capturedId); } catch(err){} }
+      capturedId = null; captured = false;
+      finish();
+    }));
+  /* … Finger direkt über Touch-Events: so kann kein Scrollcontainer
+     die Wischgeste vorher abfangen. */
+  arena.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    begin(e.touches[0].clientX, e.touches[0].clientY, e.target);
+  }, { passive:true });
+  arena.addEventListener('touchmove', e => {
+    if (!down || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) < Math.abs(dy) && moved < 8) return;          /* senkrecht: Seite scrollt */
+    drag(t.clientX);
+    if (e.cancelable) e.preventDefault();
+  }, { passive:false });
+  ['touchend','touchcancel'].forEach(ev => arena.addEventListener(ev, () => finish(), { passive:true }));
   arena.addEventListener('wheel', e => {
     if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;    /* senkrecht bleibt Seitenscrollen */
     e.preventDefault();
@@ -1108,6 +1148,7 @@ function bindArena(arena){
   arena.addEventListener('click', e => {
     const nav = e.target.closest('[data-arena]');
     if (nav){ stepArena(+nav.dataset.arena); return; }
+    if (arena.dataset.dragged === '1') return;
     const wb = e.target.closest('.wb');
     if (wb && !wb.classList.contains('is-front')){ arenaIdx = +wb.dataset.i; applyArena(true); }
   });
