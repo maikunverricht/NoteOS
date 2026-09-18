@@ -210,58 +210,74 @@ h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--e
 .seg button:hover{color:var(--text)}
 .seg button.active{background:var(--amber);color:var(--on-accent);font-weight:600}
 
-/* ── Kartei ────────────────────────────────────────────────── */
+/* ── Kartei: kompakte Liste ────────────────────────────────── */
 .deck{padding-bottom:90px}
-.group-head{display:flex;align-items:center;gap:14px;margin:34px 0 16px}
+.group-head{display:flex;align-items:center;gap:14px;margin:26px 0 10px}
 .group-head:first-child{margin-top:0}
 .group-head .eyebrow{flex:none}
 .group-head .rule{flex:1;height:1px;background:var(--line)}
 .group-head .n{font-family:var(--mono);font-size:11.5px;color:var(--text-3);letter-spacing:.12em}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
-.card{position:relative;border-radius:17px;padding:14px;display:flex;flex-direction:column;gap:12px;cursor:pointer;
-  border:0;background:none;text-align:left;font:inherit;color:inherit;opacity:0;animation:fade .55s ease forwards;
-  min-width:0;overflow:hidden}
+.rows{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  background:var(--glass);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.row{position:relative;display:grid;align-items:center;gap:0 14px;width:100%;padding:0 14px 0 0;min-height:44px;
+  grid-template-columns:3px 46px minmax(0,1fr) auto minmax(0,170px) 96px 16px;
+  border:0;border-top:1px solid var(--line);background:none;text-align:left;font:inherit;color:inherit;cursor:pointer;
+  opacity:0;animation:fade .4s ease forwards;transition:background var(--t-s)}
+.row:first-child{border-top:0}
+.row::before{content:"";grid-column:1;justify-self:stretch;height:100%;background:var(--acc);opacity:.85}
+.row:hover,.row:focus-visible{background:color-mix(in srgb,var(--acc) 10%,transparent);outline:none}
+.row:focus-visible{box-shadow:inset 0 0 0 2px var(--amber)}
 @keyframes fade{to{opacity:1}}
-.card-bg{position:absolute;inset:0;border-radius:inherit;border:1px solid var(--line);background:var(--glass);box-shadow:var(--shadow-lg);
-  -webkit-backdrop-filter:blur(15px) saturate(1.3);backdrop-filter:blur(15px) saturate(1.3);
-  transition:border-color var(--t-m),box-shadow var(--t-m),transform var(--t-m)}
-.card:hover .card-bg,.card:focus-visible .card-bg{border-color:var(--acc,var(--line-hi))}
-.card:focus-visible{outline:none}
-.card:focus-visible .card-bg{box-shadow:var(--shadow-lg),0 0 0 2px var(--amber)}
-.c-head{position:relative;display:flex;align-items:center;gap:10px;padding:0 4px;min-width:0}
-.c-idx{font-family:var(--mono);font-size:11.5px;color:var(--text-3);letter-spacing:.06em;flex:none}
-.c-head h2{margin:0;font-size:18px;letter-spacing:-.02em;font-weight:700;font-variation-settings:'wdth' 108;line-height:1.25;
-  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);
-  border:1px solid var(--line);border-radius:100px;padding:2px 8px;white-space:nowrap}
-.c-cat{border-color:color-mix(in srgb,var(--acc) 45%,transparent);color:var(--acc)}
+.r-idx{font-family:var(--mono);font-size:11.5px;color:var(--text-3);letter-spacing:.06em;padding-left:11px}
+.r-title{font-size:14.5px;font-weight:600;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.r-cat{flex:none}
+.r-tags{display:flex;gap:4px;overflow:hidden}
+.r-tags .tag{font-size:10px;padding:1px 7px}
+.r-date{font-family:var(--mono);font-size:11.5px;color:var(--text-3);white-space:nowrap;text-align:right}
+.r-go{color:var(--text-3);font-size:13px;text-align:right;transition:color var(--t-s)}
+.row:hover .r-go{color:var(--acc)}
 
-/* Vorschau: ein Blatt mit gefächertem Stapel dahinter */
-.leaf{position:relative;aspect-ratio:16/10;border-radius:11px;perspective:1000px}
-.leaf-stack{position:absolute;inset:0;transform-style:preserve-3d;transition:transform var(--t-m) cubic-bezier(.2,.8,.2,1)}
-.card:hover .leaf-stack{transform:rotateX(2deg) translateY(-3px)}
-.leaf-back{position:absolute;left:8px;right:8px;top:10px;bottom:-4px;border-radius:9px;background:var(--sheet);
-  border:1px solid var(--line-2);transform:translateZ(-24px) rotate(-1.6deg);opacity:.75}
-.leaf-back.b2{left:14px;right:14px;top:16px;transform:translateZ(-42px) rotate(2.2deg);opacity:.45}
-.leaf-face{position:absolute;inset:0;border-radius:11px;overflow:hidden;background:var(--sheet);
-  border:1px solid var(--line);padding:14px 15px;
-  box-shadow:0 14px 30px -18px rgba(0,0,0,.8)}
-.leaf-face::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--acc);opacity:.9}
-.leaf-face::after{content:"";position:absolute;inset:auto 0 0 0;height:46%;pointer-events:none;
-  background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--void) 72%,transparent))}
-.leaf-rule{height:1px;background:var(--line);margin:0 0 9px}
-.leaf-text{font-size:12.5px;line-height:1.55;color:var(--text-2);overflow:hidden;
-  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
-.leaf-kick{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-3);margin-bottom:7px}
-.open-hint{position:absolute;right:10px;bottom:10px;z-index:2;display:flex;align-items:center;gap:6px;height:28px;padding:0 11px;border-radius:100px;
-  background:var(--glass-2);border:1px solid var(--glass-edge);font-size:12.5px;font-weight:600;pointer-events:none;
-  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:background var(--t-s),color var(--t-s)}
-.card:hover .open-hint{background:var(--acc);color:var(--on-accent);border-color:transparent}
-.c-foot{position:relative;padding:0 4px;min-width:0}
-.c-meta{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:11.5px;color:var(--text-3);min-width:0}
-.c-meta span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.c-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
-.c-tags .tag{font-size:10px;padding:1px 7px}
+/* ── Whiteboard: Haufen je Kategorie ───────────────────────── */
+.board{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px;
+  padding:22px;border-radius:18px;border:1px solid var(--line);
+  background-image:
+    repeating-linear-gradient(0deg,transparent 0 25px,color-mix(in srgb,var(--text-3) 16%,transparent) 25px 26px),
+    repeating-linear-gradient(90deg,transparent 0 25px,color-mix(in srgb,var(--text-3) 16%,transparent) 25px 26px);
+  background-color:var(--glass);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.pile{display:flex;flex-direction:column;gap:10px;min-width:0}
+.pile.open{grid-column:1/-1}
+.pile-head{display:flex;align-items:center;gap:10px;width:100%;padding:0;border:0;background:none;cursor:pointer;
+  font:inherit;color:inherit;text-align:left}
+.pile-dot{width:9px;height:9px;border-radius:50%;background:var(--acc);flex:none;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+.pile-name{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pile-n{font-family:var(--mono);font-size:11.5px;color:var(--text-3);letter-spacing:.12em}
+.pile-hint{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--text-3);white-space:nowrap}
+.pile-head:hover .pile-hint{color:var(--acc)}
+.pile-stack{position:relative;height:196px;cursor:pointer}
+.pile.open .pile-stack{height:auto;display:flex;flex-wrap:wrap;gap:14px;cursor:default;padding:4px 0}
+.sticky{position:absolute;left:50%;top:10px;width:158px;height:158px;margin-left:-79px;padding:12px 12px 10px;
+  display:flex;flex-direction:column;gap:6px;border:0;text-align:left;font:inherit;cursor:pointer;
+  color:#171b22;background-color:color-mix(in srgb,var(--acc) 62%,#fff);
+  background-image:linear-gradient(160deg,rgba(255,255,255,.34),rgba(0,0,0,.07));
+  box-shadow:0 12px 24px -14px rgba(0,0,0,.85),0 1px 0 rgba(255,255,255,.4) inset;
+  transform:translate(var(--dx,0px),var(--dy,0px)) rotate(var(--rot,0deg));
+  transition:transform var(--t-m) cubic-bezier(.2,.8,.2,1),box-shadow var(--t-m),opacity var(--t-m)}
+.sticky::after{content:"";position:absolute;right:0;bottom:0;width:18px;height:18px;
+  background:linear-gradient(135deg,transparent 50%,rgba(0,0,0,.16) 50%)}
+.pile:not(.open) .sticky:nth-child(n+6){opacity:0;pointer-events:none}
+.pile:not(.open) .pile-stack:hover .sticky{transform:translate(var(--dx,0px),calc(var(--dy,0px) - 5px)) rotate(var(--rot,0deg))}
+.pile.open .sticky{position:relative;left:auto;top:auto;margin:0;opacity:1;pointer-events:auto;
+  transform:rotate(var(--rot,0deg))}
+.pile.open .sticky:hover,.sticky:focus-visible{outline:none;
+  transform:rotate(0deg) translateY(-4px) scale(1.03);box-shadow:0 16px 30px -14px rgba(0,0,0,.9)}
+.sticky:focus-visible{box-shadow:0 0 0 2px var(--amber),0 16px 30px -14px rgba(0,0,0,.9)}
+.s-date{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(23,27,34,.62)}
+.s-title{font-size:13.5px;font-weight:700;line-height:1.3;letter-spacing:-.01em;overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.s-text{font-size:11.5px;line-height:1.45;color:rgba(23,27,34,.76);overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;margin-top:auto}
 .deck-empty{text-align:center;color:var(--text-3);font-style:italic;padding:60px 20px;border:1px dashed var(--line);border-radius:17px}
 
 /* ── Leseansicht ───────────────────────────────────────────── */
@@ -405,7 +421,10 @@ footer a:hover{color:var(--text)}
   :root{--pad:16px}
   .clock,.hide-sm{display:none !important}
   .nav-in{padding-left:14px}
-  .grid{grid-template-columns:1fr}
+  .row{grid-template-columns:3px 40px minmax(0,1fr) auto 14px;padding-right:12px}
+  .r-tags,.r-date{display:none}
+  .board{padding:14px;gap:16px;grid-template-columns:1fr}
+  .sticky{width:140px;height:140px;margin-left:-70px}
   .hero-top{flex-direction:column;align-items:flex-start;gap:6px}
   .scope{--pw:20px}
   .panes{height:96px}
@@ -415,8 +434,8 @@ footer a:hover{color:var(--text)}
   .sheet{margin:16px auto 60px;border-radius:14px}
 }
 @media (prefers-reduced-motion:reduce){
-  .card{animation:none;opacity:1}
-  .leaf-stack,.card-bg,.pane,.pane-glass,.pane::after{transition:none}
+  .row{animation:none;opacity:1}
+  .sticky,.pane,.pane-glass,.pane::after{transition:none}
 }
 
 /* ── Druck ─────────────────────────────────────────────────── */
@@ -486,6 +505,10 @@ footer a:hover{color:var(--text)}
     </div>
     <button class="pill" id="tagBtn" type="button">Tags</button>
     <button class="pill" id="catBtn" type="button" hidden></button>
+    <div class="seg" role="group" aria-label="Ansicht">
+      <button data-view="liste" class="active">Liste</button>
+      <button data-view="board">Whiteboard</button>
+    </div>
   </section>
 
   <section class="deck" id="deck" aria-label="Notizen"></section>
@@ -739,6 +762,9 @@ const notes = RAW.map(([cat,title,d], i) => {
 /* ───────── Zustand ───────── */
 let curIdx = 0, sortMode = 'kategorie', searchQuery = '';
 let activeCategory = null;     /* gesetzter Kategoriefilter – dann zeigen die Scheiben Tags */
+let viewMode = 'liste';        /* 'liste' oder 'board' (Whiteboard mit Haufen) */
+const openPiles = new Set();   /* ausgebreitete Haufen im Whiteboard */
+try { const v = localStorage.getItem('noteos.view'); if (v === 'board' || v === 'liste') viewMode = v; } catch(e){}
 const activeTags = new Set();
 let view = [];                 /* aktuell sichtbare Notizen in Anzeigereihenfolge */
 let reading = false;
@@ -795,52 +821,96 @@ function filtered(){
   if (activeTags.size) list = list.filter(n => n.tags.some(t => activeTags.has(t)));
   return list;
 }
-function cardHtml(n, pos, delay){
+/* Kompakte Zeile: ein Bildschirm zeigt jetzt drei- bis viermal so viel. */
+function rowHtml(n, pos, delay){
   const tags = n.tags.filter(t => t !== n.category).slice(0,3)
     .map(t => '<span class="tag">'+esc(t)+'</span>').join('');
-  return '<button class="card" data-note="'+n.id+'" style="--acc:'+n.accent+';animation-delay:'+delay+'ms" aria-label="'+esc(n.title)+' öffnen">'
-    + '<span class="card-bg"></span>'
-    + '<span class="c-head"><span class="c-idx">'+pad3(pos)+'</span><h2>'+esc(n.title)+'</h2>'
-    +   '<span class="tag c-cat">'+esc(n.category)+'</span></span>'
-    + '<span class="leaf"><span class="leaf-stack">'
-    +   '<span class="leaf-back b2"></span><span class="leaf-back"></span>'
-    +   '<span class="leaf-face"><span class="leaf-kick">'+esc(n.modified)+'</span><span class="leaf-rule"></span>'
-    +     '<span class="leaf-text">'+esc(plainExcerpt(n))+'</span></span>'
-    +   '</span><span class="open-hint">Lesen ↗</span></span>'
-    + '<span class="c-foot"><span class="c-meta"><span>'+esc(n.author)+'</span><span>'
-    +   (n.filename ? esc(n.filename) : 'nicht gespeichert')+'</span></span>'
-    +   (tags ? '<span class="c-tags">'+tags+'</span>' : '')+'</span>'
-    + '</button>';
+  return '<button class="row" type="button" data-note="'+n.id+'" style="--acc:'+n.accent+';animation-delay:'+delay+'ms"'
+    + ' aria-label="'+esc(n.title)+' öffnen">'
+    + '<span class="r-idx">'+pad3(pos)+'</span>'
+    + '<span class="r-title">'+esc(n.title)+'</span>'
+    + '<span class="tag c-cat r-cat">'+esc(n.category)+'</span>'
+    + '<span class="r-tags">'+tags+'</span>'
+    + '<span class="r-date">'+esc(n.modified)+'</span>'
+    + '<span class="r-go">↗</span></button>';
+}
+/* Zettel für das Whiteboard – im Haufen leicht verdreht gestapelt. */
+function stickyHtml(n, i){
+  const rot = ((n.id*37 % 9) - 4) * 1.1;
+  const dx = ((n.id*53 % 7) - 3) * 2.2 + i*1.5;
+  const dy = i * 7;
+  return '<button class="sticky" type="button" data-note="'+n.id+'" style="--acc:'+n.accent+';'
+    + '--rot:'+rot.toFixed(1)+'deg;--dx:'+dx.toFixed(1)+'px;--dy:'+dy+'px;z-index:'+(40-i)+'"'
+    + ' aria-label="'+esc(n.title)+' öffnen">'
+    + '<span class="s-date">'+esc(n.modified)+'</span>'
+    + '<span class="s-title">'+esc(n.title)+'</span>'
+    + '<span class="s-text">'+esc(plainExcerpt(n))+'</span></button>';
+}
+function sortList(l){
+  if (sortMode==='az') l.sort((a,b)=>a.title.localeCompare(b.title,'de'));
+  if (sortMode==='neu') l.sort((a,b)=>b.modifiedSort-a.modifiedSort);
+  if (sortMode==='erstellt') l.sort((a,b)=>(b.createdSort||b.modifiedSort)-(a.createdSort||a.modifiedSort));
+  if (sortMode==='kategorie') l.sort((a,b)=>a.title.localeCompare(b.title,'de'));
+  return l;
+}
+function groupByCategory(list){
+  const by = {};
+  list.forEach(n => (by[n.category] = by[n.category] || []).push(n));
+  return Object.keys(by).sort((a,b)=>a.localeCompare(b,'de'))
+    .map(cat => ({ cat, notes: sortList(by[cat].slice()) }));
+}
+/* Liste: nach Kategorie gruppiert oder als eine durchgehende Reihe. */
+function renderList(list){
+  let html = '', pos = 0, d = 0;
+  if (sortMode === 'kategorie'){
+    const order = [];
+    groupByCategory(list).forEach(g => {
+      html += '<div class="group-head"><div class="eyebrow">'+esc(g.cat)+'</div><div class="rule"></div>'
+            + '<div class="n">'+pad3(g.notes.length)+'</div></div><div class="rows">';
+      g.notes.forEach(n => { order.push(n); html += rowHtml(n, ++pos, Math.min(d += 14, 420)); });
+      html += '</div>';
+    });
+    view = order;
+  } else {
+    const l = sortList(list.slice());
+    view = l;
+    html = '<div class="rows">' + l.map(n => rowHtml(n, ++pos, Math.min(d += 14, 420))).join('') + '</div>';
+  }
+  return html;
+}
+/* Whiteboard: je Kategorie ein Haufen Notizzettel. */
+function renderBoard(list){
+  const groups = groupByCategory(list);
+  const order = [];
+  const html = '<div class="board">' + groups.map(g => {
+    g.notes.forEach(n => order.push(n));
+    const open = openPiles.has(g.cat);
+    return '<div class="pile'+(open ? ' open' : '')+'" data-cat="'+esc(g.cat)+'" style="--acc:'+g.notes[0].accent+'">'
+      + '<button class="pile-head" type="button" aria-expanded="'+(open?'true':'false')+'">'
+      +   '<span class="pile-dot"></span><span class="pile-name">'+esc(g.cat)+'</span>'
+      +   '<span class="pile-n">'+pad3(g.notes.length)+'</span>'
+      +   '<span class="pile-hint">'+(open ? 'stapeln' : 'ausbreiten')+'</span></button>'
+      + '<div class="pile-stack">'
+      +   g.notes.map((n,i) => stickyHtml(n, open ? 0 : i)).join('')
+      + '</div></div>';
+  }).join('') + '</div>';
+  view = order;
+  return html;
+}
+function togglePile(el){
+  const cat = el.dataset.cat;
+  openPiles.has(cat) ? openPiles.delete(cat) : openPiles.add(cat);
+  renderDeck();
 }
 function renderDeck(){
   const list = filtered();
+  deck.dataset.mode = viewMode;
   if (!list.length){
     view = [];
     deck.innerHTML = '<div class="deck-empty">Keine Notiz gefunden.</div>';
     updateHero(); return;
   }
-  let html = '', pos = 0, d = 0;
-  if (sortMode === 'kategorie'){
-    const by = {};
-    list.forEach(n => (by[n.category] = by[n.category] || []).push(n));
-    const order = [];
-    Object.keys(by).sort((a,b)=>a.localeCompare(b,'de')).forEach(cat => {
-      const group = by[cat].slice().sort((a,b)=>a.title.localeCompare(b.title,'de'));
-      html += '<div class="group-head"><div class="eyebrow">'+esc(cat)+'</div><div class="rule"></div>'
-            + '<div class="n">'+pad3(group.length)+'</div></div><div class="grid">';
-      group.forEach(n => { order.push(n); html += cardHtml(n, ++pos, Math.min(d += 35, 700)); });
-      html += '</div>';
-    });
-    view = order;
-  } else {
-    const l = list.slice();
-    if (sortMode==='az') l.sort((a,b)=>a.title.localeCompare(b.title,'de'));
-    if (sortMode==='neu') l.sort((a,b)=>b.modifiedSort-a.modifiedSort);
-    if (sortMode==='erstellt') l.sort((a,b)=>(b.createdSort||b.modifiedSort)-(a.createdSort||a.modifiedSort));
-    view = l;
-    html = '<div class="grid">' + l.map(n => cardHtml(n, ++pos, Math.min(d += 35, 700))).join('') + '</div>';
-  }
-  deck.innerHTML = html;
+  deck.innerHTML = viewMode === 'board' ? renderBoard(list) : renderList(list);
   updateHero();
 }
 function updateHero(){
@@ -1041,15 +1111,30 @@ function syncScope(id){
   centerPane(i, 'auto');
 }
 deck.addEventListener('click', e => {
-  const c = e.target.closest('.card');
-  if (c) openNote(+c.dataset.note);
+  const sticky = e.target.closest('.sticky');
+  const pileHead = e.target.closest('.pile-head');
+  const stack = e.target.closest('.pile-stack');
+  const pile = e.target.closest('.pile');
+  if (pileHead && pile){ togglePile(pile); return; }
+  if (pile && !pile.classList.contains('open') && (stack || sticky)){ togglePile(pile); return; }
+  if (sticky){ openNote(+sticky.dataset.note, sticky); return; }
+  const r = e.target.closest('.row');
+  if (r) openNote(+r.dataset.note, r);
 });
 $('#search').addEventListener('input', e => { searchQuery = e.target.value; renderDeck(); });
-$$('.seg button').forEach(b => b.addEventListener('click', () => {
+$$('.seg button[data-sort]').forEach(b => b.addEventListener('click', () => {
   sortMode = b.dataset.sort;
-  $$('.seg button').forEach(x => x.classList.toggle('active', x === b));
+  $$('.seg button[data-sort]').forEach(x => x.classList.toggle('active', x === b));
   renderDeck();
 }));
+/* Ansicht umschalten: kompakte Liste ↔ Whiteboard mit Haufen */
+$$('.seg button[data-view]').forEach(b => b.addEventListener('click', () => {
+  viewMode = b.dataset.view;
+  $$('.seg button[data-view]').forEach(x => x.classList.toggle('active', x === b));
+  try { localStorage.setItem('noteos.view', viewMode); } catch(e){}
+  renderDeck();
+}));
+$$('.seg button[data-view]').forEach(x => x.classList.toggle('active', x.dataset.view === viewMode));
 $('#home').addEventListener('click', e => {
   e.preventDefault();
   if (reading) closeNote(); else scrollTo({ top:0, behavior:'smooth' });
@@ -1160,7 +1245,7 @@ function renderSheet(){
 function openNote(id, fromEl){
   if (!notes[id]) return;
   curIdx = id;
-  const card = fromEl || deck.querySelector('.card[data-note="'+id+'"]');
+  const card = fromEl || deck.querySelector('[data-note="'+id+'"]');
   renderSheet();
   reading = true;
   document.body.classList.add('reading');
@@ -1190,7 +1275,7 @@ function closeNote({ back = true } = {}){
   root.classList.remove('locked');
   $('#printBtn').disabled = true;
   document.title = 'NoteOS – Wissen der Werkbank';
-  const card = deck.querySelector('.card[data-note="'+curIdx+'"]');
+  const card = deck.querySelector('[data-note="'+curIdx+'"]');
   if (card && card.scrollIntoView) card.scrollIntoView({ block:'center' });
   if (card && card.focus) card.focus({ preventScroll:true });
   if (back && history.state && history.state.noteos) history.back();
@@ -1528,7 +1613,7 @@ $('#editorSave').addEventListener('click', async () => {
 });
 function landNewCard(note){
   requestAnimationFrame(() => requestAnimationFrame(() => {
-    const el = deck.querySelector('.card[data-note="'+note.id+'"]');
+    const el = deck.querySelector('[data-note="'+note.id+'"]');
     if (!el) return;
     if (el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'center' });
     if (reduced() || !el.animate) return;
