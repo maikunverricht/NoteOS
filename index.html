@@ -220,13 +220,30 @@ h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--e
     color-mix(in srgb,var(--acc) 58%,transparent) 48%,
     color-mix(in srgb,var(--acc) 12%,transparent) 100%);
   filter:drop-shadow(0 8px 16px color-mix(in srgb,var(--acc) 45%,transparent))}
-.melt-drop{position:absolute;left:50%;top:34px;width:13px;height:15px;margin-left:-6.5px;opacity:0;
-  border-radius:50% 50% 54% 54%/62% 62% 38% 38%;background:color-mix(in srgb,var(--acc) 82%,transparent);
+.melt-drop{position:absolute;left:50%;top:32px;width:15px;height:17px;margin-left:-7.5px;opacity:0;
+  border-radius:50% 50% 54% 54%/62% 62% 38% 38%;background:color-mix(in srgb,var(--acc) 86%,transparent);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.35);
   filter:drop-shadow(0 4px 10px color-mix(in srgb,var(--acc) 50%,transparent))}
-.melt.pour .melt-stream{animation:pour .52s .84s cubic-bezier(.3,.7,.2,1) both}
-.melt.pour .melt-drop{animation:drip .54s .96s cubic-bezier(.4,.1,.7,1) both}
-@keyframes pour{0%{transform:scaleY(.04);opacity:0}30%{opacity:1}62%{transform:scaleY(1.16)}100%{transform:scaleY(1);opacity:1}}
-@keyframes drip{0%{opacity:0;transform:translateY(-6px) scale(.5)}28%{opacity:1}100%{opacity:0;transform:translateY(32px) scale(1.25)}}
+.melt-drop.d2{width:11px;height:13px;margin-left:-14px}
+.melt-drop.d3{width:9px;height:11px;margin-left:5px}
+/* die Tropfen sammeln sich – daraus wird die Detailkarte */
+.melt-pool{position:absolute;left:50%;bottom:-6px;width:100%;height:16px;margin-left:-50%;opacity:0;
+  border-radius:50%/100% 100% 60% 60%;transform:scaleX(.06) scaleY(1.6);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--acc) 82%,transparent),
+             color-mix(in srgb,var(--acc) 26%,transparent));
+  filter:blur(.4px) drop-shadow(0 6px 18px color-mix(in srgb,var(--acc) 45%,transparent))}
+.melt.pour .melt-drop.d1{animation:drip .34s .86s cubic-bezier(.4,.05,.8,1) both}
+.melt.pour .melt-drop.d2{animation:drip .34s .97s cubic-bezier(.4,.05,.8,1) both}
+.melt.pour .melt-drop.d3{animation:drip .32s 1.08s cubic-bezier(.4,.05,.8,1) both}
+.melt.pour .melt-pool{animation:pool .9s 1.06s cubic-bezier(.3,.8,.25,1) both}
+@keyframes pool{
+  0%{opacity:0;transform:scaleX(.05) scaleY(1.7)}
+  10%{opacity:1;transform:scaleX(.22) scaleY(1.5)}
+  33%{opacity:1;transform:scaleX(1.02) scaleY(.85)}
+  47%{opacity:.9;transform:scaleX(1) scaleY(.7)}
+  100%{opacity:0;transform:scaleX(1) scaleY(.3)}}
+@keyframes drip{0%{opacity:0;transform:translateY(-8px) scale(.45)}22%{opacity:1;transform:translateY(0) scale(1)}
+  100%{opacity:0;transform:translateY(30px) scaleX(1.5) scaleY(.6)}}
 /* Herausgezoomte Notiz */
 .scope-detail{position:relative;margin:0;transform-origin:top center;border-radius:16px;border:1px solid var(--line);background:var(--glass);
   box-shadow:var(--shadow-lg);-webkit-backdrop-filter:blur(15px) saturate(1.3);backdrop-filter:blur(15px) saturate(1.3);
@@ -321,27 +338,37 @@ h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--e
 .s-date{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;position:relative;
   color:color-mix(in srgb,var(--text) 58%,transparent)}
 .s-title{font-size:13.5px;font-weight:700;line-height:1.3;letter-spacing:-.01em;overflow:hidden;position:relative;
-  overflow-wrap:anywhere;hyphens:auto;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+  overflow-wrap:break-word;hyphens:auto;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 .s-text{font-size:11.5px;line-height:1.45;overflow:hidden;position:relative;
   color:color-mix(in srgb,var(--text) 74%,transparent);
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;margin-top:auto}
 
-/* ── Whiteboard 2: echte Tafeln im Halbkreis ───────────────── */
-.arena{position:relative;height:clamp(430px,56vh,580px);perspective:1500px;overflow:hidden;
-  touch-action:pan-y;cursor:grab;--r:640px}
-.arena.dragging{cursor:grabbing}
-.ring{position:absolute;inset:0;transform-style:preserve-3d;
-  transform:translateZ(calc(var(--r) * -1)) rotateY(var(--rot,0deg));
-  transition:transform .62s cubic-bezier(.2,.8,.2,1)}
-.arena.dragging .ring{transition:none}
-.wb{position:absolute;left:50%;top:50%;width:min(560px,80vw);height:clamp(350px,44vh,460px);
-  transform:translate(-50%,-50%) rotateY(var(--a)) translateZ(calc(var(--r) - var(--dz,0px)));
-  transition:transform .62s cubic-bezier(.2,.8,.2,1),filter var(--t-m),opacity var(--t-m)
-  display:flex;flex-direction:column;border-radius:12px;padding:10px;backface-visibility:hidden;
+/* ── Whiteboard 2: Themenleiste oben, große Tafel darunter ─── */
+.arena{position:relative;display:flex;flex-direction:column;gap:16px;touch-action:pan-y}
+/* Die Leiste: nur die Themen, je nach Sortierung Kategorie, Buchstabe oder Zeitraum */
+.wb-strip{display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;padding:6px 2px 10px;
+  scroll-snap-type:x proximity;scrollbar-width:none;touch-action:pan-x;cursor:grab}
+.wb-strip::-webkit-scrollbar{display:none}
+.wb-strip.dragging{cursor:grabbing;scroll-snap-type:none}
+.wb-mini{flex:0 0 auto;scroll-snap-align:center;min-width:132px;max-width:190px;padding:10px 13px 9px;
+  display:flex;flex-direction:column;gap:7px;text-align:left;cursor:pointer;border:0;border-radius:10px;
+  background:linear-gradient(180deg,#D6DBE2,#B4BCC7);color:#20262F;font:inherit;opacity:.55;
+  box-shadow:0 10px 20px -16px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.5);
+  transition:opacity var(--t-m),transform var(--t-m),box-shadow var(--t-m)}
+.wb-mini:hover{opacity:.85}
+.wb-mini i{display:block;height:3px;border-radius:2px;background:var(--acc)}
+.m-label{font-family:var(--display);font-size:15.5px;font-weight:700;letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-n{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:#4E5663}
+.wb-mini.on{opacity:1;transform:translateY(-4px);
+  box-shadow:0 18px 28px -18px rgba(0,0,0,.95),0 0 0 2px var(--amber),inset 0 1px 0 rgba(255,255,255,.6)}
+/* Die große Tafel: eine sichtbar, Wechsel als Zoom */
+.wb-main{position:relative;height:clamp(340px,44vh,460px)}
+.wb{position:absolute;inset:0;display:flex;flex-direction:column;border-radius:12px;padding:10px;
   background:linear-gradient(180deg,#D8DDE4,#B9C0CB);
-  box-shadow:0 34px 60px -30px rgba(0,0,0,.85),0 0 0 1px rgba(0,0,0,.25)}
-.wb:not(.is-front){opacity:.5;filter:saturate(.8) brightness(.95);cursor:pointer}
-.wb:not(.is-front) .wb-face,.wb:not(.is-front) .wb-head{pointer-events:none}
+  box-shadow:0 34px 60px -30px rgba(0,0,0,.85),0 0 0 1px rgba(0,0,0,.25);
+  opacity:0;visibility:hidden;pointer-events:none;transform:scale(.9)}
+.wb.is-front{opacity:1;visibility:visible;pointer-events:auto;transform:none}
 .wb-face{flex:1;border-radius:6px;padding:16px;overflow-y:auto;overflow-x:hidden;touch-action:pan-y;background:#FBFCFD;
   box-shadow:inset 0 2px 10px rgba(16,22,31,.16);
   display:flex;flex-wrap:wrap;align-content:flex-start;gap:14px}
@@ -355,7 +382,7 @@ h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--e
 .wb-cat:hover{color:#11151c;border-color:rgba(16,22,31,.45)}
 .wb-n{font-family:var(--mono);font-size:11px;color:#69707B;letter-spacing:.12em}
 /* Zettel auf der Tafel: Papier, bunt, schon ausgebreitet */
-.sticky.paper{position:relative;left:auto;top:auto;margin:0;width:118px;height:118px;padding:10px 11px 9px;
+.sticky.paper{position:relative;left:auto;top:auto;margin:0;width:132px;height:132px;padding:11px 12px 10px;
   color:#171b22;border-radius:2px;
   background-color:color-mix(in srgb,var(--acc) 66%,#fff);
   background-image:linear-gradient(160deg,rgba(255,255,255,.4),rgba(0,0,0,.08));
@@ -365,16 +392,15 @@ h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--e
   background:linear-gradient(135deg,transparent 50%,rgba(0,0,0,.14) 50%)}
 .sticky.paper:hover{transform:rotate(0deg) translateY(-4px) scale(1.05);box-shadow:0 14px 22px -10px rgba(16,22,31,.7);z-index:3}
 .sticky.paper .s-date{font-size:8.5px;color:rgba(23,27,34,.6)}
-.sticky.paper .s-title{font-size:12px;-webkit-line-clamp:4}
+.sticky.paper .s-title{font-size:12.5px;-webkit-line-clamp:4}
 .sticky.paper .s-text{display:none}
-.arena-nav{position:absolute;left:50%;bottom:8px;z-index:20;transform:translateX(-50%);
-  display:flex;align-items:center;gap:12px;padding:5px 8px;border-radius:100px;
+.strip-row{display:flex;align-items:center;gap:12px;min-width:0}
+.strip-row .wb-strip{flex:1;min-width:0}
+.arena-nav{flex:none;display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:100px;
   background:var(--glass-2);border:1px solid var(--glass-edge);box-shadow:var(--shadow);
   -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-.arena-dots{display:flex;gap:6px}
-.arena-dots i{width:7px;height:7px;border-radius:50%;background:var(--line-hi);transition:background var(--t-s),transform var(--t-s)}
-.arena-dots i.on{background:var(--amber);transform:scale(1.35)}
-.arena-hint{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3)}
+.arena-hint{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-3);
+  padding:0 4px;white-space:nowrap}
 .deck-empty{text-align:center;color:var(--text-3);font-style:italic;padding:60px 20px;border:1px dashed var(--line);border-radius:17px}
 
 /* ── Leseansicht ───────────────────────────────────────────── */
@@ -522,8 +548,9 @@ footer a:hover{color:var(--text)}
   .r-tags,.r-date{display:none}
   .board{padding:14px;gap:16px;grid-template-columns:1fr}
   .sticky{width:142px;height:142px;margin-left:-71px}
-  .arena{height:clamp(380px,64vh,520px)}
-  .wb{width:84vw;height:clamp(300px,46vh,390px);padding:8px}
+  .wb-main{height:clamp(320px,52vh,430px)}
+  .wb{padding:8px}
+  .wb-mini{min-width:118px}
   .wb-face{padding:12px;gap:11px}
   .sticky.paper{width:104px;height:104px}
   .hero-top{flex-direction:column;align-items:flex-start;gap:6px}
@@ -615,7 +642,9 @@ footer a:hover{color:var(--text)}
           </div>
           <div class="scope-aim" aria-hidden="true"><i></i><i></i></div>
         </div>
-        <div class="melt" id="melt" aria-hidden="true"><span class="melt-stream"></span><span class="melt-drop"></span></div>
+        <div class="melt" id="melt" aria-hidden="true"><span class="melt-stream"></span>
+          <span class="melt-drop d1"></span><span class="melt-drop d2"></span><span class="melt-drop d3"></span>
+          <span class="melt-pool"></span></div>
         <div class="scope-detail" id="scopeDetail"></div>
       </div>
     </div>
@@ -988,33 +1017,73 @@ function renderBoard(list){
   view = order;
   return html;
 }
-/* Whiteboard 2: je Kategorie eine Tafel, im Halbkreis aufgestellt. */
+/* Whiteboard 2: Themen oben, große Tafel darunter.
+   Wonach gruppiert wird, folgt der Sortierung. */
+function arenaGroups(list){
+  if (sortMode === 'az'){
+    const by = {};
+    list.forEach(n => { const k = (n.title[0] || '#').toUpperCase(); (by[k] = by[k] || []).push(n); });
+    return Object.keys(by).sort((a,b)=>a.localeCompare(b,'de')).map(k => ({
+      key:k, label:k, notes:by[k].slice().sort((a,b)=>a.title.localeCompare(b.title,'de')), cat:null }));
+  }
+  if (sortMode === 'neu' || sortMode === 'erstellt'){
+    const key = n => (sortMode === 'neu' ? n.modifiedSort : (n.createdSort || n.modifiedSort));
+    const now = Date.now(), tag = 864e5;
+    const buckets = [
+      { key:'w', label:'Diese Woche', max:7*tag },
+      { key:'m', label:'Dieser Monat', max:31*tag },
+      { key:'q', label:'Letzte 3 Monate', max:92*tag },
+      { key:'j', label:'Dieses Jahr', max:366*tag },
+      { key:'a', label:'Älter', max:Infinity }
+    ];
+    const by = {};
+    list.forEach(n => {
+      const age = now - key(n);
+      const b = buckets.find(x => age <= x.max) || buckets[buckets.length-1];
+      (by[b.key] = by[b.key] || []).push(n);
+    });
+    return buckets.filter(b => by[b.key]).map(b => ({
+      key:b.key, label:b.label, notes:by[b.key].slice().sort((x,y)=>key(y)-key(x)), cat:null }));
+  }
+  return groupByCategory(list).map(g => ({ key:g.cat, label:g.cat, notes:g.notes, cat:g.cat }));
+}
 function renderArena(list){
-  const groups = groupByCategory(list);
+  const groups = arenaGroups(list);
   const order = [];
-  const n = groups.length;
-  const step = n > 1 ? Math.min(30, 160 / (n - 1)) : 0;
-  arenaStep = step;
-  arenaCount = n;
-  if (arenaIdx >= n) arenaIdx = n ? n - 1 : 0;
-  const boards = groups.map((g, i) => {
+  arenaCount = groups.length;
+  /* Thema behalten, solange es das noch gibt – sonst vorne anfangen. */
+  const keep = groups.findIndex(g => g.key === arenaKey);
+  arenaIdx = keep >= 0 ? keep : 0;
+  arenaKey = groups[arenaIdx] ? groups[arenaIdx].key : null;
+  const strip = groups.map((g,i) =>
+    '<button class="wb-mini'+(i === arenaIdx ? ' on' : '')+'" type="button" data-i="'+i+'"'
+    + ' style="--acc:'+g.notes[0].accent+'" aria-label="'+esc(g.label)+' zeigen">'
+    + '<i></i><span class="m-label">'+esc(g.label)+'</span>'
+    + '<span class="m-n">'+pad3(g.notes.length)+' Notizen</span></button>').join('');
+  const boards = groups.map((g,i) => {
     g.notes.forEach(x => order.push(x));
-    return '<section class="wb" data-i="'+i+'" data-cat="'+esc(g.cat)+'"'
-      + ' style="--acc:'+g.notes[0].accent+';--a:'+((i - 0) * step).toFixed(2)+'deg">'
-      + '<div class="wb-head"><span class="wb-title">'+esc(g.cat)+'</span>'
+    return '<section class="wb'+(i === arenaIdx ? ' is-front' : '')+'" data-i="'+i+'" data-cat="'+esc(g.cat || g.label)+'"'
+      + ' style="--acc:'+g.notes[0].accent+'">'
+      + '<div class="wb-head"><span class="wb-title">'+esc(g.label)+'</span>'
       +   '<span class="wb-n">'+pad3(g.notes.length)+' Notizen</span>'
-      +   '<button class="wb-cat cat-filter" type="button" data-cat="'+esc(g.cat)+'"'
-      +     ' title="Nur diese Kategorie zeigen">nur diese</button></div>'
+      +   (g.cat ? '<button class="wb-cat cat-filter" type="button" data-cat="'+esc(g.cat)+'"'
+      +     ' title="Nur diese Kategorie zeigen">nur diese</button>' : '')
+      + '</div>'
       + '<div class="wb-face">' + g.notes.map(x => stickyHtml(x, 0, 'paper')).join('') + '</div>'
       + '</section>';
   }).join('');
   view = order;
-  return '<div class="arena" id="arena"><div class="ring" id="ring">' + boards + '</div>'
-    + '<div class="arena-nav">'
-    +   '<button class="pill icon-btn" type="button" data-arena="-1" aria-label="Tafel zurück">‹</button>'
-    +   '<span class="arena-dots" id="arenaDots"></span>'
-    +   '<button class="pill icon-btn" type="button" data-arena="1" aria-label="Tafel weiter">›</button>'
-    + '</div></div>';
+  const kind = sortMode === 'kategorie' ? 'Kategorie' : sortMode === 'az' ? 'A–Z' : 'Zeitraum';
+  return '<div class="arena" id="arena">'
+    + '<div class="strip-row">'
+    +   '<div class="wb-strip" id="wbStrip">' + strip + '</div>'
+    +   '<div class="arena-nav">'
+    +     '<button class="pill icon-btn" type="button" data-arena="-1" aria-label="Thema zurück">‹</button>'
+    +     '<span class="arena-hint hide-sm">'+esc(kind)+'</span>'
+    +     '<button class="pill icon-btn" type="button" data-arena="1" aria-label="Thema weiter">›</button>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="wb-main" id="wbMain">' + boards + '</div></div>';
 }
 function togglePile(el){
   const cat = el.dataset.cat;
@@ -1033,52 +1102,57 @@ function renderDeck(){
   if (deckMode === 'arena') setupArena();
   updateHero();
 }
-/* ───────── Halbkreis: Tafeln drehen, wischen, einrasten ───────── */
-let arenaIdx = 0, arenaStep = 30, arenaCount = 0, arenaR = 640;
+/* ───────── Tafeln: Leiste wischen, große Tafel zoomt um ───────── */
+let arenaIdx = 0, arenaCount = 0, arenaKey = null;
+function keyOfArena(i){
+  const m = $('#wbStrip') ? $('#wbStrip').children[i] : null;
+  const b = $('#wbMain') ? $('#wbMain').querySelectorAll('.wb')[i] : null;
+  return b ? b.dataset.cat : (m ? m.textContent : null);
+}
 function setupArena(){
   const arena = $('#arena');
   if (!arena) return;
-  /* Radius so wählen, dass die Tafeln sich leicht überlappen und der Bogen trägt. */
-  const w = arena.querySelector('.wb') ? arena.querySelector('.wb').getBoundingClientRect().width : 520;
-  arenaR = Math.round(Math.max(420, w * 1.5));
-  arena.style.setProperty('--r', arenaR + 'px');
   applyArena(false);
   bindArena(arena);
 }
-function applyArena(smooth){
-  const ring = $('#ring'), arena = $('#arena');
-  if (!ring || !arena) return;
-  ring.style.setProperty('--rot', (-arenaIdx * arenaStep).toFixed(2) + 'deg');
-  /* Hintere Tafeln zusätzlich nach hinten setzen, sonst schwingt ihre
-     Vorderkante vor die aktive Tafel. */
-  Array.from(ring.children).forEach((b,i) => {
-    const d = Math.abs(i - arenaIdx);
-    b.classList.toggle('is-front', i === arenaIdx);
-    /* nie weiter zurück als der halbe Radius – sonst kippt die Tafel nach vorn */
-    b.style.setProperty('--dz', Math.round(Math.min(d * 150, arenaR * 0.5)) + 'px');
-    b.style.zIndex = String(100 - d);
-    b.style.visibility = d > 3 ? 'hidden' : '';
+function applyArena(zoom){
+  const main = $('#wbMain'), strip = $('#wbStrip');
+  if (!main) return;
+  const boards = main.querySelectorAll('.wb');
+  boards.forEach((b,i) => {
+    const on = i === arenaIdx;
+    b.classList.toggle('is-front', on);
+    if (on && zoom && !reduced() && b.animate){
+      /* die gewählte Tafel fährt groß heran */
+      b.animate([{ opacity:0, transform:'scale(.86) translateY(14px)' },
+                 { opacity:1, transform:'scale(1.015) translateY(-2px)', offset:.7 },
+                 { opacity:1, transform:'none' }],
+        { duration:460, easing:'cubic-bezier(.2,.8,.2,1)' });
+    }
   });
-  const dots = $('#arenaDots');
-  if (dots) dots.innerHTML = Array.from({length:arenaCount}, (_,i) =>
-    '<i class="'+(i === arenaIdx ? 'on' : '')+'"></i>').join('');
-  if (!smooth) ring.getBoundingClientRect();
+  if (strip){
+    strip.querySelectorAll('.wb-mini').forEach((m,i) => m.classList.toggle('on', i === arenaIdx));
+    const on = strip.children[arenaIdx];
+    if (on && on.scrollIntoView) on.scrollIntoView({ inline:'center', block:'nearest',
+      behavior: reduced() ? 'auto' : 'smooth' });
+  }
 }
 function stepArena(dir){
   if (!arenaCount) return;
   const next = Math.max(0, Math.min(arenaIdx + dir, arenaCount - 1));
   if (next === arenaIdx) return;
   arenaIdx = next;
+  arenaKey = keyOfArena(arenaIdx);
   applyArena(true);
 }
 function bindArena(arena){
-  const ring = $('#ring');
-  let down = false, sx = 0, sy = 0, lastX = 0, moved = 0, base = 0;
-  let capturedId = null, captured = false;
+  const main = $('#wbMain');
+  let down = false, sx = 0, sy = 0, lastX = 0, moved = 0;
+  const front = () => main.querySelector('.wb.is-front');
   const begin = (x, y, target) => {
     if (target.closest && target.closest('button') && !target.closest('.sticky')) return false;
-    down = true; moved = 0; sx = lastX = x; sy = y; base = arenaIdx * arenaStep;
-    arena.classList.add('dragging');
+    if (target.closest && target.closest('.wb-strip')) return false;   /* die Leiste scrollt selbst */
+    down = true; moved = 0; sx = lastX = x; sy = y;
     return true;
   };
   const drag = x => {
@@ -1086,47 +1160,29 @@ function bindArena(arena){
     lastX = x;
     const dx = x - sx;
     moved = Math.max(moved, Math.abs(dx));
-    ring.style.setProperty('--rot', (-(base - dx * 0.16)).toFixed(2) + 'deg');
+    const el = front();
+    if (el) el.style.transform = 'translateX(' + (dx * 0.45).toFixed(1) + 'px) scale(' +
+      (1 - Math.min(Math.abs(dx) / 2600, .04)).toFixed(3) + ')';
   };
   const finish = () => {
     if (!down) return;
     down = false;
-    arena.classList.remove('dragging');
+    const el = front();
+    if (el) el.style.transform = '';
     const dx = lastX - sx;
     if (moved > 6){
-      let shift = Math.round(-dx * 0.16 / arenaStep);
-      if (!shift && Math.abs(dx) > 42) shift = dx < 0 ? 1 : -1;   /* kurzer Wisch zählt auch */
-      arenaIdx = Math.max(0, Math.min(arenaIdx + shift, arenaCount - 1));
       arena.dataset.dragged = '1';
       setTimeout(() => { arena.dataset.dragged = ''; }, 280);
+      if (Math.abs(dx) > 48) stepArena(dx < 0 ? 1 : -1);
     }
-    applyArena(true);
   };
-  /* Maus und Stift über Pointer-Events … */
   arena.addEventListener('pointerdown', e => {
-    if (e.pointerType === 'touch') return;
-    if (e.button !== undefined && e.button !== 0) return;
+    if (e.pointerType === 'touch' || (e.button !== undefined && e.button !== 0)) return;
     begin(e.clientX, e.clientY, e.target);
-    capturedId = e.pointerId;
   });
-  arena.addEventListener('pointermove', e => {
-    if (e.pointerType === 'touch' || !down) return;
-    drag(e.clientX);
-    /* Zeiger erst einfangen, wenn wirklich gezogen wird – sonst geht der
-       Klick auf einen Zettel verloren. */
-    if (moved > 5 && capturedId !== null && !captured){
-      try { arena.setPointerCapture(capturedId); captured = true; } catch(err){}
-    }
-  });
+  arena.addEventListener('pointermove', e => { if (e.pointerType !== 'touch') drag(e.clientX); });
   ['pointerup','pointercancel'].forEach(ev =>
-    arena.addEventListener(ev, e => {
-      if (e.pointerType === 'touch') return;
-      if (captured){ try { arena.releasePointerCapture(capturedId); } catch(err){} }
-      capturedId = null; captured = false;
-      finish();
-    }));
-  /* … Finger direkt über Touch-Events: so kann kein Scrollcontainer
-     die Wischgeste vorher abfangen. */
+    arena.addEventListener(ev, e => { if (e.pointerType !== 'touch') finish(); }));
   arena.addEventListener('touchstart', e => {
     if (e.touches.length !== 1) return;
     begin(e.touches[0].clientX, e.touches[0].clientY, e.target);
@@ -1134,23 +1190,22 @@ function bindArena(arena){
   arena.addEventListener('touchmove', e => {
     if (!down || e.touches.length !== 1) return;
     const t = e.touches[0];
-    const dx = t.clientX - sx, dy = t.clientY - sy;
-    if (Math.abs(dx) < Math.abs(dy) && moved < 8) return;          /* senkrecht: Seite scrollt */
+    if (Math.abs(t.clientX - sx) < Math.abs(t.clientY - sy) && moved < 8) return;
     drag(t.clientX);
     if (e.cancelable) e.preventDefault();
   }, { passive:false });
   ['touchend','touchcancel'].forEach(ev => arena.addEventListener(ev, () => finish(), { passive:true }));
   arena.addEventListener('wheel', e => {
-    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;    /* senkrecht bleibt Seitenscrollen */
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    if (e.target.closest('.wb-strip')) return;      /* die Leiste scrollt selbst */
     e.preventDefault();
     if (Math.abs(e.deltaX) > 12) stepArena(e.deltaX > 0 ? 1 : -1);
   }, { passive:false });
   arena.addEventListener('click', e => {
     const nav = e.target.closest('[data-arena]');
     if (nav){ stepArena(+nav.dataset.arena); return; }
-    if (arena.dataset.dragged === '1') return;
-    const wb = e.target.closest('.wb');
-    if (wb && !wb.classList.contains('is-front')){ arenaIdx = +wb.dataset.i; applyArena(true); }
+    const mini = e.target.closest('.wb-mini');
+    if (mini){ const i = +mini.dataset.i; if (i !== arenaIdx){ arenaIdx = i; arenaKey = keyOfArena(i); applyArena(true); } return; }
   });
 }
 function updateHero(){
@@ -1186,7 +1241,7 @@ function playMelt(){
    0,30–0,90 s  es breitet sich auf wie ein Buchdeckel, Titel erscheint
    0,84–1,36 s  der Guss läuft nach unten aus dem Glas
    0,95–1,47 s  die Notiz schmilzt darunter heraus                  */
-const SCOPE_SEQ = 1500;
+const SCOPE_SEQ = 1500;        /* Glas + Tropfen; die Karte kommt danach */
 let seqTimer = null;
 function scheduleScopeSequence(){
   if (reduced()) return;
@@ -1210,16 +1265,18 @@ function playScopeSequence(){
     });
   }
   playMelt();
-  if (detailEl && detailEl.animate && !reduced()){
+  /* Die Detailansicht kommt erst, wenn die Tropfen zur Pfütze
+     zusammengelaufen sind – sie wächst aus dieser Pfütze heraus. */
+  if (detailEl && detailEl.animate){
     detailEl.animate(
-      [{ opacity:0, transform:'translateY(-22px) scaleY(.7) scaleX(.94)' },
-       { opacity:.9, transform:'translateY(-2px) scaleY(1.03) scaleX(1)', offset:.72 },
+      [{ opacity:0, transform:'translateY(-14px) scaleY(.06) scaleX(.42)' },
+       { opacity:1, transform:'translateY(-4px) scaleY(.7) scaleX(.92)', offset:.34 },
+       { opacity:1, transform:'translateY(0) scaleY(1.04) scaleX(1)', offset:.76 },
        { opacity:1, transform:'none' }],
-      { duration:SCOPE_SEQ - 950, delay:950, easing:'cubic-bezier(.2,.85,.25,1)', fill:'backwards' });
-    /* der Inhalt schmilzt nacheinander aus dem Guss heraus */
+      { duration:420, delay:SCOPE_SEQ, easing:'cubic-bezier(.24,.86,.3,1)', fill:'backwards' });
     detailEl.querySelectorAll('.sd-kick, h2, .sd-text, .sd-tags, .sd-side').forEach((el,i) => {
-      if (el.animate) el.animate([{ opacity:0, transform:'translateY(11px)' }, { opacity:1, transform:'none' }],
-        { duration:300, delay:980 + i*55, easing:'cubic-bezier(.2,.8,.2,1)', fill:'backwards' });
+      if (el.animate) el.animate([{ opacity:0, transform:'translateY(9px)' }, { opacity:1, transform:'none' }],
+        { duration:230, delay:SCOPE_SEQ + 170 + i*42, easing:'cubic-bezier(.2,.8,.2,1)', fill:'backwards' });
     });
   }
 }
@@ -1436,7 +1493,7 @@ const VIEW_EL = { kamm:'#viewKamm', board:'#viewDeck', arena:'#viewDeck' };
 const LEADS = {
   kamm:'Jede Scheibe ist eine Notiz. Der Kamm zeigt den ganzen Bestand: scrollen bringt eine Scheibe ins Ziel, sie steht offen und zoomt darunter heraus.',
   board:'Die Werkbank: je Kategorie ein Haufen Glaskörper. Haufen antippen breitet ihn aus, ein Körper öffnet die Notiz.',
-  arena:'Die Tafeln stehen im Halbkreis – je Kategorie eine, die Zettel liegen schon ausgebreitet darauf. Wischen dreht weiter.'
+  arena:'Oben die Themen – je nach Sortierung Kategorie, Anfangsbuchstabe oder Zeitraum. Unten die große Tafel mit den ausgebreiteten Zetteln; wischen wechselt das Thema.'
 };
 let switching = false, pendingView = null;
 function viewEl(mode){ return $(VIEW_EL[mode]); }
