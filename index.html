@@ -541,6 +541,18 @@ select.field{padding-right:8px}
   background:var(--glass-2);box-shadow:var(--shadow-lg)}
 .confirm-box p{margin:0 0 20px;font-size:15px;line-height:1.55}
 .confirm-actions{display:flex;gap:8px;justify-content:flex-end}
+/* Verknüpfungs-Vorschlag: welche Kategorien wie Auftraggeber aussehen.
+   Breiter als die Rückfrage, weil hier eine Liste zum Abhaken steht. */
+.confirm-box.weit{max-width:520px}
+.verkn{margin:0 0 18px;border:1px solid var(--line,rgba(255,255,255,.10));border-radius:13px;overflow:hidden;
+  max-height:46vh;overflow-y:auto;text-align:left}
+.verkn label{display:flex;align-items:flex-start;gap:11px;padding:11px 14px;cursor:pointer;
+  border-top:1px solid var(--line,rgba(255,255,255,.10))}
+.verkn label:first-child{border-top:0}
+.verkn input{width:19px;height:19px;flex:none;margin-top:2px;accent-color:var(--accent,#F2B33D);cursor:pointer}
+.verkn b{display:block;font-size:14.5px;font-weight:600;line-height:1.35}
+.verkn span{display:block;font-size:11.5px;opacity:.62;margin-top:2px;
+  font-family:var(--mono,ui-monospace,Menlo,monospace)}
 .pill.danger{background:var(--danger);color:#fff;border-color:transparent;font-weight:600}
 .pill.danger:hover{background:var(--danger);filter:brightness(1.08)}
 .toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%);z-index:210;
@@ -752,6 +764,16 @@ footer a:hover{color:var(--text)}
     </div>
   </div>
 </div>
+<div class="confirm" id="verknOverlay" hidden>
+  <div class="confirm-box weit">
+    <p id="verknText"></p>
+    <div class="verkn" id="verknListe"></div>
+    <div class="confirm-actions">
+      <button class="pill" id="verknSpaeter" type="button">Später</button>
+      <button class="pill" id="verknOk" type="button">Verknüpfen</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <div class="print-sheet" id="printSheet"></div>
 
@@ -806,6 +828,58 @@ function wbThemeSichern(t){
   WB_THEME_KEYS.forEach(k => { try { localStorage.setItem(k, t); } catch (e) {} });
 }
 const WB_AB_LS = 'wb-auftragsbuch-data';
+
+/* ═══════ Auftraggeber-Register ═══════
+   Eine Notiz, die zu einem Auftraggeber gehört, merkt sich dessen `agbId`.
+   Der Name steht nur als Etikett daneben – in `category` und in `tags[0]`,
+   damit Suche, Farben und Haufen weiter über den Namen laufen. Wird im
+   Auftragsbuch umbenannt, zieht das Etikett beim nächsten Lesen nach; die
+   Bindung hängt an der ID und reißt nicht.
+
+   Fehlt das Auftragsbuch, bleibt alles wie zuvor: Kategorien sind dann
+   einfach Namen, und keine Notiz verliert etwas. */
+const WB_MIGR_LS = 'noteos.agb-verknuepft';
+function agbBestand(){
+  const d = WB.lesen(WB_AB_LS);
+  return (d && Array.isArray(d.auftraggeber)) ? d.auftraggeber.filter(x => x && x.id && x.name) : [];
+}
+/* Alle, auch inaktive: ein Etikett soll auch für einen stillgelegten
+   Auftraggeber noch stimmen. */
+function agbNachId(){
+  const m = new Map();
+  agbBestand().forEach(x => m.set(String(x.id), String(x.name)));
+  return m;
+}
+/* Nur aktive: was zur Auswahl steht und was der Vorschlag anbietet. */
+function agbNachName(){
+  const m = new Map();
+  agbBestand().filter(x => x.aktiv !== false).forEach(x => m.set(String(x.name), String(x.id)));
+  return m;
+}
+function auftraggeberNamen(){
+  return [...agbNachName().keys()].sort((a,b) => a.localeCompare(b,'de'));
+}
+/* Etiketten nachziehen: für jede Notiz mit agbId den heutigen Namen setzen.
+   Die Datei behält ihren alten Namen in tags[0] – geschrieben wird erst,
+   wenn die Notiz ohnehin gespeichert wird. Die ID führt, nicht der Name. */
+function etikettenNachziehen(list){
+  const reg = agbNachId();
+  if (!reg.size) return 0;
+  let n = 0;
+  list.forEach(x => {
+    if (!x || !x.agbId) return;
+    const name = reg.get(String(x.agbId));
+    if (!name || name === x.category) return;
+    if (Array.isArray(x.tags)) {
+      const i = x.tags.indexOf(x.category);
+      if (i >= 0) x.tags[i] = name; else x.tags.unshift(name);
+      x.tags = [...new Set(x.tags)];
+    }
+    x.category = name;
+    n++;
+  });
+  return n;
+}
 
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
@@ -1257,12 +1331,17 @@ function updateHero(){
     + (view.length !== notes.length ? '<span><b>'+view.length+'</b> gefiltert</span>' : '')
     + (newest ? '<span>Zuletzt: <b>'+esc(newest.modified)+'</b></span>' : '');
   buildScope();
-  /* Je Kategorie mitzählen: das Auftragsbuch erkennt daran, wie viele
-     Notizen unter dem Namen eines Auftraggebers liegen. */
-  const jeKategorie = {};
-  notes.forEach(n => { jeKategorie[n.category] = (jeKategorie[n.category] || 0) + 1; });
+  /* Zwei Zähler zurück ans Auftragsbuch. `jeAuftraggeber` geht über die ID
+     und überlebt jedes Umbenennen; `jeKategorie` bleibt über den Namen
+     daneben stehen, damit ein Auftragsbuch, das die IDs noch nicht kennt,
+     weiter funktioniert. Beides sind Zähler, keine Bestände. */
+  const jeKategorie = {}, jeAuftraggeber = {};
+  notes.forEach(n => {
+    jeKategorie[n.category] = (jeKategorie[n.category] || 0) + 1;
+    if (n.agbId) jeAuftraggeber[n.agbId] = (jeAuftraggeber[n.agbId] || 0) + 1;
+  });
   WB.schreiben(WB_NOTES_LS, { anzahl: notes.length, kategorien: cats.size,
-    jeKategorie, zuletzt: newest ? newest.modified : null, zeit: Date.now() });
+    jeKategorie, jeAuftraggeber, zuletzt: newest ? newest.modified : null, zeit: Date.now() });
 }
 /* ───────── Glasscheiben: ein Scheibenkamm über den Bestand ─────────
    Eine Scheibe je Notiz, Farbe = Kategorie. Die Scheibe im Ziel steht
@@ -1759,7 +1838,7 @@ addEventListener('popstate', () => {
 addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   if ($('#editorView').classList.contains('active')) return;
-  if (!$('#confirmOverlay').hidden) return;
+  if (!$('#confirmOverlay').hidden || !$('#verknOverlay').hidden) return;
   if (POPOVERS.some(([id]) => { const m = document.getElementById(id); return m && !m.hidden; })) return;
   const t = e.target;
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
@@ -1808,37 +1887,55 @@ let pendingSource = null, editingNoteId = null, importToken = 0, editorSnapshot 
    Unter derselben Herkunft liegt der Bestand des Auftragsbuchs. Seine
    Auftraggeber stehen hier als Kategorie zur Wahl — so lässt sich eine
    Notiz einem Kunden zuordnen, ohne dass NoteOS etwas über Aufträge
-   wissen müsste. Fehlt das Auftragsbuch, bleibt die Liste wie zuvor. */
-function auftraggeberNamen(){
-  const d = WB.lesen(WB_AB_LS);
-  if (!d || !Array.isArray(d.auftraggeber)) return [];
-  return d.auftraggeber.filter(x => x && x.name && x.aktiv !== false)
-    .map(x => String(x.name)).sort((a,b) => a.localeCompare(b,'de'));
-}
+   wissen müsste. Fehlt das Auftragsbuch, bleibt die Liste wie zuvor.
+
+   Neu: die Auswahl trägt die `agbId` am Optionsknopf mit. Wer hier einen
+   Auftraggeber wählt, bindet die Notiz an dessen ID — der Name ist nur
+   das, was man sieht. */
 function kategorienAufbauen(){
   const gewaehlt = editorCategory.value;
   editorCategory.innerHTML = '<option value="">Kategorie wählen …</option>';
+  const kunden = agbNachName();                       /* Name → agbId, nur aktive */
   const eigene = new Set(notes.map(n => n.category));
   const fest = new Set(Object.keys(CATS));
-  [...new Set([...fest, ...eigene])].sort((a,b)=>a.localeCompare(b,'de')).forEach(c => {
-    const o = document.createElement('option'); o.value = c; o.textContent = c;
-    editorCategory.appendChild(o);
-  });
-  const kunden = auftraggeberNamen().filter(n => !fest.has(n));
-  if (kunden.length){
+  /* Auftraggeber stehen unten in ihrer eigenen Gruppe – oben bleiben die
+     freien Kategorien, damit ein Name nicht zweimal in der Liste steht. */
+  [...new Set([...fest, ...eigene])].filter(c => !kunden.has(c))
+    .sort((a,b)=>a.localeCompare(b,'de')).forEach(c => {
+      const o = document.createElement('option'); o.value = c; o.textContent = c;
+      editorCategory.appendChild(o);
+    });
+  if (kunden.size){
     const g = document.createElement('optgroup'); g.label = 'Auftraggeber';
-    kunden.forEach(n => {
-      const o = document.createElement('option'); o.value = n; o.textContent = n;
+    [...kunden.keys()].sort((a,b)=>a.localeCompare(b,'de')).forEach(n => {
+      const o = document.createElement('option');
+      o.value = n; o.textContent = n; o.dataset.agb = kunden.get(n);
       g.appendChild(o);
     });
     editorCategory.appendChild(g);
   }
   if (gewaehlt) editorCategory.value = gewaehlt;
 }
+/* Welche agbId hängt an der gerade gewählten Kategorie? Leer, wenn es
+   eine freie Kategorie ist. */
+function gewaehlteAgbId(){
+  const o = editorCategory.selectedOptions && editorCategory.selectedOptions[0];
+  return (o && o.dataset.agb) ? String(o.dataset.agb) : null;
+}
 kategorienAufbauen();
-/* Wird im Auftragsbuch ein Kunde angelegt oder umbenannt, steht er
-   hier beim nächsten Öffnen des Editors bereit — ohne Neuladen. */
-WB.horchen('auftragsbuch', () => kategorienAufbauen());
+/* Wird im Auftragsbuch ein Kunde angelegt oder umbenannt, steht er hier
+   beim nächsten Öffnen des Editors bereit — und die Etiketten der schon
+   verknüpften Notizen ziehen sofort nach, ohne Neuladen. */
+WB.horchen('auftragsbuch', () => {
+  kategorienAufbauen();
+  if (etikettenNachziehen(notes)) {
+    rebuildAccents(notes);
+    notes.forEach(n => searchCache.delete(n));
+    renderDeck();
+    if (reading) renderSheet();
+    updateHero();
+  }
+});
 addBtn.addEventListener('click', e => {
   e.stopPropagation();
   placeMenu(addMenu, addBtn, 210);
@@ -2014,7 +2111,13 @@ $('#editorSave').addEventListener('click', async () => {
     if (editingNoteId !== null){
       const n = notes[editingNoteId];
       const oldTitle = n.title, oldFilename = n.filename;
+      const alteKat = n.category, alteAgb = n.agbId || null;
       n.title = title; n.category = category; n.tags = tags;
+      /* Eine ausdrücklich gewählte Auftraggeber-Zeile bindet. Bleibt die
+         Kategorie unberührt, bleibt auch die Bindung – sonst verlöre eine
+         Notiz ihren Auftraggeber, nur weil der inzwischen inaktiv ist und
+         deshalb nicht mehr in der Auswahlgruppe steht. */
+      n.agbId = gewaehlteAgbId() || (category === alteKat ? alteAgb : null);
       n.accent = shade(colorForCategory(category), ((n.id%5)-2)*0.025);
       n.modified = fmt(now); n.modifiedSort = now.getTime();
       n.content = content.length ? content : ['(Kein Inhalt)'];
@@ -2048,7 +2151,7 @@ $('#editorSave').addEventListener('click', async () => {
     const id = notes.length;
     const taken = new Set(notes.map(n => n.filename).filter(Boolean));
     const newNote = {
-      id, title, category, tags,
+      id, title, category, tags, agbId: gewaehlteAgbId(),
       accent: shade(colorForCategory(category), ((id%5)-2)*0.025),
       created: fmt(now), createdSort: now.getTime(), modified: fmt(now), modifiedSort: now.getTime(),
       author:'Du', source: pendingSource, content: content.length ? content : ['(Kein Inhalt)'],
@@ -2105,6 +2208,9 @@ function noteToMarkdown(n){
     'created: '+n.created, 'created_iso: '+new Date(n.createdSort||Date.now()).toISOString(),
     'modified: '+n.modified, 'modified_iso: '+new Date(n.modifiedSort||Date.now()).toISOString(),
     'author: '+n.author, 'tags: ['+n.tags.join(', ')+']'];
+  /* Die Bindung an den Auftraggeber gehört in die Datei, nicht nur in den
+     Browser – sonst ist sie weg, sobald der Ordner woanders geöffnet wird. */
+  if (n.agbId) fm.push('auftraggeber_id: '+n.agbId);
   if (n.source) fm.push('source: '+n.source);
   fm.push('---', '');
   return fm.join('\n') + n.content.join('\n\n');
@@ -2121,6 +2227,7 @@ function parseMarkdownFile(text, filename, fileLastMod){
     });
   }
   const contentLines = body.split(/\r?\n+/).map(l=>l.trim()).filter(Boolean);
+  const agbId = meta.auftraggeber_id ? String(meta.auftraggeber_id) : null;
   const category = (meta.tags && meta.tags[0]) || 'Ohne Kategorie';
   const modSort = meta.modified_iso ? Date.parse(meta.modified_iso) : fileLastMod;
   const creSort = meta.created_iso ? Date.parse(meta.created_iso) : fileLastMod;
@@ -2129,7 +2236,7 @@ function parseMarkdownFile(text, filename, fileLastMod){
     category, tags: meta.tags && meta.tags.length ? meta.tags : [category],
     created: meta.created || fmt(new Date(creSort)), createdSort: creSort,
     modified: meta.modified || fmt(new Date(modSort)), modifiedSort: modSort,
-    author: meta.author || 'Du', source: meta.source || null,
+    author: meta.author || 'Du', source: meta.source || null, agbId,
     content: contentLines.length ? contentLines : ['(Kein Inhalt)'],
     filename, fileMtime: fileLastMod
   };
@@ -2213,6 +2320,9 @@ const idbMoveToTrash = n => idbOpen().then(db => new Promise((res, rej) => {
 }));
 
 function replaceNotes(list){
+  /* Ein Durchgang für alle drei Wege herein (Ordner, IndexedDB, Zwischenspeicher):
+     verknüpfte Notizen bekommen den heutigen Namen ihres Auftraggebers. */
+  etikettenNachziehen(list);
   notes.length = 0;
   list.forEach((n,i) => { n.id = i; notes.push(n); });
   curIdx = 0;
@@ -2390,6 +2500,7 @@ async function initStorage(){
     const restored = await tryRestoreFolder();
     if (restored === true) renderDeck();
     updateFolderStatus();
+    verknuepfungAnbieten();
     return;
   }
   try{
@@ -2403,7 +2514,77 @@ async function initStorage(){
     }
   }catch(e){}
   updateFolderStatus();
+  verknuepfungAnbieten();
 }
+
+/* ═══════ Altbestand verknüpfen ═══════
+   Bis hierher lief die Verbindung zum Auftragsbuch über den Namen: eine
+   Kategorie hieß wie ein Auftraggeber, das war alles. Wer umbenannte,
+   riss den Faden. Einmalig wird deshalb angeboten, aus diesen Namen eine
+   feste Bindung zu machen – sichtbar, zum Abhaken, nichts im Stillen.
+
+   Geschrieben wird nur, was du ankreuzt; die Dateien behalten alles
+   andere. Wer ablehnt, wird nicht wieder gefragt. */
+function verknuepfungKandidaten(){
+  const kunden = agbNachName();
+  if (!kunden.size) return [];
+  const proKat = new Map();
+  notes.forEach(n => {
+    if (!n || n.agbId || !kunden.has(n.category)) return;
+    proKat.set(n.category, (proKat.get(n.category) || 0) + 1);
+  });
+  return [...proKat.entries()]
+    .map(([name, anzahl]) => ({ name, anzahl, agbId: kunden.get(name) }))
+    .sort((a,b) => b.anzahl - a.anzahl || a.name.localeCompare(b.name,'de'));
+}
+let verknListe = [];
+function verknuepfungAnbieten(){
+  let schonGefragt = false;
+  try { schonGefragt = localStorage.getItem(WB_MIGR_LS) === 'nein'; } catch(e){}
+  if (schonGefragt) return;
+  verknListe = verknuepfungKandidaten();
+  if (!verknListe.length) return;
+  const summe = verknListe.reduce((s,k) => s + k.anzahl, 0);
+  const eine = verknListe.length === 1;
+  $('#verknText').textContent = (eine
+      ? 'Eine Kategorie heißt wie ein Auftraggeber im Auftragsbuch'
+      : verknListe.length + ' Kategorien heißen wie Auftraggeber im Auftragsbuch')
+    + ' – zusammen ' + summe + ' Notiz' + (summe === 1 ? '' : 'en') + '. '
+    + 'Fest verknüpft übersteh' + (eine ? 't sie' : 'en sie') + ' ein Umbenennen drüben.';
+  $('#verknListe').innerHTML = verknListe.map((k, i) =>
+      '<label><input type="checkbox" data-v="' + i + '" checked>'
+    + '<span style="flex:1;min-width:0"><b>' + esc(k.name) + '</b>'
+    + '<span>' + k.anzahl + ' Notiz' + (k.anzahl === 1 ? '' : 'en') + ' · ' + esc(k.agbId) + '</span></span></label>').join('');
+  $('#verknOverlay').hidden = false;
+}
+function verknuepfungSchliessen(nieWieder){
+  $('#verknOverlay').hidden = true;
+  if (nieWieder) { try { localStorage.setItem(WB_MIGR_LS, 'nein'); } catch(e){} }
+}
+$('#verknSpaeter').addEventListener('click', () => verknuepfungSchliessen(true));
+$('#verknOverlay').addEventListener('click', e => { if (e.target.id === 'verknOverlay') verknuepfungSchliessen(true); });
+$('#verknOk').addEventListener('click', async () => {
+  const gewaehlt = $$('#verknListe input:checked').map(b => verknListe[+b.dataset.v]).filter(Boolean);
+  verknuepfungSchliessen(true);
+  if (!gewaehlt.length) return;
+  const nachName = new Map(gewaehlt.map(k => [k.name, k.agbId]));
+  const betroffen = notes.filter(n => !n.agbId && nachName.has(n.category));
+  betroffen.forEach(n => { n.agbId = nachName.get(n.category); });
+  let geschrieben = 0, fehler = 0;
+  for (const n of betroffen) {
+    try {
+      if (fsMode === 'fs') await writeNoteFile(n);
+      else if (fsMode === 'idb') await idbPutNote(n);
+      geschrieben++;
+    } catch(e){ fehler++; }
+  }
+  updateHero();
+  WB.melden('noteos', { was:'verknuepft' });
+  toast(fsMode === 'none'
+    ? betroffen.length + ' Notizen verknüpft – ohne Ordner nur für diese Sitzung.'
+    : geschrieben + ' Notiz' + (geschrieben === 1 ? '' : 'en') + ' verknüpft'
+      + (fehler ? ', ' + fehler + ' fehlgeschlagen' : '') + '.');
+});
 
 /* ───────── Dialog & Toast ───────── */
 let confirmResolve = null;
@@ -2424,6 +2605,7 @@ $('#confirmCancel').addEventListener('click', () => closeConfirm(false));
 $('#confirmOverlay').addEventListener('click', e => { if (e.target.id === 'confirmOverlay') closeConfirm(false); });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !$('#confirmOverlay').hidden) closeConfirm(false);
+  else if (e.key === 'Escape' && !$('#verknOverlay').hidden) verknuepfungSchliessen(true);
 });
 let toastTimer = null;
 function toast(msg){
