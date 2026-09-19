@@ -183,7 +183,7 @@ h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--e
   width:clamp(158px,18vw,216px);height:clamp(112px,13vw,148px);
   display:flex;flex-direction:column;justify-content:flex-end;gap:7px;padding:14px 16px 13px;
   border-radius:3px 9px 9px 3px;overflow:hidden;text-align:left;pointer-events:none;
-  transform-origin:left center;transform:translateY(-50%) rotateY(-88deg);opacity:0;
+  transform-origin:left center;transform:translateY(-50%) rotateY(-48deg) scaleX(.04);opacity:0;
   background:linear-gradient(126deg,
     color-mix(in srgb,var(--wc) 52%,transparent) 0%,
     color-mix(in srgb,var(--wc) 20%,transparent) 46%,
@@ -191,14 +191,14 @@ h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--e
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.34),inset 2px 0 0 rgba(255,255,255,.5),
              0 28px 46px -26px rgba(0,0,0,.95),0 0 40px -14px color-mix(in srgb,var(--wc) 70%,transparent);
   -webkit-backdrop-filter:blur(8px) saturate(1.3);backdrop-filter:blur(8px) saturate(1.3);
-  transition:transform .5s cubic-bezier(.2,.8,.2,1),opacity .35s ease}
+  transition:transform .26s cubic-bezier(.4,0,1,1),opacity .2s ease}
 .pane-body::after{content:"";position:absolute;left:0;top:0;bottom:0;width:34%;pointer-events:none;
   background:linear-gradient(100deg,rgba(255,255,255,.22),transparent 78%)}
 /* Lesegrund im Glas: unten eingetrübt, damit der Titel trägt */
 .pane-body::before{content:"";position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(0deg,color-mix(in srgb,var(--void) 82%,transparent) 4%,
              color-mix(in srgb,var(--void) 40%,transparent) 46%,transparent 78%)}
-.pane.is-active .pane-body{opacity:1;transform:translateY(-50%) rotateY(-31deg)}
+.pane.is-active .pane-body{opacity:1;transform:translateY(-50%) rotateY(-31deg) scaleX(1)}
 .body-kick{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
   color:color-mix(in srgb,var(--text) 68%,transparent);position:relative}
 .body-title{font-size:clamp(14px,1.5vw,16.5px);font-weight:700;line-height:1.24;letter-spacing:-.015em;position:relative;
@@ -223,10 +223,10 @@ h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--e
 .melt-drop{position:absolute;left:50%;top:34px;width:13px;height:15px;margin-left:-6.5px;opacity:0;
   border-radius:50% 50% 54% 54%/62% 62% 38% 38%;background:color-mix(in srgb,var(--acc) 82%,transparent);
   filter:drop-shadow(0 4px 10px color-mix(in srgb,var(--acc) 50%,transparent))}
-.melt.pour .melt-stream{animation:pour .72s cubic-bezier(.3,.7,.2,1) both}
-.melt.pour .melt-drop{animation:drip .8s .16s cubic-bezier(.4,.1,.7,1) both}
-@keyframes pour{0%{transform:scaleY(.06);opacity:.25}58%{transform:scaleY(1.14);opacity:1}100%{transform:scaleY(1);opacity:1}}
-@keyframes drip{0%{opacity:0;transform:translateY(-6px) scale(.5)}28%{opacity:1}100%{opacity:0;transform:translateY(30px) scale(1.25)}}
+.melt.pour .melt-stream{animation:pour .52s .84s cubic-bezier(.3,.7,.2,1) both}
+.melt.pour .melt-drop{animation:drip .54s .96s cubic-bezier(.4,.1,.7,1) both}
+@keyframes pour{0%{transform:scaleY(.04);opacity:0}30%{opacity:1}62%{transform:scaleY(1.16)}100%{transform:scaleY(1);opacity:1}}
+@keyframes drip{0%{opacity:0;transform:translateY(-6px) scale(.5)}28%{opacity:1}100%{opacity:0;transform:translateY(32px) scale(1.25)}}
 /* Herausgezoomte Notiz */
 .scope-detail{position:relative;margin:0;transform-origin:top center;border-radius:16px;border:1px solid var(--line);background:var(--glass);
   box-shadow:var(--shadow-lg);-webkit-backdrop-filter:blur(15px) saturate(1.3);backdrop-filter:blur(15px) saturate(1.3);
@@ -1181,6 +1181,48 @@ function playMelt(){
   void meltEl.offsetWidth;            /* Animation neu starten */
   meltEl.classList.add('pour');
 }
+/* ── Der Auftritt der Notiz, 1,5 s am Stück ─────────────────────
+   0,00–0,30 s  das Glas fährt seitlich aus dem Kamm heraus
+   0,30–0,90 s  es breitet sich auf wie ein Buchdeckel, Titel erscheint
+   0,84–1,36 s  der Guss läuft nach unten aus dem Glas
+   0,95–1,47 s  die Notiz schmilzt darunter heraus                  */
+const SCOPE_SEQ = 1500;
+let seqTimer = null;
+function scheduleScopeSequence(){
+  if (reduced()) return;
+  clearTimeout(seqTimer);
+  seqTimer = setTimeout(playScopeSequence, 170);   /* erst wenn das Ziel steht */
+}
+function playScopeSequence(){
+  if (reduced()) return;
+  const body = trackEl.querySelector('.pane.is-active .pane-body');
+  if (body && body.animate){
+    body.animate([
+      { offset:0,   opacity:0, transform:'translateY(-50%) rotateY(-48deg) scaleX(.04)' },
+      { offset:.12, opacity:1, transform:'translateY(-50%) rotateY(-47deg) scaleX(.16)' },
+      { offset:.34, opacity:1, transform:'translateY(-50%) rotateY(-45deg) scaleX(.46)' },
+      { offset:.70, opacity:1, transform:'translateY(-50%) rotateY(-25deg) scaleX(1.04)' },
+      { offset:1,   opacity:1, transform:'translateY(-50%) rotateY(-31deg) scaleX(1)' }
+    ], { duration:900, easing:'cubic-bezier(.22,.78,.24,1)', fill:'backwards' });
+    [body.querySelector('.body-kick'), body.querySelector('.body-title')].forEach((el,i) => {
+      if (el && el.animate) el.animate([{ opacity:0, transform:'translateY(9px)' }, { opacity:1, transform:'none' }],
+        { duration:360, delay:520 + i*90, easing:'cubic-bezier(.2,.8,.2,1)', fill:'backwards' });
+    });
+  }
+  playMelt();
+  if (detailEl && detailEl.animate && !reduced()){
+    detailEl.animate(
+      [{ opacity:0, transform:'translateY(-22px) scaleY(.7) scaleX(.94)' },
+       { opacity:.9, transform:'translateY(-2px) scaleY(1.03) scaleX(1)', offset:.72 },
+       { opacity:1, transform:'none' }],
+      { duration:SCOPE_SEQ - 950, delay:950, easing:'cubic-bezier(.2,.85,.25,1)', fill:'backwards' });
+    /* der Inhalt schmilzt nacheinander aus dem Guss heraus */
+    detailEl.querySelectorAll('.sd-kick, h2, .sd-text, .sd-tags, .sd-side').forEach((el,i) => {
+      if (el.animate) el.animate([{ opacity:0, transform:'translateY(11px)' }, { opacity:1, transform:'none' }],
+        { duration:300, delay:980 + i*55, easing:'cubic-bezier(.2,.8,.2,1)', fill:'backwards' });
+    });
+  }
+}
 let paneIdx = 0;            /* Position im aktuellen View */
 let paneCenters = [];       /* Mittelpunkte der Scheiben, für das Ziel */
 let paneNote = null;        /* Notiz, die gerade im Ziel steht */
@@ -1247,8 +1289,8 @@ function setActivePane(i, { animate = true } = {}){
   paneIdx = i;
   paneNote = view[i] || null;
   if (scopeEl && paneNote) scopeEl.style.setProperty('--acc', paneNote.accent);
-  renderScopeDetail(paneNote, animate);
-  if (animate) playMelt();
+  renderScopeDetail(paneNote);
+  if (animate) scheduleScopeSequence();
   updateScopeCount();
 }
 function updateScopeCount(){
@@ -1258,7 +1300,7 @@ function updateScopeCount(){
     ? pad3(view.length) + ' von ' + pad3(notes.length)
     : pad3(view.length ? paneIdx+1 : 0) + ' — ' + pad3(view.length);
 }
-function renderScopeDetail(n, animate){
+function renderScopeDetail(n){
   if (!detailEl) return;
   if (!n){
     detailEl.style.removeProperty('--acc');
@@ -1279,12 +1321,6 @@ function renderScopeDetail(n, animate){
     + '</div>'
     + '<div class="sd-side"><button class="pill primary" type="button" data-open="'+n.id+'">Lesen ↗</button>'
     +   '<span class="sd-hint">← → blättert</span></div>';
-  if (animate && !reduced() && detailEl.animate){
-    detailEl.animate(
-      [{ opacity:0, transform:'translateY(-16px) scaleY(.82) scaleX(.97)' },
-       { opacity:1, transform:'none' }],
-      { duration:520, delay:90, easing:'cubic-bezier(.2,.85,.25,1)', fill:'backwards' });
-  }
 }
 /* Scrollen im Kamm setzt das Ziel neu */
 let scopeRaf = 0, snapTimer = null;
@@ -1410,7 +1446,7 @@ function applyView(){
   $$('.seg button[data-view]').forEach(x => x.classList.toggle('active', x.dataset.view === viewMode));
   const lead = $('#lead');
   if (lead) lead.innerHTML = LEADS[viewMode];
-  if (viewMode === 'kamm'){ measurePanes(); centerPane(paneIdx, 'auto'); }
+  if (viewMode === 'kamm'){ measurePanes(); centerPane(paneIdx, 'auto'); scheduleScopeSequence(); }
   updateScopeCount();
 }
 function switchView(next){
