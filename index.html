@@ -751,7 +751,7 @@ html[data-theme="light"]{
 
 <footer>
   <span>© <span id="yr"></span> Maik Unverricht · NoteOS</span>
-  <span><a href="https://maikunverricht.github.io/Der-Werkzeugkasten/">Cockpit</a> · <a href="https://github.com/maikunverricht/NoteOS" target="_blank" rel="noopener">Repo ↗</a></span>
+  <span><a href="https://maikunverricht.github.io/Der-Werkzeugkasten/">Cockpit</a> · <a href="https://maikunverricht.github.io/WerkbankUnverricht/">Werkbank ↗</a> · <a href="https://github.com/maikunverricht/NoteOS" target="_blank" rel="noopener">Repo ↗</a></span>
 </footer>
 
 <div class="scrim" id="scrim"></div>
@@ -1401,13 +1401,23 @@ html[data-theme="light"]{
   function fussknopf() {
     if (!cfg.fuss) return;
     var f = document.querySelector(cfg.fuss);
-    if (!f) return;
+    if (!f) {
+      /* Manche Werkzeuge rufen start() beim Parsen auf – dann steht die
+         Fußzeile noch nicht. Einmal nachfassen, sobald sie da ist. */
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fussknopf, { once: true });
+      }
+      return;
+    }
     var b = document.createElement('button');
     b.type = 'button';
     b.className = cfg.fussKlasse || 'pill sm';
     b.textContent = lage && lage.status === 'frei' ? 'Lizenz' : 'Freischalten';
     b.addEventListener('click', dialogAuf);
-    f.insertBefore(b, f.firstChild);
+    /* Vor den letzten Eintrag – der ist in allen Werkzeugen der Verweis
+       nach draußen, und davor gehört der Lizenzknopf hin. */
+    var letzter = f.lastElementChild;
+    if (letzter) f.insertBefore(b, letzter); else f.appendChild(b);
   }
 
   /* ── Tor ───────────────────────────────────────────────── */
