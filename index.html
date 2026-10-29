@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>NoteOS – Wissen der Werkbank</title>
+<title>Notizbuch – Wissen der Werkbank</title>
 <meta name="description" content="Notizen als Kartei: Kategorien, Tags und Volltext – lokal im Ordner gespeichert.">
 <meta name="theme-color" content="#06090E">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='8'%20fill='%2306090E'/%3E%3Cg%20transform='translate%2816%2016%29%20scale%280.19%29%20translate%28-60%20-56%29'%3E%3Cpath%20d='M26%2C16%20V62%20A34%2C34%200%200%200%2094%2C62%20V16'%20fill='none'%20stroke='%23EDF0F3'%20stroke-width='22'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='60'%20cy='64'%20r='18.5'%20fill='%23F2B33D'/%3E%3C/g%3E%3C/svg%3E">
@@ -552,6 +552,136 @@ select.field{padding-right:8px}
   font-family:var(--mono,ui-monospace,Menlo,monospace)}
 .pill.danger{background:var(--danger);color:#fff;border-color:transparent;font-weight:600}
 .pill.danger:hover{background:var(--danger);filter:brightness(1.08)}
+/* ── Würfel: Kanban in drei Richtungen ────────────────────── */
+.wf{display:flex;flex-direction:column;gap:18px}
+.cube-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:18px 34px;padding:16px 20px;border-radius:18px;
+  border:1px solid var(--line);background:var(--glass);box-shadow:var(--shadow)}
+.cube{--s:132px;--gap:30px;position:relative;width:calc(var(--s) * 1.5);flex:none;
+  height:calc(var(--s) * .95 + var(--n) * var(--gap) * .8);perspective:1100px}
+.cube-in{position:absolute;left:50%;bottom:calc(var(--s) * .22);width:var(--s);height:var(--s);margin-left:calc(var(--s) / -2);
+  transform-style:preserve-3d;transform:rotateX(58deg) rotateZ(-38deg)}
+.cube-l{position:absolute;inset:0;padding:6px;border-radius:9px;cursor:pointer;
+  border:1px solid color-mix(in srgb,var(--teal) 42%,transparent);
+  background:color-mix(in srgb,var(--glass-2) 70%,transparent);
+  box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 10px 24px -14px rgba(0,0,0,.8);
+  transform:translateZ(calc(var(--k) * var(--gap)));transition:transform var(--t-m) cubic-bezier(.2,.8,.2,1),opacity var(--t-s),border-color var(--t-s)}
+.cube-l:hover{transform:translateZ(calc(var(--k) * var(--gap) + 8px));border-color:var(--amber)}
+.cube-l.on{border-color:var(--amber);background:color-mix(in srgb,var(--amber) 16%,var(--glass-2));
+  transform:translateZ(calc(var(--k) * var(--gap) + 10px))}
+.cube-l.aus{opacity:.35}
+.cube-g{display:grid;grid-template-columns:repeat(var(--cols),1fr);grid-template-rows:repeat(var(--rows),1fr);gap:4px;width:100%;height:100%}
+.cube-g i{display:grid;place-items:center;border-radius:4px;font:600 9px/1 var(--mono);font-style:normal;color:var(--on-accent);
+  background:color-mix(in srgb,var(--teal) calc(var(--c) * 100%),color-mix(in srgb,var(--text-3) 14%,transparent))}
+.cube-l.on .cube-g i{background:color-mix(in srgb,var(--amber) calc(var(--c) * 100%),color-mix(in srgb,var(--text-3) 14%,transparent))}
+.cube-leg{flex:1;min-width:250px;display:flex;flex-direction:column;gap:9px;font-size:13.5px;color:var(--text-2)}
+.cube-ax{display:flex;align-items:center;gap:8px}
+.cube-ax b{color:var(--text);font-weight:600}
+.ax{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;font-size:12px;border:1px solid var(--line);color:var(--text)}
+.ax.x{border-color:color-mix(in srgb,var(--amber) 55%,transparent)}
+.ax.y{border-color:color-mix(in srgb,var(--teal) 55%,transparent)}
+.ax.z{border-color:color-mix(in srgb,#B79BFF 60%,transparent)}
+.wf-sel{height:30px;padding:0 8px;border-radius:100px;border:1px solid var(--glass-edge);background:var(--glass-2);color:var(--text);font-size:13px}
+.wf-dreh{width:30px;height:30px;border-radius:50%;border:1px solid var(--glass-edge);background:none;cursor:pointer;font-size:15px;line-height:1}
+.wf-dreh:hover{border-color:var(--line-hi);color:var(--amber)}
+.cube-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.cube-tag{border:1px solid var(--line);background:none;border-radius:100px;padding:4px 11px;cursor:pointer;font-size:12.5px;color:var(--text-2)}
+.cube-tag b{font-family:var(--mono);font-weight:500;color:var(--text-3);margin-left:3px}
+.cube-tag:hover{border-color:var(--line-hi);color:var(--text)}
+.cube-tag.on{background:var(--amber);border-color:transparent;color:var(--on-accent);font-weight:600}
+.cube-tag.on b{color:inherit}
+.wf-scroll{overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.wf-grid{display:grid;grid-template-columns:118px repeat(var(--cols),minmax(208px,1fr));gap:8px;min-width:min-content}
+.wf-c{border-radius:12px;min-width:0}
+.wf-corner{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--text-3);align-self:end;padding:0 4px 8px;line-height:1.4}
+.wf-h,.wf-rh{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-2);
+  display:flex;align-items:center;gap:8px}
+.wf-h{padding:8px 12px;border-bottom:2px solid color-mix(in srgb,var(--amber) 45%,transparent);border-radius:0}
+.wf-rh{padding:12px 10px;align-items:flex-start;flex-direction:column;gap:4px;border-right:2px solid color-mix(in srgb,var(--teal) 45%,transparent);border-radius:0}
+.wf-h span,.wf-rh span{color:var(--text-3);letter-spacing:.06em}
+.wf-h[data-v="erledigt"]{color:var(--teal)}
+.wf-rh[data-v="hoch"],.wf-h[data-v="hoch"]{color:var(--danger)}
+.wf-cell{position:relative;display:flex;flex-direction:column;gap:7px;padding:8px;min-height:92px;
+  border:1px dashed var(--line);background:color-mix(in srgb,var(--glass) 60%,transparent);
+  transition:border-color var(--t-s),background var(--t-s)}
+.wf-cell.ziel{border:1px solid var(--amber);background:color-mix(in srgb,var(--amber) 12%,var(--glass))}
+.kc{position:relative;padding:9px 10px 10px 12px;border-radius:10px;cursor:grab;text-align:left;
+  background:var(--glass-2);border:1px solid var(--glass-edge);box-shadow:var(--shadow);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  transition:transform var(--t-s),box-shadow var(--t-s),opacity var(--t-s),border-color var(--t-s)}
+.kc::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--acc)}
+.kc:hover{border-color:color-mix(in srgb,var(--acc) 55%,transparent);transform:translateY(-1px)}
+.kc:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.kc.dragging{opacity:.3}
+.kc.done .kc-t{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--text) 40%,transparent);color:var(--text-2)}
+.kc-ghost{position:fixed;z-index:300;pointer-events:none;margin:0;transform:rotate(-2.5deg) scale(1.03);
+  box-shadow:var(--shadow-lg);opacity:.95;cursor:grabbing}
+body.ziehen,body.ziehen *{cursor:grabbing !important}
+.kc-top{display:flex;align-items:center;gap:6px;min-height:20px}
+.kc-dot{width:7px;height:7px;border-radius:50%;background:var(--acc);flex:none}
+.kc-cat{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.kc-acts{display:flex;gap:3px;opacity:0;transition:opacity var(--t-s)}
+.kc:hover .kc-acts,.kc:focus-within .kc-acts{opacity:1}
+.kc-acts button{width:22px;height:22px;display:grid;place-items:center;padding:0;border-radius:6px;border:1px solid var(--line);
+  background:none;cursor:pointer;font-size:12px;line-height:1;color:var(--text-2)}
+.kc-ok:hover{color:var(--teal);border-color:var(--teal)}
+.kc-del:hover{color:var(--danger);border-color:var(--danger)}
+.kc-t{font-size:13.5px;font-weight:650;line-height:1.3;margin-top:3px;overflow-wrap:anywhere}
+.kc-m{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.kc-chip{font-family:var(--mono);font-size:10px;color:var(--text-3);border:1px solid var(--line);border-radius:100px;padding:1px 7px}
+.kc-neu{align-self:center;margin-top:auto;width:26px;height:26px;border-radius:50%;border:1px dashed var(--line);background:none;
+  color:var(--text-3);cursor:pointer;font-size:15px;line-height:1;opacity:0;transition:opacity var(--t-s),color var(--t-s),border-color var(--t-s)}
+.wf-cell:hover .kc-neu,.kc-neu:focus-visible{opacity:1}
+.kc-neu:hover{color:var(--amber);border-color:var(--amber)}
+.wf-hint{margin:0;font-family:var(--mono);font-size:11px;color:var(--text-3)}
+@media (pointer:coarse){
+  .kc-acts,.kc-neu{opacity:1}
+  .kc-acts button{width:28px;height:28px}
+}
+@media (max-width:720px){
+  .cube{--s:104px;--gap:24px}
+  .wf-grid{grid-template-columns:84px repeat(var(--cols),minmax(176px,1fr))}
+}
+/* Status-, Prioritäts- und Personenmarken – Leseansicht und Vorschau */
+.s-kanban,.hv-k{display:flex;flex-wrap:wrap;gap:6px}
+.s-kanban{margin:12px 0 0}
+.kb-s,.kb-p,.kb-w{font-family:var(--mono);font-size:11px;padding:2px 9px;border-radius:100px;border:1px solid var(--line);color:var(--text-2)}
+.kb-s[data-s="arbeit"]{border-color:color-mix(in srgb,var(--amber) 60%,transparent);color:var(--amber)}
+.kb-s[data-s="erledigt"]{border-color:color-mix(in srgb,var(--teal) 60%,transparent);color:var(--teal)}
+.kb-p[data-p="hoch"]{border-color:color-mix(in srgb,var(--danger) 60%,transparent);color:var(--danger)}
+/* Vorschau beim Überfahren */
+.hv{position:fixed;z-index:220;pointer-events:none;padding:14px 16px 12px;border-radius:14px;
+  border:1px solid color-mix(in srgb,var(--acc,var(--amber)) 45%,var(--glass-edge));background:var(--glass-2);
+  box-shadow:var(--shadow-lg);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);
+  opacity:0;transform:translateY(4px);transition:opacity .18s ease,transform .18s ease}
+.hv.on{opacity:1;transform:none}
+.hv-kick{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3)}
+.hv-dot{width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.hv-d{margin-left:auto;letter-spacing:.06em}
+.hv-t{font-size:16px;font-weight:700;letter-spacing:-.015em;line-height:1.25;margin:6px 0 8px}
+.hv-tags{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:8px;font-family:var(--mono);font-size:10.5px;color:var(--text-3)}
+.hv-b{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:13px;line-height:1.55;color:var(--text-2);
+  max-height:220px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 78%,transparent);mask-image:linear-gradient(#000 78%,transparent)}
+.hv-b > *{margin:0 0 .5em}
+.hv-b h1,.hv-b h2,.hv-b h3,.hv-b h4{font-size:13.5px;color:var(--text);margin:0 0 .35em}
+.hv-b ul,.hv-b ol{padding-left:1.2em}
+.hv-b blockquote{border-left:2px solid var(--acc);padding-left:8px;margin-left:0}
+.hv-b pre{font-size:11px;white-space:pre-wrap}
+/* Editor: Würfelfelder */
+.ed-lab{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3)}
+.ed-lab .field{font-family:var(--display);letter-spacing:0;text-transform:none}
+#editorPerson{width:150px}
+/* Hinweis mit Rückgängig */
+.toast.aktion{pointer-events:auto;display:flex;align-items:center;gap:14px;padding:.45rem .55rem .45rem 1.2rem}
+.toast button{border:0;border-radius:100px;padding:.4rem .9rem;background:var(--amber);color:var(--on-accent);font-weight:600;cursor:pointer;font-size:13px}
+/* Lesen: Formatierungen, die jetzt erhalten bleiben */
+.s-body u,.hv-b u{text-decoration-thickness:1px;text-underline-offset:2px}
+.s-body mark{background:color-mix(in srgb,var(--amber) 35%,transparent);color:inherit;border-radius:3px;padding:0 2px}
+.s-body code{font-family:var(--mono);font-size:.88em;padding:1px 5px;border-radius:5px;background:color-mix(in srgb,var(--text-3) 18%,transparent)}
+.s-body pre{font-family:var(--mono);font-size:13px;line-height:1.55;padding:12px 14px;border-radius:10px;overflow:auto;
+  background:color-mix(in srgb,var(--void) 60%,transparent);border:1px solid var(--line)}
+.s-body pre code{padding:0;background:none}
+.s-body hr{border:0;height:1px;background:var(--line);margin:1.4em 0}
 .toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%);z-index:210;
   background:var(--glass-2);color:var(--text);padding:.7rem 1.2rem;border-radius:100px;border:1px solid var(--glass-edge);
   font-size:13.5px;box-shadow:var(--shadow-lg);-webkit-backdrop-filter:blur(15px);backdrop-filter:blur(15px);
@@ -684,7 +814,7 @@ html[data-theme="light"]{
 
 <header class="nav">
   <div class="nav-in">
-    <a class="brand" href="#" id="home"><span class="mark" aria-hidden="true"><svg viewBox="15 5 90 102"><path d="M26,16 V62 A34,34 0 0 0 94,62 V16" fill="none" stroke="currentColor" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="64" r="18.5" fill="var(--amber,#F2B33D)"/></svg></span>Note<b>OS</b></a>
+    <a class="brand" href="#" id="home"><span class="mark" aria-hidden="true"><svg viewBox="15 5 90 102"><path d="M26,16 V62 A34,34 0 0 0 94,62 V16" fill="none" stroke="currentColor" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="64" r="18.5" fill="var(--amber,#F2B33D)"/></svg></span><span>Notiz<b>buch</b></span></a>
     <div class="nav-r">
       <span class="clock" id="clock"></span>
       <button class="pill" id="folderBtn" type="button">Ordner<span class="dot-state" id="folderDot"></span></button>
@@ -725,6 +855,7 @@ html[data-theme="light"]{
       <button data-view="kamm" class="active">Kamm<span class="kbd hide-sm">1</span></button>
       <button data-view="board">Haufen<span class="kbd hide-sm">2</span></button>
       <button data-view="arena">Tafeln<span class="kbd hide-sm">3</span></button>
+      <button data-view="wuerfel">Würfel<span class="kbd hide-sm">4</span></button>
     </div>
   </section>
 
@@ -750,7 +881,7 @@ html[data-theme="light"]{
 </main>
 
 <footer>
-  <span>© <span id="yr"></span> Maik Unverricht · NoteOS</span>
+  <span>© <span id="yr"></span> Maik Unverricht · Notizbuch</span>
   <span><a href="https://maikunverricht.github.io/Kontor/">Kontor</a> · <a href="https://maikunverricht.github.io/WerkbankUnverricht/">Werkbank ↗</a> · <a href="https://github.com/maikunverricht/NoteOS" target="_blank" rel="noopener">Repo ↗</a></span>
 </footer>
 
@@ -802,6 +933,15 @@ html[data-theme="light"]{
       <input type="text" id="editorTags" class="field ed-tags" placeholder="Tags, mit Komma getrennt" aria-label="Tags">
       <span class="ed-source" id="editorSource"></span>
     </div>
+    <div class="ed-row ed-kanban">
+      <label class="ed-lab">Status
+        <select id="editorStatus" class="field"><option value="offen">Offen</option><option value="arbeit">In Bearbeitung</option><option value="erledigt">Erledigt</option></select></label>
+      <label class="ed-lab">Priorität
+        <select id="editorPrio" class="field"><option value="hoch">Hoch</option><option value="mittel" selected>Mittel</option><option value="niedrig">Niedrig</option></select></label>
+      <label class="ed-lab">Person
+        <input type="text" id="editorPerson" class="field" list="personenListe" placeholder="wer macht es?" autocomplete="off"></label>
+      <datalist id="personenListe"></datalist>
+    </div>
     <div class="ed-hint" id="editorHint"></div>
     <div class="ed-toolbar" id="editorToolbar">
       <button type="button" data-cmd="undo" title="Rückgängig (Strg+Z)" aria-label="Rückgängig">↶</button>
@@ -843,6 +983,7 @@ html[data-theme="light"]{
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="hv" id="hover" role="tooltip" hidden></div>
 <div class="print-sheet" id="printSheet"></div>
 
 <!-- ══════════════════════════════════════════════════════════════
@@ -1500,15 +1641,15 @@ html[data-theme="light"]{
 })(window);
 </script>
 <script>
-/* Lizenztor · NoteOS freischalten */
+/* Lizenztor · Notizbuch freischalten (Kennung bleibt „noteos“, damit Lizenzen gültig bleiben) */
 WBTor({
   "werkzeug": "noteos",
   "build": "2026-09-19",
-  "titel": "NoteOS freischalten",
+  "titel": "Notizbuch freischalten",
   "merkmale": [
     "Notizen als Markdown-Dateien im eigenen Ordner",
     "Kategorien, Tags und Volltextsuche",
-    "Bindung an den Auftraggeber über dessen ID",
+    "Kanban-Würfel: Status, Priorität und Person",
     "Lesen und Schreiben ohne Umweg über die Cloud"
   ],
   "nach": "main .hero",
@@ -1518,7 +1659,7 @@ WBTor({
     "noteos.agb-verknuepft",
     "wb-noteos-stand"
   ],
-  "schreiben": "#addBtn,#addBlank,#addImport,#folderConnect,#folderReconnect,#folderReload,#folderBulkImport,#folderDisconnect,#editBtn,#editorSave,#delBtn,#confirmOk,#verknOk,#tbLink",
+  "schreiben": "#addBtn,#addBlank,#addImport,#folderConnect,#folderReconnect,#folderReload,#folderBulkImport,#folderDisconnect,#editBtn,#editorSave,#delBtn,#confirmOk,#verknOk,#tbLink,.kc-ok,.kc-del,.kc-neu,#toastUndo",
   "ausgabe": "#printBtn,#pmExport",
   "demo": {},
   "fussKlasse": "pill"
@@ -1587,10 +1728,13 @@ const WB_AB_LS = 'wb-auftragsbuch-data';
    Fehlt das Auftragsbuch, bleibt alles wie zuvor: Kategorien sind dann
    einfach Namen, und keine Notiz verliert etwas. */
 const WB_MIGR_LS = 'noteos.agb-verknuepft';
-function agbBestand(){
-  const d = WB.lesen(WB_AB_LS);
-  return (d && Array.isArray(d.auftraggeber)) ? d.auftraggeber.filter(x => x && x.id && x.name) : [];
-}
+/* Seit 30.10.2026 steht das Notizbuch für sich (Ansicht „Produktiv“ im
+   Kontor): es liest das Auftragsbuch nicht mehr und meldet nichts zurück.
+   Der Bezug zu Aufträgen wird im Auftragsstatus geführt. Eine `agbId`, die
+   schon in einer Datei steht, bleibt beim Speichern erhalten, wird aber
+   nicht mehr ausgewertet. Die Funktionen bleiben leer stehen, damit der
+   Rest unverändert läuft. */
+function agbBestand(){ return []; }
 /* Alle, auch inaktive: ein Etikett soll auch für einen stillgelegten
    Auftraggeber noch stimmen. */
 function agbNachId(){
@@ -1732,7 +1876,9 @@ const notes = RAW.map(([cat,title,d], i) => {
     id:i, title, category:cat, tags:[cat, ...(EXTRA_TAGS[title]||[])],
     accent: shade(CATS[cat], ((i%5)-2)*0.025),
     created: fmt(cre), createdSort: cre.getTime(), modified: fmt(mod), modifiedSort: mod.getTime(),
-    author:'Du', content: CONTENT[cat], filename: null, source: null
+    author:'Du', content: CONTENT[cat], filename: null, source: null,
+    status: ['offen','arbeit','erledigt'][(i*7) % 3], prio: ['hoch','mittel','niedrig'][Math.floor(i / 3) % 3],
+    person: ['Maik','Anna','Jonas',''][Math.floor(i / 2) % 4]
   };
 });
 
@@ -1744,7 +1890,7 @@ let deckMode = 'board';        /* welche Ansicht in der Bühne unter #deck liegt
 const openPiles = new Set();   /* ausgebreitete Haufen im Whiteboard */
 try {
   const v = localStorage.getItem('noteos.view');
-  if (v === 'board' || v === 'arena' || v === 'kamm') viewMode = v;
+  if (v === 'board' || v === 'arena' || v === 'kamm' || v === 'wuerfel') viewMode = v;
   if (v === 'liste') viewMode = 'board';                  /* die alte Liste ist abgelöst */
   if (viewMode !== 'kamm') deckMode = viewMode;
 } catch(e){}
@@ -1752,34 +1898,159 @@ const activeTags = new Set();
 let view = [];                 /* aktuell sichtbare Notizen in Anzeigereihenfolge */
 let reading = false;
 
-/* ───────── Markdown ───────── */
+/* ───────── Markdown ─────────
+   Seit 30.10.2026: Hin- und Rückweg sind verlustfrei für alles, was der
+   Editor erzeugt. Vorher zerriss ein Fettdruck in der ersten Zeile den
+   Absatz, Listen in einem <div> verschwanden, Zeilenumbrüche und
+   Leerzeilen fielen weg.
+
+   Inline: **fett**, *kursiv*, ~~durch~~, <u>unter</u>, <mark>, `code`,
+   [Link](url), <br> für den Umbruch im Absatz. Wörtliche Sonderzeichen
+   stehen mit Backslash. Gelesen wird mit einem kleinen Stapel statt mit
+   Regex-Kaskaden – so verschachtelt sich **fett *und kursiv*** korrekt.
+   Block: # bis ####, - / 1. mit zwei Leerzeichen je Ebene, > Zitat,
+   ``` Code, --- Linie, &nbsp; als bewusst leerer Absatz. */
+const MD_TAG = { b:'strong', i:'em', s:'s', u:'u', m:'mark' };
+const escH = c => c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '"' ? '&quot;' : c;
+const escHs = s => Array.from(String(s), escH).join('');
+const safeUrl = u => { u = String(u || '').trim(); return !u || /^(javascript|data|vbscript):/i.test(u.replace(/\s+/g,'')) ? '#' : u; };
 function inlineMdToHtml(text){
-  return String(text)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  const s = String(text ?? '');
+  const st = [];
+  let out = '', i = 0;
+  const open = k => { st.push(k); out += '<'+MD_TAG[k]+'>'; };
+  const close = k => {
+    const at = st.lastIndexOf(k); if (at < 0) return;
+    const weg = st.splice(at);
+    for (let j = weg.length - 1; j >= 0; j--) out += '</'+MD_TAG[weg[j]]+'>';
+    weg.slice(1).forEach(open);                    /* was darüber lag, geht wieder auf */
+  };
+  const toggle = k => st.includes(k) ? close(k) : open(k);
+  while (i < s.length){
+    const c = s[i];
+    if (c === '\\' && i + 1 < s.length && /[\\*~`\[\]<>_#\-+.!|()]/.test(s[i+1])){ out += escH(s[i+1]); i += 2; continue; }
+    if (c === '`'){
+      const j = s.indexOf('`', i + 1);
+      if (j > i){ out += '<code>'+escHs(s.slice(i+1, j))+'</code>'; i = j + 1; continue; }
+    }
+    if (c === '*'){
+      let n = 1; while (s[i+n] === '*') n++;
+      if (n >= 3){
+        const hb = st.includes('b'), hi = st.includes('i');
+        if (hb && hi){ const oben = st.lastIndexOf('b') > st.lastIndexOf('i') ? 'b' : 'i'; close(oben); close(oben === 'b' ? 'i' : 'b'); }
+        else { toggle('b'); toggle('i'); }
+        i += 3; continue;
+      }
+      toggle(n === 2 ? 'b' : 'i'); i += n; continue;
+    }
+    if (c === '~' && s[i+1] === '~'){ toggle('s'); i += 2; continue; }
+    if (c === '<'){
+      const m = /^<(\/?)(u|mark|br)\s*\/?>/i.exec(s.slice(i));
+      if (m){
+        const t = m[2].toLowerCase();
+        if (t === 'br') out += '<br>';
+        else { const k = t === 'u' ? 'u' : 'm'; if (m[1]) close(k); else if (!st.includes(k)) open(k); }
+        i += m[0].length; continue;
+      }
+    }
+    if (c === '&' && s.startsWith('&nbsp;', i)){ out += '&nbsp;'; i += 6; continue; }
+    if (c === '['){
+      const m = /^\[((?:\\.|[^\]\\])*)\]\(([^)\s]*)\)/.exec(s.slice(i));
+      if (m){
+        out += '<a href="'+escHs(safeUrl(m[2]))+'" target="_blank" rel="noopener">'+inlineMdToHtml(m[1])+'</a>';
+        i += m[0].length; continue;
+      }
+    }
+    out += escH(c); i++;
+  }
+  for (let j = st.length - 1; j >= 0; j--) out += '</'+MD_TAG[st[j]]+'>';
+  return out;
+}
+const MD_LIST = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/;
+const MD_FENCE = /^\s*```/;
+function listHtml(items){
+  let html = '';
+  const stack = [];
+  items.forEach(it => {
+    const lvl = Math.min(it.lvl, stack.length);
+    const typ = it.ord ? 'ol' : 'ul';
+    while (stack.length > lvl + 1) html += '</li></'+stack.pop()+'>';
+    if (stack.length === lvl + 1){
+      if (stack[lvl] !== typ) html += '</li></'+stack.pop()+'>';
+      else html += '</li>';
+    }
+    if (stack.length === lvl){ html += '<'+typ+'>'; stack.push(typ); }
+    html += '<li>'+inlineMdToHtml(it.text);
+  });
+  while (stack.length) html += '</li></'+stack.pop()+'>';
+  return html;
 }
 function contentToHtml(lines){
+  const L = Array.isArray(lines) ? lines : [];
   let html = '', i = 0;
-  while (i < lines.length){
-    const line = lines[i];
-    if (line.startsWith('- ')){
-      let items=''; while (i<lines.length && lines[i].startsWith('- ')){ items+='<li>'+inlineMdToHtml(lines[i].slice(2))+'</li>'; i++; }
-      html += '<ul>'+items+'</ul>';
-    } else if (/^\d+\.\s/.test(line)){
-      let items=''; while (i<lines.length && /^\d+\.\s/.test(lines[i])){ items+='<li>'+inlineMdToHtml(lines[i].replace(/^\d+\.\s/,''))+'</li>'; i++; }
-      html += '<ol>'+items+'</ol>';
-    } else if (line.startsWith('### ')){ html += '<h3>'+inlineMdToHtml(line.slice(4))+'</h3>'; i++; }
-    else if (line.startsWith('## ')){ html += '<h2>'+inlineMdToHtml(line.slice(3))+'</h2>'; i++; }
-    else if (line.startsWith('# ')){ html += '<h1>'+inlineMdToHtml(line.slice(2))+'</h1>'; i++; }
-    else if (line.startsWith('> ')){ html += '<blockquote>'+inlineMdToHtml(line.slice(2))+'</blockquote>'; i++; }
-    else { html += '<p>'+inlineMdToHtml(line)+'</p>'; i++; }
+  while (i < L.length){
+    const line = String(L[i] ?? '').replace(/\s+$/,'');
+    if (MD_FENCE.test(line)){
+      const code = []; i++;
+      while (i < L.length && !MD_FENCE.test(L[i])){ code.push(L[i]); i++; }
+      i++;
+      html += '<pre><code>'+escHs(code.join('\n'))+'</code></pre>';
+      continue;
+    }
+    if (MD_LIST.test(line) && !/^\s*(\*\s*){3,}$|^\s*(-\s*){3,}$/.test(line)){
+      const items = [];
+      while (i < L.length && MD_LIST.test(L[i])){
+        const m = MD_LIST.exec(L[i]);
+        items.push({ lvl: Math.floor(m[1].replace(/\t/g,'  ').length / 2), ord: /\d/.test(m[2]), text: m[3] });
+        i++;
+      }
+      html += listHtml(items);
+      continue;
+    }
+    i++;
+    const t = line.trim();
+    if (!t) continue;
+    if (t === '&nbsp;'){ html += '<p><br></p>'; continue; }
+    const h = /^(#{1,6})\s+(.*)$/.exec(t);
+    if (h){ const n = Math.min(h[1].length, 4); html += '<h'+n+'>'+inlineMdToHtml(h[2])+'</h'+n+'>'; continue; }
+    if (/^>\s?/.test(t)){ html += '<blockquote>'+inlineMdToHtml(t.replace(/^>\s?/,''))+'</blockquote>'; continue; }
+    if (/^(\*\s*){3,}$|^(-\s*){3,}$|^(_\s*){3,}$/.test(t)){ html += '<hr>'; continue; }
+    html += '<p>'+inlineMdToHtml(t)+'</p>';
   }
   return html;
 }
+/* Rohtext einer .md-Datei → Zeilen. Leerzeilen trennen nur, außer im Code;
+   Einrückung bleibt, sonst gingen verschachtelte Listen verloren. */
+function bodyToLines(body){
+  const out = [];
+  let fence = false;
+  String(body || '').split(/\r?\n/).forEach(l => {
+    const r = l.replace(/\s+$/,'');
+    if (MD_FENCE.test(r)){ fence = !fence; out.push(r.trim()); return; }
+    if (fence){ out.push(r); return; }
+    if (r.trim()) out.push(r);
+  });
+  return out;
+}
+/* Zeilen → Dateitext. Listen und Code stehen dicht, alles andere mit
+   Leerzeile – so liest sich die Datei auch in jedem anderen Editor. */
+function linesToMd(lines){
+  let out = '', fence = false;
+  (lines || []).forEach((l, i) => {
+    if (i){
+      const dicht = fence || (MD_LIST.test(lines[i-1]) && MD_LIST.test(l));
+      out += dicht ? '\n' : '\n\n';
+    }
+    out += l;
+    if (MD_FENCE.test(l)) fence = !fence;
+  });
+  return out;
+}
 function plainExcerpt(n){
-  const raw = (n.content || []).join(' ').replace(/^#+\s*/gm,'').replace(/[*>`]/g,'').replace(/\s+/g,' ').trim();
+  const raw = (n.content || []).join(' ')
+    .replace(/<br>|&nbsp;/g,' ').replace(/<\/?(u|mark)>/g,'')
+    .replace(/^\s*(#+|>|[-*+]|\d+[.)])\s+/gm,'').replace(/\\(.)/g,'$1')
+    .replace(/[*`~]/g,'').replace(/\[([^\]]*)\]\([^)]*\)/g,'$1').replace(/\s+/g,' ').trim();
   return raw || '(Kein Inhalt)';
 }
 
@@ -1919,6 +2190,224 @@ function renderArena(list){
     + '</div>'
     + '<div class="wb-main" id="wbMain">' + boards + '</div></div>';
 }
+/* ═══════ Würfel: Kanban in drei Richtungen ═══════
+   Jede Notiz trägt Status, Priorität und Person. Zwei Achsen spannen die
+   Tafel auf (Spalten × Zeilen), die dritte schichtet sie – zusammen ein
+   Würfel. Oben steht er als Bild: je Schicht eine Ebene, je Zelle ein
+   Punkt, dessen Stärke die Anzahl zeigt. Eine Ebene antippen blendet die
+   Tafel auf diese Schicht; ⟳ dreht die Achsen weiter. Karten lassen sich
+   zwischen Zellen ziehen (am Telefon: kurz halten, dann ziehen). */
+const STATUS_W = [['offen','Offen'],['arbeit','In Bearbeitung'],['erledigt','Erledigt']];
+const PRIO_W   = [['hoch','Hoch'],['mittel','Mittel'],['niedrig','Niedrig']];
+const nStatus = n => (n && STATUS_W.some(w => w[0] === n.status)) ? n.status : 'offen';
+const nPrio   = n => (n && PRIO_W.some(w => w[0] === n.prio)) ? n.prio : 'mittel';
+const nPerson = n => (n && n.person ? String(n.person).trim() : '');
+function personen(){
+  return [...new Set(notes.map(nPerson).filter(Boolean))].sort((a,b) => a.localeCompare(b,'de'));
+}
+const ACHSEN = {
+  status: { name:'Status',    feld:'status', von:nStatus, werte:() => STATUS_W },
+  prio:   { name:'Priorität', feld:'prio',   von:nPrio,   werte:() => PRIO_W },
+  person: { name:'Person',    feld:'person', von:nPerson, werte:() => [...personen().map(p => [p, p]), ['', 'Niemand']] }
+};
+const ACHS_REIHE = ['status','prio','person'];
+const wf = { s:'status', z:'prio', ebene:null };
+try {
+  const g = JSON.parse(localStorage.getItem('noteos.wuerfel') || 'null');
+  if (g && ACHSEN[g.s] && ACHSEN[g.z] && g.s !== g.z){ wf.s = g.s; wf.z = g.z; }
+} catch(e){}
+const wfE = () => ACHS_REIHE.find(a => a !== wf.s && a !== wf.z);
+function wfMerken(){ try { localStorage.setItem('noteos.wuerfel', JSON.stringify({ s:wf.s, z:wf.z })); } catch(e){} }
+function statusLabel(v){ return (STATUS_W.find(w => w[0] === v) || STATUS_W[0])[1]; }
+function prioLabel(v){ return (PRIO_W.find(w => w[0] === v) || PRIO_W[1])[1]; }
+function wertLabel(achse, v){ return achse === 'status' ? statusLabel(v) : achse === 'prio' ? prioLabel(v) : (v || 'Niemand'); }
+
+function kanbanKarte(n, zeigeEbene){
+  const e = wfE();
+  const meta = zeigeEbene
+    ? '<span class="kc-chip">'+esc(ACHSEN[e].name)+': '+esc(wertLabel(e, ACHSEN[e].von(n)))+'</span>' : '';
+  const fertig = nStatus(n) === 'erledigt';
+  return '<div class="kc'+(fertig ? ' done' : '')+'" data-note="'+n.id+'" tabindex="0" role="button"'
+    + ' style="--acc:'+n.accent+'" aria-label="'+esc(n.title)+' öffnen">'
+    + '<div class="kc-top"><span class="kc-dot"></span><span class="kc-cat">'+esc(n.category)+'</span>'
+    +   '<span class="kc-acts">'
+    +     '<button class="kc-ok" type="button" title="'+(fertig ? 'Wieder öffnen' : 'Erledigt')+'" aria-label="'+(fertig ? 'Wieder öffnen' : 'Als erledigt markieren')+'">'+(fertig ? '↺' : '✓')+'</button>'
+    +     '<button class="kc-del" type="button" title="In den Papierkorb" aria-label="In den Papierkorb">✕</button>'
+    +   '</span></div>'
+    + '<div class="kc-t">'+esc(n.title)+'</div>'
+    + (meta ? '<div class="kc-m">'+meta+'</div>' : '')
+    + '</div>';
+}
+function wuerfelBild(list, sp, ze, eb, e){
+  /* Zählen je Ebene und Zelle – über die gefilterte Liste, nicht nur die Schicht. */
+  const z = {};
+  let max = 1;
+  list.forEach(n => {
+    const k = ACHSEN[e].von(n)+'|'+ACHSEN[wf.z].von(n)+'|'+ACHSEN[wf.s].von(n);
+    z[k] = (z[k] || 0) + 1; max = Math.max(max, z[k]);
+  });
+  const ebenen = eb.map(([v, lab], k) => {
+    const summe = list.filter(n => ACHSEN[e].von(n) === v).length;
+    const zellen = ze.map(([zv]) => sp.map(([sv]) => {
+      const c = z[v+'|'+zv+'|'+sv] || 0;
+      return '<i style="--c:'+(c ? (0.28 + 0.72 * c / max).toFixed(2) : 0)+'">'+(c || '')+'</i>';
+    }).join('')).join('');
+    const an = wf.ebene === v;
+    return '<button class="cube-l'+(an ? ' on' : '')+(wf.ebene !== null && !an ? ' aus' : '')+'" type="button" data-ebene="'+esc(v)+'"'
+      + ' style="--k:'+k+';--cols:'+sp.length+';--rows:'+ze.length+'" aria-pressed="'+(an ? 'true' : 'false')+'"'
+      + ' aria-label="Ebene '+esc(lab)+': '+summe+' Notizen">'
+      + '<span class="cube-g">'+zellen+'</span></button>';
+  }).join('');
+  const marken = eb.map(([v, lab], k) => {
+    const summe = list.filter(n => ACHSEN[e].von(n) === v).length;
+    return '<button class="cube-tag'+(wf.ebene === v ? ' on' : '')+'" type="button" data-ebene="'+esc(v)+'" style="--k:'+k+'">'
+      + esc(lab)+' <b>'+summe+'</b></button>';
+  }).join('');
+  return '<div class="cube-wrap">'
+    + '<div class="cube" style="--n:'+eb.length+'"><div class="cube-in">'+ebenen+'</div></div>'
+    + '<div class="cube-leg">'
+    +   '<div class="cube-ax"><span class="ax x">→</span> Spalten <select class="wf-sel" data-ach="s" aria-label="Spalten">'
+    +     ACHS_REIHE.map(a => '<option value="'+a+'"'+(a === wf.s ? ' selected' : '')+'>'+ACHSEN[a].name+'</option>').join('')+'</select></div>'
+    +   '<div class="cube-ax"><span class="ax y">↓</span> Zeilen <select class="wf-sel" data-ach="z" aria-label="Zeilen">'
+    +     ACHS_REIHE.map(a => '<option value="'+a+'"'+(a === wf.z ? ' selected' : '')+'>'+ACHSEN[a].name+'</option>').join('')+'</select></div>'
+    +   '<div class="cube-ax"><span class="ax z">↗</span> Ebenen <b>'+esc(ACHSEN[e].name)+'</b>'
+    +     '<button class="wf-dreh" type="button" title="Achsen weiterdrehen" aria-label="Achsen weiterdrehen">⟳</button></div>'
+    +   '<div class="cube-tags"><button class="cube-tag'+(wf.ebene === null ? ' on' : '')+'" type="button" data-ebene="*">Alle <b>'+list.length+'</b></button>'+marken+'</div>'
+    + '</div></div>';
+}
+function renderWuerfel(list){
+  const e = wfE();
+  const sp = ACHSEN[wf.s].werte(), ze = ACHSEN[wf.z].werte(), eb = ACHSEN[e].werte();
+  if (wf.ebene !== null && !eb.some(w => w[0] === wf.ebene)) wf.ebene = null;
+  const schicht = wf.ebene === null ? list : list.filter(n => ACHSEN[e].von(n) === wf.ebene);
+  const zellen = {};
+  sortList(schicht.slice()).forEach(n => {
+    const k = ACHSEN[wf.z].von(n)+'|'+ACHSEN[wf.s].von(n);
+    (zellen[k] = zellen[k] || []).push(n);
+  });
+  const order = [];
+  const kopf = '<div class="wf-c wf-corner">'+esc(ACHSEN[wf.z].name)+' ↓ · '+esc(ACHSEN[wf.s].name)+' →</div>'
+    + sp.map(([sv, lab]) => {
+        const n = schicht.filter(x => ACHSEN[wf.s].von(x) === sv).length;
+        return '<div class="wf-c wf-h" data-a="'+wf.s+'" data-v="'+esc(sv)+'">'+esc(lab)+'<span>'+n+'</span></div>';
+      }).join('');
+  const reihen = ze.map(([zv, zlab]) => {
+    const n = schicht.filter(x => ACHSEN[wf.z].von(x) === zv).length;
+    return '<div class="wf-c wf-rh" data-a="'+wf.z+'" data-v="'+esc(zv)+'">'+esc(zlab)+'<span>'+n+'</span></div>'
+      + sp.map(([sv]) => {
+          const karten = zellen[zv+'|'+sv] || [];
+          karten.forEach(x => order.push(x));
+          return '<div class="wf-c wf-cell" data-s="'+esc(sv)+'" data-z="'+esc(zv)+'">'
+            + karten.map(x => kanbanKarte(x, wf.ebene === null)).join('')
+            + '<button class="kc-neu" type="button" title="Neue Notiz in dieser Zelle" aria-label="Neue Notiz hier">+</button></div>';
+        }).join('');
+  }).join('');
+  view = order;
+  return '<div class="wf">' + wuerfelBild(list, sp, ze, eb, e)
+    + '<div class="wf-scroll" id="wfScroll"><div class="wf-grid" style="--cols:'+sp.length+'">'+kopf+reihen+'</div></div>'
+    + '<p class="wf-hint">Ziehen verschiebt eine Karte · ✓ erledigt · ✕ in den Papierkorb (rückgängig machbar) · + legt in der Zelle an</p>'
+    + '</div>';
+}
+/* Werte einer Notiz ändern und sichern – ohne Editor. */
+function darfSchreiben(){
+  if (window.WBTor && WBTor.zu && WBTor.zu()){ if (WBTor.dialog) WBTor.dialog(); return false; }
+  return true;
+}
+async function notizSichern(n, meldung){
+  const now = new Date();
+  n.modified = fmt(now); n.modifiedSort = now.getTime();
+  searchCache.delete(n);
+  try {
+    if (fsMode === 'fs') await writeNoteFile(n);
+    else if (fsMode === 'idb') await idbPutNote(n);
+  } catch(err){ toast('Speichern fehlgeschlagen – Ordnerzugriff prüfen.'); }
+  WB.melden('noteos', { was:'geaendert' });
+  renderDeck();
+  if (reading) renderSheet();
+  if (meldung) toast(meldung);
+}
+deck.addEventListener('change', e => {
+  const sel = e.target.closest('.wf-sel'); if (!sel) return;
+  const alt = wf[sel.dataset.ach], neu = sel.value;
+  const anderes = sel.dataset.ach === 's' ? 'z' : 's';
+  if (wf[anderes] === neu) wf[anderes] = alt;          /* tauschen statt doppelt belegen */
+  wf[sel.dataset.ach] = neu; wf.ebene = null; wfMerken(); renderDeck();
+});
+
+/* Ziehen mit Zeiger: Maus sofort, Finger nach kurzem Halten. */
+let zug = null, klickSperre = false;
+function zugEnde(){
+  if (!zug) return;
+  clearTimeout(zug.timer);
+  if (zug.ghost) zug.ghost.remove();
+  if (zug.card) zug.card.classList.remove('dragging');
+  $$('.wf-cell.ziel').forEach(c => c.classList.remove('ziel'));
+  document.body.classList.remove('ziehen');
+  zug = null;
+}
+function zugStart(){
+  if (!zug || zug.on) return;
+  zug.on = true;
+  hoverZu();
+  const r = zug.card.getBoundingClientRect();
+  const g = zug.card.cloneNode(true);
+  g.classList.add('kc-ghost'); g.removeAttribute('tabindex');
+  g.style.width = r.width + 'px';
+  g.style.left = r.left + 'px'; g.style.top = r.top + 'px';
+  zug.dx = zug.x - r.left; zug.dy = zug.y - r.top;
+  document.body.appendChild(g);
+  zug.ghost = g;
+  zug.card.classList.add('dragging');
+  document.body.classList.add('ziehen');
+  if (navigator.vibrate && zug.touch) { try { navigator.vibrate(12); } catch(e){} }
+}
+deck.addEventListener('pointerdown', e => {
+  const card = e.target.closest('.kc');
+  if (!card || e.target.closest('button') || (e.button !== undefined && e.button > 0)) return;
+  zug = { card, id:+card.dataset.note, x:e.clientX, y:e.clientY, on:false, touch:e.pointerType !== 'mouse', timer:null };
+  if (zug.touch) zug.timer = setTimeout(zugStart, 320);
+});
+addEventListener('pointermove', e => {
+  if (!zug) return;
+  const weit = Math.hypot(e.clientX - zug.x, e.clientY - zug.y);
+  if (!zug.on){
+    if (zug.touch){ if (weit > 10) zugEnde(); return; }   /* Finger bewegt sich: das ist Scrollen */
+    if (weit < 6) return;
+    zugStart();
+  }
+  zug.ghost.style.left = (e.clientX - zug.dx) + 'px';
+  zug.ghost.style.top = (e.clientY - zug.dy) + 'px';
+  const unter = document.elementFromPoint(e.clientX, e.clientY);
+  const zelle = unter && unter.closest ? unter.closest('.wf-cell') : null;
+  $$('.wf-cell.ziel').forEach(c => { if (c !== zelle) c.classList.remove('ziel'); });
+  if (zelle) zelle.classList.add('ziel');
+  zug.zelle = zelle;
+  /* Am Rand der Tafel weiterschieben */
+  const sc = $('#wfScroll');
+  if (sc){
+    const r = sc.getBoundingClientRect();
+    if (e.clientX > r.right - 40) sc.scrollLeft += 14; else if (e.clientX < r.left + 40) sc.scrollLeft -= 14;
+  }
+});
+document.addEventListener('touchmove', e => { if (zug && zug.on && e.cancelable) e.preventDefault(); }, { passive:false });
+addEventListener('pointerup', async () => {
+  if (!zug) return;
+  const z = zug;
+  if (!z.on){ zugEnde(); return; }
+  klickSperre = true; setTimeout(() => { klickSperre = false; }, 60);
+  const zelle = z.zelle, n = notes[z.id];
+  zugEnde();
+  if (!zelle || !n) return;
+  const sv = zelle.dataset.s, zv = zelle.dataset.z;
+  if (ACHSEN[wf.s].von(n) === sv && ACHSEN[wf.z].von(n) === zv) return;
+  if (!darfSchreiben()) return;
+  n[ACHSEN[wf.s].feld] = sv;
+  n[ACHSEN[wf.z].feld] = zv;
+  await notizSichern(n, '„'+n.title+'“: '+wertLabel(wf.s, sv)+' · '+wertLabel(wf.z, zv));
+});
+addEventListener('pointercancel', zugEnde);
+document.addEventListener('contextmenu', e => { if (zug && zug.touch) e.preventDefault(); });
+
 function togglePile(el){
   const cat = el.dataset.cat;
   openPiles.has(cat) ? openPiles.delete(cat) : openPiles.add(cat);
@@ -1932,8 +2421,11 @@ function renderDeck(){
     deck.innerHTML = '<div class="deck-empty">Keine Notiz gefunden.</div>';
     updateHero(); return;
   }
-  deck.innerHTML = deckMode === 'arena' ? renderArena(list) : renderBoard(list);
+  const sl = deckMode === 'wuerfel' && $('#wfScroll') ? $('#wfScroll').scrollLeft : 0;
+  deck.innerHTML = deckMode === 'arena' ? renderArena(list)
+                 : deckMode === 'wuerfel' ? renderWuerfel(list) : renderBoard(list);
   if (deckMode === 'arena') setupArena();
+  if (deckMode === 'wuerfel' && $('#wfScroll')) $('#wfScroll').scrollLeft = sl;
   updateHero();
 }
 /* ───────── Tafeln: Leiste wischen, große Tafel zoomt um ───────── */
@@ -2079,17 +2571,12 @@ function updateHero(){
     + (view.length !== notes.length ? '<span><b>'+view.length+'</b> gefiltert</span>' : '')
     + (newest ? '<span>Zuletzt: <b>'+esc(newest.modified)+'</b></span>' : '');
   buildScope();
-  /* Zwei Zähler zurück ans Auftragsbuch. `jeAuftraggeber` geht über die ID
-     und überlebt jedes Umbenennen; `jeKategorie` bleibt über den Namen
-     daneben stehen, damit ein Auftragsbuch, das die IDs noch nicht kennt,
-     weiter funktioniert. Beides sind Zähler, keine Bestände. */
-  const jeKategorie = {}, jeAuftraggeber = {};
-  notes.forEach(n => {
-    jeKategorie[n.category] = (jeKategorie[n.category] || 0) + 1;
-    if (n.agbId) jeAuftraggeber[n.agbId] = (jeAuftraggeber[n.agbId] || 0) + 1;
-  });
-  WB.schreiben(WB_NOTES_LS, { anzahl: notes.length, kategorien: cats.size,
-    jeKategorie, jeAuftraggeber, zuletzt: newest ? newest.modified : null, zeit: Date.now() });
+  /* Lesekopie nur noch für die Zahl an der Kachel im Kontor – kein
+     Zähler je Auftraggeber mehr, das Notizbuch steht für sich. */
+  const jeStatus = { offen:0, arbeit:0, erledigt:0 };
+  notes.forEach(n => { jeStatus[n.status || 'offen'] = (jeStatus[n.status || 'offen'] || 0) + 1; });
+  WB.schreiben(WB_NOTES_LS, { anzahl: notes.length, kategorien: cats.size, jeStatus,
+    zuletzt: newest ? newest.modified : null, zeit: Date.now() });
 }
 /* ───────── Glasscheiben: ein Scheibenkamm über den Bestand ─────────
    Eine Scheibe je Notiz, Farbe = Kategorie. Die Scheibe im Ziel steht
@@ -2332,6 +2819,43 @@ function syncScope(id){
   centerPane(i, 'auto');
 }
 deck.addEventListener('click', e => {
+  if (klickSperre) return;                                  /* Ziehen ist kein Klick */
+  /* Würfel */
+  const ebene = e.target.closest('[data-ebene]');
+  if (ebene){
+    const v = ebene.dataset.ebene;
+    wf.ebene = (v === '*' || wf.ebene === v) ? null : v;
+    renderDeck(); return;
+  }
+  if (e.target.closest('.wf-dreh')){
+    const e3 = wfE(); wf.s = wf.z; wf.z = e3; wf.ebene = null;   /* Spalten ← Zeilen ← Ebenen */
+    wfMerken(); renderDeck(); return;
+  }
+  const neu = e.target.closest('.kc-neu');
+  if (neu){
+    const zelle = neu.closest('.wf-cell');
+    const vor = { status:'offen', prio:'mittel', person:'' };
+    vor[ACHSEN[wf.s].feld] = zelle.dataset.s;
+    vor[ACHSEN[wf.z].feld] = zelle.dataset.z;
+    if (wf.ebene !== null) vor[ACHSEN[wfE()].feld] = wf.ebene;
+    openEditor(vor);
+    return;
+  }
+  const kc = e.target.closest('.kc');
+  if (kc){
+    const n = notes[+kc.dataset.note];
+    if (!n) return;
+    if (e.target.closest('.kc-ok')){
+      if (!darfSchreiben()) return;
+      const fertig = nStatus(n) === 'erledigt';
+      n.status = fertig ? 'offen' : 'erledigt';
+      notizSichern(n, '„'+n.title+'“ '+(fertig ? 'wieder offen.' : 'erledigt.'));
+      return;
+    }
+    if (e.target.closest('.kc-del')){ if (darfSchreiben()) notizWeg(n); return; }
+    openNote(n.id, kc);
+    return;
+  }
   const cf = e.target.closest('.cat-filter');
   if (cf){ setCategoryFilter(activeCategory === cf.dataset.cat ? null : cf.dataset.cat); return; }
   const sticky = e.target.closest('.sticky');
@@ -2344,6 +2868,16 @@ deck.addEventListener('click', e => {
   if (arena && arena.dataset.dragged === '1') return;      /* Wischen ist kein Klick */
   if (sticky){ openNote(+sticky.dataset.note, sticky); return; }
 });
+deck.addEventListener('keydown', e => {
+  const kc = e.target.closest && e.target.closest('.kc');
+  if (!kc || e.target !== kc) return;
+  if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openNote(+kc.dataset.note, kc); }
+  else if (e.key === 'Delete' || e.key === 'Backspace'){
+    e.preventDefault();
+    const n = notes[+kc.dataset.note];
+    if (n && darfSchreiben()) notizWeg(n);
+  }
+});
 $('#search').addEventListener('input', e => { searchQuery = e.target.value; renderDeck(); });
 $$('.seg button[data-sort]').forEach(b => b.addEventListener('click', () => {
   sortMode = b.dataset.sort;
@@ -2355,11 +2889,12 @@ $$('.seg button[data-sort]').forEach(b => b.addEventListener('click', () => {
    die alte Ansicht ab, die Bühne fährt auf die neue Höhe, die neue
    Ansicht kommt herein – kein Sprung. */
 const stage = $('#stage');
-const VIEW_EL = { kamm:'#viewKamm', board:'#viewDeck', arena:'#viewDeck' };
+const VIEW_EL = { kamm:'#viewKamm', board:'#viewDeck', arena:'#viewDeck', wuerfel:'#viewDeck' };
 const LEADS = {
   kamm:'Jede Scheibe ist eine Notiz. Der Kamm zeigt den ganzen Bestand: scrollen bringt eine Scheibe ins Ziel, sie steht offen und zoomt darunter heraus.',
   board:'Die Werkbank: je Kategorie ein Haufen Glaskörper. Haufen antippen breitet ihn aus, ein Körper öffnet die Notiz.',
-  arena:'Oben die Themen – je nach Sortierung Kategorie, Anfangsbuchstabe oder Zeitraum. Unten die große Tafel mit den ausgebreiteten Zetteln; wischen wechselt das Thema.'
+  arena:'Oben die Themen – je nach Sortierung Kategorie, Anfangsbuchstabe oder Zeitraum. Unten die große Tafel mit den ausgebreiteten Zetteln; wischen wechselt das Thema.',
+  wuerfel:'Kanban in drei Richtungen: Status, Priorität und Person. Zwei davon bilden die Tafel, die dritte schichtet sie zum Würfel – eine Schicht antippen zeigt nur sie. Karten ziehen ändert die Werte.'
 };
 let switching = false, pendingView = null;
 function viewEl(mode){ return $(VIEW_EL[mode]); }
@@ -2506,6 +3041,9 @@ function renderSheet(){
     '<div class="s-kick"><span>'+pad3(pos)+' — '+pad3(total)+'</span><span class="rule"></span><span>'+esc(n.category)+'</span></div>'
     + '<h1>'+esc(n.title)+'</h1>'
     + '<div class="s-meta"><span>Erstellt '+esc(n.created)+'</span><span>Geändert '+esc(n.modified)+'</span><span>Autor '+esc(n.author)+'</span></div>'
+    + '<div class="s-kanban"><span class="kb-s" data-s="'+nStatus(n)+'">'+esc(statusLabel(nStatus(n)))+'</span>'
+    +   '<span class="kb-p" data-p="'+nPrio(n)+'">Priorität '+esc(prioLabel(nPrio(n)))+'</span>'
+    +   '<span class="kb-w">'+(nPerson(n) ? esc(nPerson(n)) : 'niemand zugeteilt')+'</span></div>'
     + (n.source ? '<div class="s-source">Importiert aus: '+esc(n.source)+'</div>' : '')
     + '<div class="s-tags">'+tags+'</div>'
     + '<div class="s-rule"></div>'
@@ -2519,7 +3057,7 @@ function renderSheet(){
   const i = view.indexOf(n);
   $('#prevBtn').disabled = i <= 0;
   $('#nextBtn').disabled = i < 0 || i >= view.length - 1;
-  document.title = n.title + ' · NoteOS';
+  document.title = n.title + ' · Notizbuch';
 }
 function openNote(id, fromEl){
   if (!notes[id]) return;
@@ -2553,7 +3091,7 @@ function closeNote({ back = true } = {}){
   document.body.classList.remove('reading');
   root.classList.remove('locked');
   $('#printBtn').disabled = true;
-  document.title = 'NoteOS – Wissen der Werkbank';
+  document.title = 'Notizbuch – Wissen der Werkbank';
   const card = deck.querySelector('[data-note="'+curIdx+'"]');
   if (card && card.scrollIntoView) card.scrollIntoView({ block:'center' });
   if (card && card.focus) card.focus({ preventScroll:true });
@@ -2596,6 +3134,7 @@ addEventListener('keydown', e => {
     if (e.key === '1'){ e.preventDefault(); switchView('kamm'); return; }
     if (e.key === '2'){ e.preventDefault(); switchView('board'); return; }
     if (e.key === '3'){ e.preventDefault(); switchView('arena'); return; }
+    if (e.key === '4'){ e.preventDefault(); switchView('wuerfel'); return; }
     if (viewMode === 'arena'){
       if (e.key === 'ArrowLeft'){ e.preventDefault(); stepArena(-1); }
       else if (e.key === 'ArrowRight'){ e.preventDefault(); stepArena(1); }
@@ -2631,15 +3170,10 @@ const editorSource = $('#editorSource'), editorHint = $('#editorHint');
 const addBtn = $('#addBtn'), addMenu = $('#addMenu'), importInput = $('#importInput');
 let pendingSource = null, editingNoteId = null, importToken = 0, editorSnapshot = null;
 
-/* ═══════ Auftraggeber aus dem Auftragsbuch ═══════
-   Unter derselben Herkunft liegt der Bestand des Auftragsbuchs. Seine
-   Auftraggeber stehen hier als Kategorie zur Wahl — so lässt sich eine
-   Notiz einem Kunden zuordnen, ohne dass NoteOS etwas über Aufträge
-   wissen müsste. Fehlt das Auftragsbuch, bleibt die Liste wie zuvor.
-
-   Neu: die Auswahl trägt die `agbId` am Optionsknopf mit. Wer hier einen
-   Auftraggeber wählt, bindet die Notiz an dessen ID — der Name ist nur
-   das, was man sieht. */
+/* ═══════ Kategorien ═══════
+   Feste und eigene Kategorien. Die Gruppe „Auftraggeber“ aus dem
+   Auftragsbuch entfällt seit 30.10.2026 (agbBestand() ist leer) – der Code
+   bleibt stehen, falls die Leitung je zurückkommt. */
 function kategorienAufbauen(){
   const gewaehlt = editorCategory.value;
   editorCategory.innerHTML = '<option value="">Kategorie wählen …</option>';
@@ -2674,26 +3208,19 @@ kategorienAufbauen();
 /* Wird im Auftragsbuch ein Kunde angelegt oder umbenannt, steht er hier
    beim nächsten Öffnen des Editors bereit — und die Etiketten der schon
    verknüpften Notizen ziehen sofort nach, ohne Neuladen. */
-WB.horchen('auftragsbuch', () => {
-  kategorienAufbauen();
-  if (etikettenNachziehen(notes)) {
-    rebuildAccents(notes);
-    notes.forEach(n => searchCache.delete(n));
-    renderDeck();
-    if (reading) renderSheet();
-    updateHero();
-  }
-});
 addBtn.addEventListener('click', e => {
   e.stopPropagation();
   placeMenu(addMenu, addBtn, 210);
   addMenu.hidden = !addMenu.hidden;
 });
+const editorStatus = $('#editorStatus'), editorPrio = $('#editorPrio'), editorPerson = $('#editorPerson');
 function snapshotEditor(){
-  return JSON.stringify({ t:editorTitle.value, c:editorCategory.value, g:editorTags.value, b:editorBody.innerHTML });
+  return JSON.stringify({ t:editorTitle.value, c:editorCategory.value, g:editorTags.value, b:editorBody.innerHTML,
+    s:editorStatus.value, p:editorPrio.value, w:editorPerson.value });
 }
 const editorIsDirty = () => editorSnapshot !== null && snapshotEditor() !== editorSnapshot;
-function openEditor({ title='', category='', bodyHtml='', source=null, editId=null, tags=[] } = {}){
+function openEditor({ title='', category='', bodyHtml='', source=null, editId=null, tags=[],
+                      status='offen', prio='mittel', person='' } = {}){
   importToken++;
   addMenu.hidden = true;
   editingNoteId = editId;
@@ -2701,6 +3228,10 @@ function openEditor({ title='', category='', bodyHtml='', source=null, editId=nu
   editorCategory.value = category;
   editorTags.value = tags.filter(t => t !== category).join(', ');
   editorBody.innerHTML = bodyHtml;
+  editorStatus.value = STATUS_W.some(w => w[0] === status) ? status : 'offen';
+  editorPrio.value = PRIO_W.some(w => w[0] === prio) ? prio : 'mittel';
+  editorPerson.value = person || '';
+  $('#personenListe').innerHTML = personen().map(p => '<option value="'+esc(p)+'">').join('');
   pendingSource = source;
   editorSource.textContent = source ? 'Importiert aus: '+source : '';
   editorHint.textContent = '';
@@ -2708,6 +3239,8 @@ function openEditor({ title='', category='', bodyHtml='', source=null, editId=nu
   $('#editorSave').textContent = editId === null ? 'Speichern' : 'Änderungen speichern';
   editorView.classList.add('active');
   root.classList.add('locked');
+  /* Enter erzeugt <p> statt <div> – gleichmäßiger, und das Markdown wird ruhiger. */
+  try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch(e){}
   editorSnapshot = snapshotEditor();
   setTimeout(() => editorTitle.focus(), 60);
 }
@@ -2721,7 +3254,8 @@ $('#addImport').addEventListener('click', () => { addMenu.hidden = true; importI
 $('#editBtn').addEventListener('click', () => {
   const n = notes[curIdx];
   if (!n) return;
-  openEditor({ title:n.title, category:n.category, bodyHtml:contentToHtml(n.content), source:n.source||null, editId:n.id, tags:n.tags });
+  openEditor({ title:n.title, category:n.category, bodyHtml:contentToHtml(n.content), source:n.source||null, editId:n.id, tags:n.tags,
+               status:nStatus(n), prio:nPrio(n), person:nPerson(n) });
 });
 $('#editorCancel').addEventListener('click', async () => {
   if (editorIsDirty()){
@@ -2775,7 +3309,7 @@ async function extractPdfText(file){
   for (let i=1; i<=doc.numPages; i++){
     const tc = await (await doc.getPage(i)).getTextContent();
     const text = tc.items.map(it => it.str).join(' ').replace(/\s+/g,' ').trim();
-    if (text) paragraphs.push(text);
+    if (text) paragraphs.push(escLead(mdEsc(text)));
   }
   return contentToHtml(paragraphs.length ? paragraphs : ['(Kein Text im PDF gefunden – evtl. ein gescanntes Dokument ohne Textebene.)']);
 }
@@ -2790,7 +3324,9 @@ importInput.addEventListener('change', () => {
   if (ext === 'txt' || ext === 'md'){
     const reader2 = new FileReader();
     reader2.onload = () => {
-      const lines = String(reader2.result).split(/\r?\n+/).map(l=>l.trim()).filter(Boolean);
+      const roh = String(reader2.result);
+      const lines = ext === 'md' ? bodyToLines(roh.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, ''))
+                                 : roh.split(/\r?\n+/).map(l => l.trim()).filter(Boolean).map(l => escLead(mdEsc(l)));
       openEditor({ title:titleGuess, bodyHtml:contentToHtml(lines.length ? lines : ['']), source:file.name });
     };
     reader2.readAsText(file);
@@ -2810,34 +3346,125 @@ importInput.addEventListener('change', () => {
   importInput.value = '';
 });
 
-/* ───────── HTML → Markdown ───────── */
+/* ───────── HTML → Markdown ─────────
+   Der Editor liefert, was der Browser will: Text und <b> lose vor dem
+   ersten <div>, Listen in <div> verpackt, <div><br></div> für eine
+   Leerzeile, beim Einfügen <span style="font-weight:700">. Alles davon
+   wird hier zu sauberem Markdown – lose Inline-Teile werden zu einem
+   Absatz gesammelt, statt jeden für sich auf eine Zeile zu stellen. */
+const MD_BLOCK = new Set(['P','DIV','H1','H2','H3','H4','H5','H6','UL','OL','LI','BLOCKQUOTE','PRE','HR',
+  'TABLE','THEAD','TBODY','TR','SECTION','ARTICLE','HEADER','FOOTER','FIGURE']);
+const isBlockEl = n => n && n.nodeType === 1 && MD_BLOCK.has(n.tagName);
+const mdEsc = t => String(t).replace(/[\t\n\r ]+/g,' ').replace(/ /g,' ').replace(/[\\*~`\[\]<]/g,'\\$&');
+const trimBr = s => String(s).replace(/^(\s|<br>)+|(\s|<br>)+$/g,'');
+function inlineNode(c){
+  if (c.nodeType === 3) return mdEsc(c.textContent);
+  if (c.nodeType !== 1) return '';
+  const tag = c.tagName;
+  if (tag === 'BR') return '<br>';
+  if (tag === 'IMG' || tag === 'SCRIPT' || tag === 'STYLE') return '';
+  if (tag === 'CODE' || tag === 'KBD') { const t = c.textContent.replace(/`/g,''); return t ? '`'+t+'`' : ''; }
+  const inner = inlineToMd(c);
+  if (tag === 'A'){
+    const h = (c.getAttribute('href') || '').replace(/[()\s]/g, m => m === '(' ? '%28' : m === ')' ? '%29' : '%20');
+    return inner.trim() ? '['+inner+']('+h+')' : inner;
+  }
+  const st = c.style || {};
+  const deko = String(st.textDecorationLine || st.textDecoration || '');
+  const fett = tag === 'B' || tag === 'STRONG' || /^(bold|bolder|[6-9]00)$/.test(String(st.fontWeight || ''));
+  const kurs = tag === 'I' || tag === 'EM' || st.fontStyle === 'italic';
+  const unter = tag === 'U' || tag === 'INS' || /underline/.test(deko);
+  const durch = tag === 'S' || tag === 'STRIKE' || tag === 'DEL' || /line-through/.test(deko);
+  const mark = tag === 'MARK';
+  if (!(fett || kurs || unter || durch || mark)) return inner;
+  /* Leerzeichen gehören vor bzw. hinter die Marken, nicht hinein. */
+  const m = /^((?:\s|<br>)*)([\s\S]*?)((?:\s|<br>)*)$/.exec(inner);
+  let core = m[2];
+  if (!core) return inner;
+  if (durch) core = '~~'+core+'~~';
+  if (unter) core = '<u>'+core+'</u>';
+  if (kurs) core = '*'+core+'*';
+  if (fett) core = '**'+core+'**';
+  if (mark) core = '<mark>'+core+'</mark>';
+  return m[1] + core + m[3];
+}
 function inlineToMd(node){
   let out = '';
-  node.childNodes.forEach(child => {
-    if (child.nodeType === 3){ out += child.textContent; return; }
-    const tag = child.tagName;
-    if (tag==='B'||tag==='STRONG') out += '**'+inlineToMd(child)+'**';
-    else if (tag==='I'||tag==='EM') out += '*'+inlineToMd(child)+'*';
-    else if (tag==='A') out += '['+inlineToMd(child)+']('+(child.getAttribute('href')||'')+')';
-    else if (tag==='BR') out += ' ';
-    else out += inlineToMd(child);
-  });
+  node.childNodes.forEach(c => { out += isBlockEl(c) ? (out ? '<br>' : '') + blockInline(c) : inlineNode(c); });
   return out;
+}
+/* Ein Block als eine Zeile – innere Absätze werden zu <br>. */
+function blockInline(n){
+  const parts = [];
+  let buf = '';
+  n.childNodes.forEach(c => {
+    if (isBlockEl(c)){ if (trimBr(buf)) parts.push(buf); buf = ''; parts.push(blockInline(c)); }
+    else buf += inlineNode(c);
+  });
+  if (trimBr(buf)) parts.push(buf);
+  return parts.map(trimBr).filter(Boolean).join('<br>');
+}
+/* Ein Absatz darf nicht wie ein Blockzeichen anfangen, sonst wird er beim
+   nächsten Öffnen zur Überschrift oder Liste. */
+function escLead(t){
+  if (/^\d+[.)]\s/.test(t)) return t.replace(/^(\d+)([.)])/, '$1\\$2');
+  if (/^(#{1,6}\s|[-+]\s|>|(-\s*){3,}$|&nbsp;$)/.test(t)) return '\\' + t;
+  return t;
 }
 function htmlToMarkdown(rootEl){
   const lines = [];
-  rootEl.childNodes.forEach(node => {
-    if (node.nodeType !== 1){ const t = (node.textContent||'').trim(); if (t) lines.push(t); return; }
-    const tag = node.tagName;
-    if (tag==='H1') lines.push('# '+inlineToMd(node).trim());
-    else if (tag==='H2') lines.push('## '+inlineToMd(node).trim());
-    else if (tag==='H3') lines.push('### '+inlineToMd(node).trim());
-    else if (tag==='BLOCKQUOTE') lines.push('> '+inlineToMd(node).trim());
-    else if (tag==='UL') node.querySelectorAll(':scope > li').forEach(li => lines.push('- '+inlineToMd(li).trim()));
-    else if (tag==='OL'){ let i=1; node.querySelectorAll(':scope > li').forEach(li => lines.push((i++)+'. '+inlineToMd(li).trim())); }
-    else { const t = inlineToMd(node).trim(); if (t) lines.push(t); }
-  });
-  return lines.filter(Boolean);
+  const absatz = s => { const t = trimBr(s); lines.push(t ? escLead(t) : '&nbsp;'); };
+  function liste(el, lvl){
+    let k = 1;
+    const ord = el.tagName === 'OL';
+    Array.from(el.children).forEach(li => {
+      if (li.tagName === 'UL' || li.tagName === 'OL'){ liste(li, lvl + 1); return; }
+      if (li.tagName !== 'LI') return;
+      let txt = '';
+      const unter = [];
+      li.childNodes.forEach(c => {
+        if (c.nodeType === 1 && (c.tagName === 'UL' || c.tagName === 'OL')) unter.push(c);
+        else if (isBlockEl(c)){ const b = blockInline(c); if (b) txt += (trimBr(txt) ? '<br>' : '') + b; }
+        else txt += inlineNode(c);
+      });
+      lines.push('  '.repeat(lvl) + (ord ? (k++) + '. ' : '- ') + trimBr(txt));
+      unter.forEach(u => liste(u, lvl + 1));
+    });
+  }
+  function bloecke(parent){
+    let buf = null;
+    const flush = () => { if (buf !== null){ if (trimBr(buf) || /<br>/.test(buf)) absatz(buf); buf = null; } };
+    parent.childNodes.forEach(n => {
+      if (!isBlockEl(n)){
+        const frag = inlineNode(n);
+        if (buf === null && !frag.trim()) return;      /* Leerraum zwischen Blöcken */
+        buf = (buf || '') + frag;
+        return;
+      }
+      flush();
+      const tag = n.tagName;
+      if (/^H[1-6]$/.test(tag)){
+        const t = trimBr(blockInline(n));
+        if (t) lines.push('#'.repeat(Math.min(+tag[1], 4)) + ' ' + t);
+      }
+      else if (tag === 'UL' || tag === 'OL') liste(n, 0);
+      else if (tag === 'LI'){ const t = trimBr(blockInline(n)); if (t) lines.push('- ' + t); }
+      else if (tag === 'BLOCKQUOTE'){ const t = blockInline(n); if (t) lines.push('> ' + t); }
+      else if (tag === 'PRE'){
+        lines.push('```');
+        n.textContent.replace(/\n$/,'').split('\n').forEach(l => lines.push(l.replace(/\s+$/,'')));
+        lines.push('```');
+      }
+      else if (tag === 'HR') lines.push('---');
+      else if (Array.from(n.childNodes).some(isBlockEl)) bloecke(n);
+      else absatz(inlineToMd(n));
+    });
+    flush();
+  }
+  bloecke(rootEl);
+  while (lines.length && lines[0] === '&nbsp;') lines.shift();
+  while (lines.length && lines[lines.length-1] === '&nbsp;') lines.pop();
+  return lines;
 }
 
 /* ───────── Speichern ───────── */
@@ -2852,6 +3479,7 @@ $('#editorSave').addEventListener('click', async () => {
   const extraTags = editorTags.value.split(',').map(t=>t.trim()).filter(Boolean).filter(t=>t!==category);
   const tags = [category, ...extraTags];
   const content = htmlToMarkdown(editorBody);
+  const kanban = { status: editorStatus.value, prio: editorPrio.value, person: editorPerson.value.trim() };
   const now = new Date();
   const saveBtn = $('#editorSave');
   saveBtn.disabled = true;
@@ -2861,6 +3489,7 @@ $('#editorSave').addEventListener('click', async () => {
       const oldTitle = n.title, oldFilename = n.filename;
       const alteKat = n.category, alteAgb = n.agbId || null;
       n.title = title; n.category = category; n.tags = tags;
+      Object.assign(n, kanban);
       /* Eine ausdrücklich gewählte Auftraggeber-Zeile bindet. Bleibt die
          Kategorie unberührt, bleibt auch die Bindung – sonst verlöre eine
          Notiz ihren Auftraggeber, nur weil der inzwischen inaktiv ist und
@@ -2899,7 +3528,7 @@ $('#editorSave').addEventListener('click', async () => {
     const id = notes.length;
     const taken = new Set(notes.map(n => n.filename).filter(Boolean));
     const newNote = {
-      id, title, category, tags, agbId: gewaehlteAgbId(),
+      id, title, category, tags, agbId: gewaehlteAgbId(), ...kanban,
       accent: shade(colorForCategory(category), ((id%5)-2)*0.025),
       created: fmt(now), createdSort: now.getTime(), modified: fmt(now), modifiedSort: now.getTime(),
       author:'Du', source: pendingSource, content: content.length ? content : ['(Kein Inhalt)'],
@@ -2959,9 +3588,13 @@ function noteToMarkdown(n){
   /* Die Bindung an den Auftraggeber gehört in die Datei, nicht nur in den
      Browser – sonst ist sie weg, sobald der Ordner woanders geöffnet wird. */
   if (n.agbId) fm.push('auftraggeber_id: '+n.agbId);
+  /* Würfel: Status, Priorität, Person – nur was gesetzt ist. */
+  if (n.status) fm.push('status: '+nStatus(n));
+  if (n.prio) fm.push('prioritaet: '+nPrio(n));
+  if (nPerson(n)) fm.push('person: '+nPerson(n).replace(/[\r\n]/g,' '));
   if (n.source) fm.push('source: '+n.source);
   fm.push('---', '');
-  return fm.join('\n') + n.content.join('\n\n');
+  return fm.join('\n') + linesToMd(n.content);
 }
 function parseMarkdownFile(text, filename, fileLastMod){
   const m = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
@@ -2974,7 +3607,7 @@ function parseMarkdownFile(text, filename, fileLastMod){
       meta[key] = key === 'tags' ? val.replace(/^\[|\]$/g,'').split(',').map(s=>s.trim()).filter(Boolean) : val;
     });
   }
-  const contentLines = body.split(/\r?\n+/).map(l=>l.trim()).filter(Boolean);
+  const contentLines = bodyToLines(body);
   const agbId = meta.auftraggeber_id ? String(meta.auftraggeber_id) : null;
   const category = (meta.tags && meta.tags[0]) || 'Ohne Kategorie';
   const modSort = meta.modified_iso ? Date.parse(meta.modified_iso) : fileLastMod;
@@ -2985,6 +3618,9 @@ function parseMarkdownFile(text, filename, fileLastMod){
     created: meta.created || fmt(new Date(creSort)), createdSort: creSort,
     modified: meta.modified || fmt(new Date(modSort)), modifiedSort: modSort,
     author: meta.author || 'Du', source: meta.source || null, agbId,
+    status: STATUS_W.some(w => w[0] === meta.status) ? meta.status : 'offen',
+    prio: PRIO_W.some(w => w[0] === meta.prioritaet) ? meta.prioritaet : 'mittel',
+    person: meta.person ? String(meta.person).trim() : '',
     content: contentLines.length ? contentLines : ['(Kein Inhalt)'],
     filename, fileMtime: fileLastMod
   };
@@ -3358,9 +3994,19 @@ document.addEventListener('keydown', e => {
 let toastTimer = null;
 function toast(msg){
   const t = $('#toast');
-  t.textContent = msg; t.classList.add('show');
+  t.textContent = msg; t.classList.remove('aktion'); t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+/* Hinweis mit Knopf – bleibt länger stehen, damit „Rückgängig“ erreichbar ist. */
+function toastAktion(msg, label, fn){
+  const t = $('#toast');
+  t.innerHTML = '<span>'+esc(msg)+'</span><button type="button" id="toastUndo">'+esc(label)+'</button>';
+  t.classList.add('show','aktion');
+  clearTimeout(toastTimer);
+  const zu = () => { t.classList.remove('show','aktion'); };
+  $('#toastUndo').addEventListener('click', () => { clearTimeout(toastTimer); zu(); fn(); }, { once:true });
+  toastTimer = setTimeout(zu, 7000);
 }
 
 /* ───────── Löschen ───────── */
@@ -3372,11 +4018,15 @@ async function moveFileToTrash(n){
   await wr.close();
   await dirHandle.removeEntry(n.filename);
 }
-$('#delBtn').addEventListener('click', async () => {
-  const n = notes[curIdx];
+/* Löschen ohne Rückfrage: die Notiz wandert ohnehin in den Papierkorb,
+   und der Hinweis unten bietet „Rückgängig“ an. Eine Frage vor jedem
+   Löschen bremst nur – Sicherheit gibt das Zurückholen. */
+const idbTrashDelete = filename => idbOpen().then(db => new Promise((res, rej) => {
+  const tx = db.transaction('trash','readwrite'); tx.objectStore('trash').delete(filename);
+  tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+}));
+async function notizWeg(n){
   if (!n) return;
-  const ok = await confirmDialog('„'+n.title+'" in den Papierkorb verschieben?');
-  if (!ok) return;
   try{
     if (fsMode === 'fs' && dirHandle && n.filename) await moveFileToTrash(n);
     else if (fsMode === 'idb' && n.filename) await idbMoveToTrash(n);
@@ -3384,20 +4034,95 @@ $('#delBtn').addEventListener('click', async () => {
     toast('Verschieben fehlgeschlagen – Notiz bleibt erhalten.');
     return;
   }
-  const idx = curIdx;
-  notes.splice(idx, 1);
+  const idx = notes.indexOf(n);
+  const warOffen = reading && notes[curIdx] === n;
+  if (idx >= 0) notes.splice(idx, 1);
   notes.forEach((x,i) => x.id = i);       /* ids sind Array-Positionen */
+  hoverZu();
   renderDeck();
   WB.melden('noteos', { was:'geloescht' });
   if (!notes.length){ closeNote(); }
-  else {
+  else if (warOffen){
     curIdx = Math.min(idx, notes.length - 1);
-    if (reading) renderSheet();
-  }
-  toast(fsMode === 'fs'
-    ? '„'+n.title+'" liegt jetzt im Ordner „Papierkorb".'
-    : '„'+n.title+'" in den Papierkorb verschoben.');
+    renderSheet();
+  } else if (curIdx >= notes.length) curIdx = notes.length - 1;
+  toastAktion('„'+n.title+'“ liegt im Papierkorb.', 'Rückgängig', () => notizZurueck(n));
+}
+async function notizZurueck(n){
+  try{
+    if (fsMode === 'fs' && dirHandle && n.filename){
+      n.fileMtime = null;
+      await writeNoteFile(n);
+      try { const pk = await dirHandle.getDirectoryHandle('Papierkorb'); await pk.removeEntry(n.filename); } catch(e){}
+    } else if (fsMode === 'idb' && n.filename){
+      await idbPutNote(n);
+      try { await idbTrashDelete(n.filename); } catch(e){}
+    }
+  }catch(err){ toast('Zurückholen fehlgeschlagen – die Notiz liegt weiter im Papierkorb.'); return; }
+  notes.push(n);
+  notes.forEach((x,i) => x.id = i);
+  renderDeck();
+  WB.melden('noteos', { was:'neu' });
+  toast('„'+n.title+'“ ist zurück.');
+}
+$('#delBtn').addEventListener('click', () => {
+  const n = notes[curIdx];
+  if (n) notizWeg(n);
 });
+
+/* ───────── Vorschau beim Überfahren ─────────
+   Mit der Maus über eine Karte (Haufen, Tafel, Würfel) zeigt nach kurzem
+   Verweilen die Notiz selbst: Kategorie, Status, Priorität, Person, Tags
+   und der Anfang des Textes – formatiert. Am Telefon gibt es kein Hover;
+   dort bleibt es beim Antippen. */
+const hv = $('#hover');
+let hvTimer = null, hvId = null;
+const HV_SEL = '.kc, .pile.open .sticky, .wb.is-front .sticky';
+function hoverZu(){ clearTimeout(hvTimer); hvTimer = null; hvId = null; hv.hidden = true; hv.classList.remove('on'); }
+function hoverAuf(el){
+  const n = notes[+el.dataset.note];
+  if (!n || zug || reading) return;
+  hvId = n.id;
+  const tags = n.tags.filter(t => t !== n.category);
+  hv.style.setProperty('--acc', n.accent);
+  hv.innerHTML =
+      '<div class="hv-kick"><span class="hv-dot"></span>'+esc(n.category)+'<span class="hv-d">'+esc(n.modified)+'</span></div>'
+    + '<div class="hv-t">'+esc(n.title)+'</div>'
+    + '<div class="hv-k"><span class="kb-s" data-s="'+nStatus(n)+'">'+esc(statusLabel(nStatus(n)))+'</span>'
+    +   '<span class="kb-p" data-p="'+nPrio(n)+'">'+esc(prioLabel(nPrio(n)))+'</span>'
+    +   '<span class="kb-w">'+(nPerson(n) ? esc(nPerson(n)) : 'niemand')+'</span></div>'
+    + (tags.length ? '<div class="hv-tags">'+tags.map(t => '<span>#'+esc(t)+'</span>').join('')+'</div>' : '')
+    + '<div class="hv-b">'+contentToHtml((n.content || []).slice(0, 14))+'</div>';
+  hv.hidden = false;
+  const r = el.getBoundingClientRect(), w = Math.min(340, innerWidth - 24);
+  hv.style.width = w + 'px';
+  const h = hv.offsetHeight;
+  let x, y = Math.max(70, Math.min(r.top, innerHeight - h - 12));
+  if (r.right + 12 + w <= innerWidth - 12) x = r.right + 12;              /* rechts daneben */
+  else if (r.left - 12 - w >= 12) x = r.left - w - 12;                    /* links daneben */
+  else {                                                                   /* kein Platz: darunter oder darüber */
+    x = Math.max(12, Math.min(innerWidth - w - 12, r.left + r.width/2 - w/2));
+    y = r.bottom + 10 + h < innerHeight ? r.bottom + 10 : Math.max(12, r.top - h - 10);
+  }
+  hv.style.left = x + 'px'; hv.style.top = y + 'px';
+  requestAnimationFrame(() => hv.classList.add('on'));
+}
+deck.addEventListener('pointerover', e => {
+  if (e.pointerType !== 'mouse') return;
+  const el = e.target.closest(HV_SEL);
+  if (!el){ return; }
+  if (+el.dataset.note === hvId) return;
+  clearTimeout(hvTimer);
+  if (!hv.hidden) { hoverAuf(el); return; }           /* schon offen: gleich weiterwandern */
+  hvTimer = setTimeout(() => hoverAuf(el), 380);
+});
+deck.addEventListener('pointerout', e => {
+  if (e.pointerType !== 'mouse') return;
+  const von = e.target.closest(HV_SEL), nach = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest(HV_SEL) : null;
+  if (von && von !== nach) hoverZu();
+});
+addEventListener('scroll', hoverZu, { passive:true, capture:true });
+['pointerdown','keydown'].forEach(ev => addEventListener(ev, hoverZu, true));
 
 /* ───────── Start ───────── */
 WBTor.start(function(){
