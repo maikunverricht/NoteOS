@@ -556,10 +556,46 @@ select.field{padding-right:8px}
 .wf{display:flex;flex-direction:column;gap:18px}
 .cube-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:18px 34px;padding:16px 20px;border-radius:18px;
   border:1px solid var(--line);background:var(--glass);box-shadow:var(--shadow)}
-.cube{--s:132px;--gap:30px;position:relative;width:calc(var(--s) * 1.5);flex:none;
-  height:calc(var(--s) * .95 + var(--n) * var(--gap) * .8);perspective:1100px}
-.cube-in{position:absolute;left:50%;bottom:calc(var(--s) * .22);width:var(--s);height:var(--s);margin-left:calc(var(--s) / -2);
-  transform-style:preserve-3d;transform:rotateX(58deg) rotateZ(-38deg)}
+.cube{--s:min(340px, 62vw);--gap:calc(var(--s) * var(--gf, .3));position:relative;flex:1 1 440px;
+  max-width:calc(var(--s) * 2.2);height:calc(var(--s) * 2);margin:10px 0;perspective:calc(var(--s) * 4);
+  cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+.cube.dreht,.cube.dreht *{cursor:grabbing !important}
+.cube-in{position:absolute;left:50%;top:50%;width:var(--s);height:var(--s);margin:calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+  transform-style:preserve-3d;
+  transform:rotateX(var(--rx, 58deg)) rotateZ(var(--rz, -38deg)) translateZ(calc(var(--gap) * (var(--n) - 1) / -2))}
+/* Achsen im Würfel: Ursprung oben links auf der untersten Ebene */
+.cube-ach{position:absolute;inset:0;pointer-events:none;transform-style:preserve-3d;
+  transform:translateZ(calc(var(--gap) * (var(--n) - 1) + 2px))}
+.cube-lin{position:absolute;left:0;top:0;border-radius:2px}
+.cube-lin.x{height:3px;width:calc(100% + 26px);background:var(--amber);transform:translate(0,-12px)}
+.cube-lin.y{width:3px;height:calc(100% + 26px);background:var(--teal);transform:translate(-12px,0)}
+.cube-lin.z{height:3px;width:calc(var(--gap) * (var(--n) - 1) + 14px);background:#9A7BF0;
+  transform-origin:0 50%;transform:translate(-12px,-12px) rotateY(90deg)}
+.cube-lin::after{position:absolute;font:700 13px/1 var(--mono);white-space:nowrap}
+.cube-lin.x::after{content:'→';right:-14px;top:-6px;color:var(--amber)}
+.cube-lin.y::after{content:'↓';left:-5px;bottom:-14px;color:var(--teal)}
+.cube-tit{position:absolute;font:700 12px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.cube-tit.x{left:0;width:100%;bottom:calc(100% + 40px);text-align:center;color:var(--amber)}
+.cube-tit.y{right:calc(100% + 40px);top:50%;color:var(--teal);transform:translate(50%,-50%) rotate(-90deg)}
+.cube-tit.z{right:calc(100% + 22px);bottom:calc(100% + 38px);color:#9A7BF0}
+.cube-cl,.cube-rl{position:absolute;font:600 11.5px/1.15 var(--mono);color:var(--text);text-align:center;
+  overflow:hidden;text-overflow:ellipsis}
+.cube-cl{bottom:calc(100% + 16px);width:calc((100% - 12px) / var(--cols));white-space:nowrap;
+  left:calc(6px + (100% - 12px) * var(--i) / var(--cols))}
+.cube-rl{right:calc(100% + 16px);width:calc(var(--s) * .3);text-align:right;transform:translateY(-50%);white-space:nowrap;
+  top:calc(6px + (100% - 12px) * (var(--i) + .5) / var(--rows))}
+.cube-ll{position:absolute;left:0;top:0;white-space:nowrap;cursor:pointer;
+  transform:translateZ(calc(var(--k) * var(--gap) + 1px)) translate(calc(-100% - 22px), calc(-100% - 6px));
+  transition:transform var(--t-m) cubic-bezier(.2,.8,.2,1),opacity var(--t-s);
+  font:600 12.5px/1 var(--mono);color:var(--text);padding:5px 9px;border-radius:100px;
+  border:1.5px solid #9A7BF0;background:var(--glass-2)}
+.cube-ll.on{color:var(--on-accent);background:var(--amber);border-color:transparent;
+  transform:translateZ(calc(var(--k) * var(--gap) + 11px)) translate(calc(-100% - 22px), calc(-100% - 6px))}
+.cube-ll.aus{opacity:.45}
+.cube-ll:hover{border-color:var(--amber)}
+.cube-ll b{font-weight:500;opacity:.7;margin-left:4px}
+.cube-reset{width:30px;height:30px;border-radius:50%;border:1px solid var(--glass-edge);background:none;cursor:pointer;font-size:14px;line-height:1;color:var(--text-2)}
+.cube-reset:hover{border-color:var(--line-hi);color:var(--amber)}
 .cube-l{position:absolute;inset:0;padding:6px;border-radius:9px;cursor:pointer;
   border:1px solid color-mix(in srgb,var(--teal) 42%,transparent);
   background:color-mix(in srgb,var(--glass-2) 70%,transparent);
@@ -570,7 +606,7 @@ select.field{padding-right:8px}
   transform:translateZ(calc(var(--k) * var(--gap) + 10px))}
 .cube-l.aus{opacity:.35}
 .cube-g{display:grid;grid-template-columns:repeat(var(--cols),1fr);grid-template-rows:repeat(var(--rows),1fr);gap:4px;width:100%;height:100%}
-.cube-g i{display:grid;place-items:center;border-radius:4px;font:600 9px/1 var(--mono);font-style:normal;color:var(--on-accent);
+.cube-g i{display:grid;place-items:center;border-radius:5px;font:700 calc(var(--s) * .26 / var(--m)) /1 var(--mono);font-style:normal;color:var(--on-accent);
   background:color-mix(in srgb,var(--teal) calc(var(--c) * 100%),color-mix(in srgb,var(--text-3) 14%,transparent))}
 .cube-l.on .cube-g i{background:color-mix(in srgb,var(--amber) calc(var(--c) * 100%),color-mix(in srgb,var(--text-3) 14%,transparent))}
 .cube-leg{flex:1;min-width:250px;display:flex;flex-direction:column;gap:9px;font-size:13.5px;color:var(--text-2)}
@@ -613,6 +649,22 @@ select.field{padding-right:8px}
 .kc:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .kc.dragging{opacity:.3}
 .kc.done .kc-t{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--text) 40%,transparent);color:var(--text-2)}
+/* Gestaffelter Stapel erledigter Karten */
+.kc-stapel{display:flex;flex-direction:column;gap:6px}
+.kc-stapel-kopf{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:3px 8px;
+  border:none;border-top:1px dashed var(--line);background:none;cursor:pointer;
+  font:600 10.5px/1.4 var(--mono);letter-spacing:.06em;color:var(--teal)}
+.kc-stapel-kopf i{font-style:normal;color:var(--text-3)}
+.kc-stapel-kopf:hover i{color:var(--amber)}
+.kc-stapel:not(.auf) .kc-stapel-k{display:grid;padding-bottom:calc((var(--n) - 1) * 9px);cursor:pointer}
+.kc-stapel:not(.auf) .kc-stapel-k > .kc{grid-area:1/1;z-index:calc(10 - var(--i));transform-origin:50% 100%;
+  background:var(--surface);transform:translateY(calc(var(--i) * 9px)) scale(calc(1 - var(--i) * .05))}
+.kc-stapel:not(.auf) .kc-stapel-k > .kc:not(:first-child){box-shadow:0 2px 6px -3px rgba(0,0,0,.25)}
+.kc-stapel:not(.auf) .kc-stapel-k > .kc:not(:first-child) > *,
+.kc-stapel:not(.auf) .kc-stapel-k > .kc:not(:first-child)::before{visibility:hidden}
+.kc-stapel:not(.auf) .kc-stapel-k > .kc:nth-child(n+5){visibility:hidden}
+.kc-stapel:not(.auf) .kc-stapel-k:hover > .kc:first-child{transform:translateY(-2px)}
+.kc-stapel.auf .kc-stapel-k{display:flex;flex-direction:column;gap:7px}
 .kc-ghost{position:fixed;z-index:300;pointer-events:none;margin:0;transform:rotate(-2.5deg) scale(1.03);
   box-shadow:var(--shadow-lg);opacity:.95;cursor:grabbing}
 body.ziehen,body.ziehen *{cursor:grabbing !important}
@@ -639,7 +691,7 @@ body.ziehen,body.ziehen *{cursor:grabbing !important}
   .kc-acts button{width:28px;height:28px}
 }
 @media (max-width:720px){
-  .cube{--s:104px;--gap:24px}
+  .cube{--s:min(300px, 64vw);flex-basis:100%;max-width:100%}
   .wf-grid{grid-template-columns:84px repeat(var(--cols),minmax(176px,1fr))}
 }
 /* Status-, Prioritäts- und Personenmarken – Leseansicht und Vorschau */
@@ -2217,7 +2269,14 @@ try {
   if (g && ACHSEN[g.s] && ACHSEN[g.z] && g.s !== g.z){ wf.s = g.s; wf.z = g.z; }
 } catch(e){}
 const wfE = () => ACHS_REIHE.find(a => a !== wf.s && a !== wf.z);
-function wfMerken(){ try { localStorage.setItem('noteos.wuerfel', JSON.stringify({ s:wf.s, z:wf.z })); } catch(e){} }
+/* Blickwinkel des Würfels – Ziehen dreht ihn, ⌖ stellt ihn zurück. */
+const WF_BLICK = { rx:58, rz:-38 };
+const wfBlick = { ...WF_BLICK };
+try {
+  const g = JSON.parse(localStorage.getItem('noteos.wuerfel') || 'null');
+  if (g && isFinite(g.rx) && isFinite(g.rz)){ wfBlick.rx = Math.min(90, Math.max(0, +g.rx)); wfBlick.rz = +g.rz; }
+} catch(e){}
+function wfMerken(){ try { localStorage.setItem('noteos.wuerfel', JSON.stringify({ s:wf.s, z:wf.z, rx:Math.round(wfBlick.rx), rz:Math.round(wfBlick.rz) })); } catch(e){} }
 function statusLabel(v){ return (STATUS_W.find(w => w[0] === v) || STATUS_W[0])[1]; }
 function prioLabel(v){ return (PRIO_W.find(w => w[0] === v) || PRIO_W[1])[1]; }
 function wertLabel(achse, v){ return achse === 'status' ? statusLabel(v) : achse === 'prio' ? prioLabel(v) : (v || 'Niemand'); }
@@ -2238,6 +2297,20 @@ function kanbanKarte(n, zeigeEbene){
     + (meta ? '<div class="kc-m">'+meta+'</div>' : '')
     + '</div>';
 }
+/* Erledigte Notizen liegen je Zelle gestaffelt als Stapel; ein Klick fächert ihn auf. */
+const wfAufgefaechert = new Set();
+function kcStapel(fertig, key){
+  if (!fertig.length) return '';
+  const auf = wfAufgefaechert.has(key);
+  const n = fertig.length;
+  return '<div class="kc-stapel'+(auf ? ' auf' : '')+'" data-key="'+esc(key)+'" style="--n:'+Math.min(n, 4)+'">'
+    + '<button class="kc-stapel-kopf" type="button" aria-expanded="'+auf+'"'
+    +   ' title="'+(auf ? 'Stapel schließen' : 'Stapel auffächern')+'">'
+    +   '<span>✓ '+n+' erledigt</span><i>'+(auf ? '▴' : '▾')+'</i></button>'
+    + '<div class="kc-stapel-k">'
+    +   fertig.map((x, i) => kanbanKarte(x, wf.ebene === null).replace('style="--acc:', 'style="--i:'+Math.min(i, 4)+';--acc:')).join('')
+    + '</div></div>';
+}
 function wuerfelBild(list, sp, ze, eb, e){
   /* Zählen je Ebene und Zelle – über die gefilterte Liste, nicht nur die Schicht. */
   const z = {};
@@ -2254,24 +2327,40 @@ function wuerfelBild(list, sp, ze, eb, e){
     }).join('')).join('');
     const an = wf.ebene === v;
     return '<button class="cube-l'+(an ? ' on' : '')+(wf.ebene !== null && !an ? ' aus' : '')+'" type="button" data-ebene="'+esc(v)+'"'
-      + ' style="--k:'+k+';--cols:'+sp.length+';--rows:'+ze.length+'" aria-pressed="'+(an ? 'true' : 'false')+'"'
+      + ' style="--k:'+k+'" aria-pressed="'+(an ? 'true' : 'false')+'"'
       + ' aria-label="Ebene '+esc(lab)+': '+summe+' Notizen">'
-      + '<span class="cube-g">'+zellen+'</span></button>';
+      + '<span class="cube-g">'+zellen+'</span></button>'
+      + '<button class="cube-ll'+(an ? ' on' : '')+(wf.ebene !== null && !an ? ' aus' : '')+'" type="button" tabindex="-1"'
+      +   ' data-ebene="'+esc(v)+'" style="--k:'+k+'" aria-hidden="true">'+esc(lab)+'<b>'+summe+'</b></button>';
   }).join('');
+  const achsen = '<div class="cube-ach" aria-hidden="true">'
+    + '<span class="cube-lin x"></span><span class="cube-lin y"></span><span class="cube-lin z"></span>'
+    + '<span class="cube-tit x">'+esc(ACHSEN[wf.s].name)+'</span>'
+    + '<span class="cube-tit y">'+esc(ACHSEN[wf.z].name)+'</span>'
+    + '<span class="cube-tit z">'+esc(ACHSEN[e].name)+' ↕</span>'
+    + sp.map(([, lab], i) => '<span class="cube-cl" style="--i:'+i+'" title="'+esc(lab)+'">'+esc(lab)+'</span>').join('')
+    + ze.map(([, lab], i) => '<span class="cube-rl" style="--i:'+i+'" title="'+esc(lab)+'">'+esc(lab)+'</span>').join('')
+    + '</div>';
+  const gf = Math.min(.32, .9 / Math.max(eb.length - 1, 1));
+  const cubeVars = '--n:'+eb.length+';--gf:'+gf.toFixed(3)+';--cols:'+sp.length+';--rows:'+ze.length
+    + ';--m:'+Math.max(sp.length, ze.length);
   const marken = eb.map(([v, lab], k) => {
     const summe = list.filter(n => ACHSEN[e].von(n) === v).length;
     return '<button class="cube-tag'+(wf.ebene === v ? ' on' : '')+'" type="button" data-ebene="'+esc(v)+'" style="--k:'+k+'">'
       + esc(lab)+' <b>'+summe+'</b></button>';
   }).join('');
   return '<div class="cube-wrap">'
-    + '<div class="cube" style="--n:'+eb.length+'"><div class="cube-in">'+ebenen+'</div></div>'
+    + '<div class="cube" style="'+cubeVars+'" title="Ziehen dreht den Würfel · Doppelklick stellt ihn zurück">'
+    +   '<div class="cube-in" style="--rx:'+wfBlick.rx+'deg;--rz:'+wfBlick.rz+'deg">'+achsen+ebenen+'</div></div>'
     + '<div class="cube-leg">'
     +   '<div class="cube-ax"><span class="ax x">→</span> Spalten <select class="wf-sel" data-ach="s" aria-label="Spalten">'
     +     ACHS_REIHE.map(a => '<option value="'+a+'"'+(a === wf.s ? ' selected' : '')+'>'+ACHSEN[a].name+'</option>').join('')+'</select></div>'
     +   '<div class="cube-ax"><span class="ax y">↓</span> Zeilen <select class="wf-sel" data-ach="z" aria-label="Zeilen">'
     +     ACHS_REIHE.map(a => '<option value="'+a+'"'+(a === wf.z ? ' selected' : '')+'>'+ACHSEN[a].name+'</option>').join('')+'</select></div>'
     +   '<div class="cube-ax"><span class="ax z">↗</span> Ebenen <b>'+esc(ACHSEN[e].name)+'</b>'
-    +     '<button class="wf-dreh" type="button" title="Achsen weiterdrehen" aria-label="Achsen weiterdrehen">⟳</button></div>'
+    +     '<button class="wf-dreh" type="button" title="Achsen weiterdrehen" aria-label="Achsen weiterdrehen">⟳</button>'
+    +     '<button class="cube-reset" type="button" title="Blickwinkel zurücksetzen" aria-label="Blickwinkel zurücksetzen">⌖</button></div>'
+    +   '<p class="wf-hint">Würfel mit Maus oder Finger ziehen, um ihn zu drehen</p>'
     +   '<div class="cube-tags"><button class="cube-tag'+(wf.ebene === null ? ' on' : '')+'" type="button" data-ebene="*">Alle <b>'+list.length+'</b></button>'+marken+'</div>'
     + '</div></div>';
 }
@@ -2296,9 +2385,12 @@ function renderWuerfel(list){
     return '<div class="wf-c wf-rh" data-a="'+wf.z+'" data-v="'+esc(zv)+'">'+esc(zlab)+'<span>'+n+'</span></div>'
       + sp.map(([sv]) => {
           const karten = zellen[zv+'|'+sv] || [];
-          karten.forEach(x => order.push(x));
+          const offen = karten.filter(x => nStatus(x) !== 'erledigt');
+          const fertig = karten.filter(x => nStatus(x) === 'erledigt');
+          offen.concat(fertig).forEach(x => order.push(x));
           return '<div class="wf-c wf-cell" data-s="'+esc(sv)+'" data-z="'+esc(zv)+'">'
-            + karten.map(x => kanbanKarte(x, wf.ebene === null)).join('')
+            + offen.map(x => kanbanKarte(x, wf.ebene === null)).join('')
+            + kcStapel(fertig, zv+'|'+sv)
             + '<button class="kc-neu" type="button" title="Neue Notiz in dieser Zelle" aria-label="Neue Notiz hier">+</button></div>';
         }).join('');
   }).join('');
@@ -2406,6 +2498,46 @@ addEventListener('pointerup', async () => {
   await notizSichern(n, '„'+n.title+'“: '+wertLabel(wf.s, sv)+' · '+wertLabel(wf.z, zv));
 });
 addEventListener('pointercancel', zugEnde);
+/* Würfel drehen: waagrecht ziehen dreht um die Hochachse, senkrecht kippt ihn. */
+let wfZiehen = null;
+function wfBlickSetzen(el){
+  if (!el) return;
+  el.style.setProperty('--rx', wfBlick.rx.toFixed(1)+'deg');
+  el.style.setProperty('--rz', wfBlick.rz.toFixed(1)+'deg');
+}
+deck.addEventListener('pointerdown', e => {
+  const st = e.target.closest('.cube');
+  if (!st || (e.button !== undefined && e.button > 0)) return;
+  wfZiehen = { st, el:st.querySelector('.cube-in'), x:e.clientX, y:e.clientY, rx:wfBlick.rx, rz:wfBlick.rz, on:false };
+});
+addEventListener('pointermove', e => {
+  if (!wfZiehen) return;
+  const dx = e.clientX - wfZiehen.x, dy = e.clientY - wfZiehen.y;
+  if (!wfZiehen.on){
+    if (Math.hypot(dx, dy) < 5) return;
+    wfZiehen.on = true; wfZiehen.st.classList.add('dreht');
+  }
+  wfBlick.rz = wfZiehen.rz - dx * .45;
+  wfBlick.rx = Math.min(90, Math.max(0, wfZiehen.rx - dy * .45));
+  wfBlickSetzen(wfZiehen.el);
+});
+function wfZiehenEnde(){
+  if (!wfZiehen) return;
+  if (wfZiehen.on){
+    klickSperre = true; setTimeout(() => { klickSperre = false; }, 60);
+    wfZiehen.st.classList.remove('dreht');
+    wfBlick.rz = ((wfBlick.rz % 360) + 540) % 360 - 180;
+    wfMerken();
+  }
+  wfZiehen = null;
+}
+addEventListener('pointerup', wfZiehenEnde);
+addEventListener('pointercancel', wfZiehenEnde);
+deck.addEventListener('dblclick', e => {
+  const st = e.target.closest('.cube');
+  if (!st) return;
+  Object.assign(wfBlick, WF_BLICK); wfBlickSetzen(st.querySelector('.cube-in')); wfMerken();
+});
 document.addEventListener('contextmenu', e => { if (zug && zug.touch) e.preventDefault(); });
 
 function togglePile(el){
@@ -2827,9 +2959,18 @@ deck.addEventListener('click', e => {
     wf.ebene = (v === '*' || wf.ebene === v) ? null : v;
     renderDeck(); return;
   }
+  if (e.target.closest('.cube-reset')){
+    Object.assign(wfBlick, WF_BLICK); wfBlickSetzen($('.cube-in')); wfMerken(); return;
+  }
   if (e.target.closest('.wf-dreh')){
     const e3 = wfE(); wf.s = wf.z; wf.z = e3; wf.ebene = null;   /* Spalten ← Zeilen ← Ebenen */
     wfMerken(); renderDeck(); return;
+  }
+  const stapel = e.target.closest('.kc-stapel');
+  if (stapel && (e.target.closest('.kc-stapel-kopf') || (!stapel.classList.contains('auf') && !e.target.closest('.kc-acts')))){
+    const key = stapel.dataset.key;
+    wfAufgefaechert.has(key) ? wfAufgefaechert.delete(key) : wfAufgefaechert.add(key);
+    renderDeck(); return;
   }
   const neu = e.target.closest('.kc-neu');
   if (neu){
