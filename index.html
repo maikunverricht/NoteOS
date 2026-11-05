@@ -574,21 +574,26 @@ select.field{padding-right:8px}
 .cube.dreht,.cube.dreht *{cursor:grabbing !important}
 .cube-in{position:absolute;left:50%;top:50%;width:var(--s);height:var(--s);margin:calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
   transform-style:preserve-3d;
-  transform:rotateX(var(--rx, 58deg)) rotateZ(var(--rz, -38deg)) translateZ(calc(var(--gap) * (var(--n) - 1) / -2))}
+  transform:rotateX(var(--rx, 58deg)) rotateZ(var(--rz, -38deg)) translateZ(calc(var(--gap) * var(--top) / -2))}
+@property --top{syntax:'<number>';inherits:true;initial-value:0}
+@property --rx{syntax:'<angle>';inherits:true;initial-value:58deg}
+@property --rz{syntax:'<angle>';inherits:true;initial-value:-38deg}
+.cube-in.tauscht{transition:--top .8s cubic-bezier(.65,0,.35,1)}
+.cube-in.faehrt{transition:--rx .7s cubic-bezier(.65,0,.35,1),--rz .7s cubic-bezier(.65,0,.35,1)}
 /* Achsen im Würfel: Ursprung oben links auf der untersten Ebene */
 .cube-ach{position:absolute;inset:0;pointer-events:none;transform-style:preserve-3d;
-  transform:translateZ(calc(var(--gap) * (var(--n) - 1) + 12px))}
+  transform:translateZ(calc(var(--gap) * var(--top) + 12px))}
 .cube-lin{position:absolute;left:0;top:0;border-radius:2px}
 .cube-lin.x{height:3px;width:calc(100% + 26px);background:var(--amber);transform:translate(0,-12px)}
 .cube-lin.y{width:3px;height:calc(100% + 26px);background:var(--teal);transform:translate(-12px,0)}
-.cube-lin.z{height:3px;width:calc(var(--gap) * (var(--n) - 1) + 14px);background:#9A7BF0;
+.cube-lin.z{height:3px;width:calc(var(--gap) * var(--top) + 14px);background:#9A7BF0;
   transform-origin:0 50%;transform:translate(-12px,-12px) rotateY(90deg)}
 .cube-lin::after{position:absolute;font:700 13px/1 var(--mono);white-space:nowrap}
 .cube-lin.x::after{content:'→';right:-14px;top:-6px;color:var(--amber)}
 .cube-lin.y::after{content:'↓';left:-5px;bottom:-14px;color:var(--teal)}
 .cube-tit{position:absolute;font:700 12px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
 .cube-tit.x{left:0;width:100%;bottom:calc(100% + 40px);text-align:center;color:var(--amber)}
-.cube-tit.y{right:calc(100% + 40px);top:50%;color:var(--teal);transform:translate(50%,-50%) rotate(-90deg)}
+.cube-tit.y{right:calc(100% + var(--s) * .3 + 26px);top:50%;color:var(--teal);transform:translate(50%,-50%) rotate(-90deg)}
 .cube-tit.z{right:calc(100% + 22px);bottom:calc(100% + 38px);color:#9A7BF0}
 .cube-cl,.cube-rl{position:absolute;font:600 11.5px/1.15 var(--mono);color:var(--text);text-align:center;
   overflow:hidden;text-overflow:ellipsis}
@@ -639,6 +644,57 @@ select.field{padding-right:8px}
 .cube-tag:hover{border-color:var(--line-hi);color:var(--text)}
 .cube-tag.on{background:var(--amber);border-color:transparent;color:var(--on-accent);font-weight:600}
 .cube-tag.on b{color:inherit}
+/* ── Würfel klarer: deckende Ebenen, leere Zellen bleiben leer, die
+   gewählte Ebene schwebt deutlich über den anderen ── */
+.cube{--lift:calc(var(--s) * .16)}
+.cube-l{background:var(--surface);border:1px solid var(--line);
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset,0 6px 16px -10px rgba(0,0,0,.45)}
+.cube-l:hover{transform:translateZ(calc(var(--k) * var(--gap) + 4px));border-color:var(--amber)}
+.cube-l.on{background:var(--surface);border:1.5px solid var(--amber);
+  box-shadow:0 18px 34px -16px rgba(0,0,0,.55);transform:translateZ(calc(var(--k) * var(--gap) + var(--lift)))}
+.cube-ll.on{transform:translateZ(calc(var(--k) * var(--gap) + var(--lift) + 1px)) translate(calc(-100% - 22px), calc(-100% - 6px))}
+.cube-l.aus{opacity:.55;filter:saturate(0)}
+.cube-l.aus .cube-g i{color:transparent}
+.cube-ll.aus{opacity:.4}
+.cube-in.gewaehlt .cube-ach{transform:translateZ(calc(var(--gap) * var(--top) + var(--lift) + 4px))}
+.cube{--lift:6px}
+/* Würfel ↔ Liste: was zusammengehört, leuchtet auf */
+.cube-g i.glimmt{outline:3px solid var(--amber);outline-offset:2px;z-index:2}
+.cube-g i.glimmt.leer{border-color:var(--amber)}
+.wf.verbunden .wf-grid .kc{opacity:.35;transition:opacity var(--t-s),box-shadow var(--t-s)}
+.wf.verbunden .wf-grid .kc.glimmt{opacity:1;box-shadow:0 0 0 2px var(--amber),var(--shadow)}
+/* Feste Blickwinkel */
+.cube-in.flach .cube-ll{opacity:0;pointer-events:none}
+.cube-in.flach .cube-ll.on{opacity:1;pointer-events:auto}
+.cube-blicke{display:inline-flex;gap:2px;padding:2px;border-radius:100px;border:1px solid var(--glass-edge)}
+.cube-blick{border:none;background:none;border-radius:100px;padding:4px 10px;cursor:pointer;font-size:12.5px;color:var(--text-2)}
+.cube-blick:hover{color:var(--text)}
+.cube-blick.on{background:var(--amber);color:var(--on-accent);font-weight:600}
+.cube-g{gap:5px}
+.cube-g i{border-radius:6px;color:#fff;
+  background:color-mix(in srgb,var(--teal) calc(35% + var(--c) * 65%),var(--surface))}
+.cube-g i.lo{color:var(--text)}
+.cube-g i.leer{background:none;border:1px dashed color-mix(in srgb,var(--text-3) 35%,transparent)}
+.cube-l.on .cube-g i{background:color-mix(in srgb,var(--amber) calc(35% + var(--c) * 65%),var(--surface))}
+.cube-l.on .cube-g i.leer{background:none;border-color:color-mix(in srgb,var(--amber) 45%,transparent)}
+.cube-lin{opacity:.85}
+.cube-cl,.cube-rl{font-size:12px}
+
+/* ── Desktop: Würfel links (bleibt stehen), Liste rechts ── */
+@media (min-width:1100px){
+  .deck[data-mode="wuerfel"] .wf{--bw:min(1680px, calc(100vw - 2 * var(--pad) - 20px));width:var(--bw);
+    margin-left:calc((100% - var(--bw)) / 2);display:grid;grid-template-columns:minmax(440px, 37%) minmax(0, 1fr);
+    gap:22px;align-items:start}
+  .deck[data-mode="wuerfel"] .cube-wrap{position:sticky;top:84px;flex-direction:column;flex-wrap:nowrap;
+    align-items:stretch;gap:10px;padding:14px 16px;container-type:inline-size}
+  .deck[data-mode="wuerfel"] .cube{flex:none;width:100%;max-width:none;margin:0;
+    --s:min(330px, 46cqi);height:calc(var(--s) * 1.75)}
+  .deck[data-mode="wuerfel"] .cube-in{left:58%}
+  .deck[data-mode="wuerfel"] .cube-leg{min-width:0}
+  .deck[data-mode="wuerfel"] .wf-scroll{grid-column:2;grid-row:1}
+  .deck[data-mode="wuerfel"] .wf-hint{grid-column:2}
+  .deck[data-mode="wuerfel"] .wf-grid{grid-template-columns:96px repeat(var(--cols),minmax(176px,1fr))}
+}
 .wf-scroll{overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
 .wf-grid{display:grid;grid-template-columns:118px repeat(var(--cols),minmax(208px,1fr));gap:8px;min-width:min-content}
 .wf-c{border-radius:12px;min-width:0}
@@ -2319,6 +2375,26 @@ const wfE = () => ACHS_REIHE.find(a => a !== wf.s && a !== wf.z);
 /* Blickwinkel des Würfels – Ziehen dreht ihn, ⌖ stellt ihn zurück. */
 const WF_BLICK = { rx:58, rz:-38 };
 const wfBlick = { ...WF_BLICK };
+const WF_BLICKE = {
+  schraeg: { name:'Schräg', rx:58, rz:-38 },
+  oben:    { name:'Oben',   rx:0,  rz:0 },
+  seite:   { name:'Seite',  rx:78, rz:-14 }
+};
+const wfBlickIst = k => Math.abs(wfBlick.rx - WF_BLICKE[k].rx) < .5 && Math.abs(wfBlick.rz - WF_BLICKE[k].rz) < .5;
+function wfBlickFahren(ziel){
+  const cin = $('.cube-in');
+  /* auf dem kürzesten Weg drehen */
+  let rz = ziel.rz; while (rz - wfBlick.rz > 180) rz -= 360; while (rz - wfBlick.rz < -180) rz += 360;
+  wfBlick.rx = ziel.rx; wfBlick.rz = rz;
+  if (cin){
+    cin.classList.add('faehrt');
+    wfBlickSetzen(cin);
+    clearTimeout(wfBlickFahren.t);
+    wfBlickFahren.t = setTimeout(() => cin.classList.remove('faehrt'), 750);
+  }
+  $$('.cube-blick').forEach(b => b.classList.toggle('on', wfBlickIst(b.dataset.blick)));
+  wfMerken();
+}
 try {
   const g = JSON.parse(localStorage.getItem('noteos.wuerfel') || 'null');
   if (g && isFinite(g.rx) && isFinite(g.rz)){ wfBlick.rx = Math.min(90, Math.max(0, +g.rx)); wfBlick.rz = +g.rz; }
@@ -2334,6 +2410,7 @@ function kanbanKarte(n, zeigeEbene){
     ? '<span class="kc-chip">'+esc(ACHSEN[e].name)+': '+esc(wertLabel(e, ACHSEN[e].von(n)))+'</span>' : '';
   const fertig = nStatus(n) === 'erledigt';
   return '<div class="kc'+(fertig ? ' done' : '')+'" data-note="'+n.id+'" tabindex="0" role="button"'
+    + ' data-ws="'+esc(ACHSEN[wf.s].von(n))+'" data-wz="'+esc(ACHSEN[wf.z].von(n))+'" data-we="'+esc(ACHSEN[e].von(n))+'"'
     + ' style="--acc:'+n.accent+'" aria-label="'+esc(n.title)+' öffnen">'
     + '<div class="kc-top"><span class="kc-dot"></span><span class="kc-cat">'+esc(n.category)+'</span>'
     +   '<span class="kc-acts">'
@@ -2346,13 +2423,16 @@ function kanbanKarte(n, zeigeEbene){
 }
 let wfPlatz = {};                 /* Ebene → angezeigter Platz im Stapel (0 = unten) */
 function wfTauschen(){
-  const teile = $$('.cube-in [data-k]').filter(el => el.style.getPropertyValue('--k') !== el.dataset.k);
-  if (!teile.length) return;
   const cin = $('.cube-in');
+  if (!cin) return;
+  const teile = $$('.cube-in [data-k]').filter(el => el.style.getPropertyValue('--k') !== el.dataset.k);
+  const topWeg = cin.style.getPropertyValue('--top') !== cin.dataset.top;
+  if (!teile.length && !topWeg) return;
   cin.classList.add('tauscht');
   void cin.offsetWidth;                                   /* alten Platz erst zeichnen */
   requestAnimationFrame(() => {
     teile.forEach(el => el.style.setProperty('--k', el.dataset.k));
+    cin.style.setProperty('--top', cin.dataset.top);
     clearTimeout(wfTauschen.t);
     wfTauschen.t = setTimeout(() => cin.classList.remove('tauscht'), 900);
   });
@@ -2382,7 +2462,12 @@ function wuerfelBild(list, sp, ze, eb, e){
   /* Die markierte Ebene tauscht den Platz mit der obersten. Gezeichnet
      wird erst am alten Platz, wfTauschen() schiebt sie dann animiert hin. */
   const oben = eb.length - 1, gew = eb.findIndex(w => w[0] === wf.ebene);
-  const platz = k => gew < 0 ? k : k === gew ? oben : k === oben ? gew : k;
+  /* Fahrstuhl: die gewählte Ebene fährt frei über alle, die übrigen rücken
+     in ihrer Reihenfolge eng zusammen. */
+  const DICHT = .32, ABSTAND = 1.35;
+  const platz = k => gew < 0 ? k : k === gew ? (oben - 1) * DICHT + ABSTAND : (k < gew ? k : k - 1) * DICHT;
+  const topNeu = gew < 0 ? oben : (oben - 1) * DICHT + ABSTAND;
+  const topAlt = ('__top|'+e) in wfPlatz ? wfPlatz['__top|'+e] : topNeu;
   const neuePlaetze = {};
   const ebenen = eb.map(([v, lab], k) => {
     const schl = e+'|'+v, ziel = platz(k);
@@ -2391,7 +2476,8 @@ function wuerfelBild(list, sp, ze, eb, e){
     const summe = list.filter(n => ACHSEN[e].von(n) === v).length;
     const zellen = ze.map(([zv]) => sp.map(([sv]) => {
       const c = z[v+'|'+zv+'|'+sv] || 0;
-      return '<i data-s="'+esc(sv)+'" data-z="'+esc(zv)+'" style="--c:'+(c ? (0.28 + 0.72 * c / max).toFixed(2) : 0)+'">'+(c || '')+'</i>';
+      const st = c ? c / max : 0;
+      return '<i class="'+(c ? (st < .45 ? 'lo' : '') : 'leer')+'" data-s="'+esc(sv)+'" data-z="'+esc(zv)+'" style="--c:'+st.toFixed(2)+'">'+(c || '')+'</i>';
     }).join('')).join('');
     const an = wf.ebene === v;
     return '<button class="cube-l'+(an ? ' on' : '')+(wf.ebene !== null && !an ? ' aus' : '')+'" type="button" data-ebene="'+esc(v)+'"'
@@ -2401,6 +2487,7 @@ function wuerfelBild(list, sp, ze, eb, e){
       + '<button class="cube-ll'+(an ? ' on' : '')+(wf.ebene !== null && !an ? ' aus' : '')+'" type="button" tabindex="-1"'
       +   ' data-ebene="'+esc(v)+'" style="--k:'+alt+'" data-k="'+ziel+'" aria-hidden="true">'+esc(lab)+'<b>'+summe+'</b></button>';
   }).join('');
+  neuePlaetze['__top|'+e] = topNeu;
   wfPlatz = neuePlaetze;
   const achsen = '<div class="cube-ach" aria-hidden="true">'
     + '<span class="cube-lin x"></span><span class="cube-lin y"></span><span class="cube-lin z"></span>'
@@ -2420,7 +2507,7 @@ function wuerfelBild(list, sp, ze, eb, e){
   }).join('');
   return '<div class="cube-wrap">'
     + '<div class="cube" style="'+cubeVars+'" title="Ziehen dreht den Würfel · Doppelklick stellt ihn zurück">'
-    +   '<div class="cube-in" style="--rx:'+wfBlick.rx+'deg;--rz:'+wfBlick.rz+'deg">'+achsen+ebenen+'</div></div>'
+    +   '<div class="cube-in'+(gew >= 0 ? ' gewaehlt' : '')+(wfBlick.rx < 20 ? ' flach' : '')+'" data-top="'+topNeu+'" style="--top:'+topAlt+';--rx:'+wfBlick.rx+'deg;--rz:'+wfBlick.rz+'deg">'+achsen+ebenen+'</div></div>'
     + '<div class="cube-leg">'
     +   '<div class="cube-ax"><span class="ax x">→</span> Spalten <select class="wf-sel" data-ach="s" aria-label="Spalten">'
     +     ACHS_REIHE.map(a => '<option value="'+a+'"'+(a === wf.s ? ' selected' : '')+'>'+ACHSEN[a].name+'</option>').join('')+'</select></div>'
@@ -2428,7 +2515,10 @@ function wuerfelBild(list, sp, ze, eb, e){
     +     ACHS_REIHE.map(a => '<option value="'+a+'"'+(a === wf.z ? ' selected' : '')+'>'+ACHSEN[a].name+'</option>').join('')+'</select></div>'
     +   '<div class="cube-ax"><span class="ax z">↗</span> Ebenen <b>'+esc(ACHSEN[e].name)+'</b>'
     +     '<button class="wf-dreh" type="button" title="Achsen weiterdrehen" aria-label="Achsen weiterdrehen">⟳</button>'
-    +     '<button class="cube-reset" type="button" title="Blickwinkel zurücksetzen" aria-label="Blickwinkel zurücksetzen">⌖</button></div>'
+    +   '</div>'
+    +   '<div class="cube-ax"><span class="ax">◎</span> Blick <span class="cube-blicke" role="group" aria-label="Blickwinkel">'
+    +     Object.entries(WF_BLICKE).map(([k, b]) => '<button class="cube-blick'+(wfBlickIst(k) ? ' on' : '')+'" type="button" data-blick="'+k+'">'+b.name+'</button>').join('')
+    +   '</span></div>'
     +   '<p class="wf-hint">Würfel mit Maus oder Finger ziehen, um ihn zu drehen</p>'
     +   '<div class="cube-tags"><button class="cube-tag'+(wf.ebene === null ? ' on' : '')+'" type="button" data-ebene="*">Alle <b>'+list.length+'</b></button>'+marken+'</div>'
     + '</div></div>';
@@ -2573,6 +2663,7 @@ function wfBlickSetzen(el){
   if (!el) return;
   el.style.setProperty('--rx', wfBlick.rx.toFixed(1)+'deg');
   el.style.setProperty('--rz', wfBlick.rz.toFixed(1)+'deg');
+  el.classList.toggle('flach', wfBlick.rx < 20);       /* Draufsicht: Schilder lägen übereinander */
 }
 deck.addEventListener('pointerdown', e => {
   const st = e.target.closest('.cube');
@@ -2596,11 +2687,43 @@ function wfZiehenEnde(){
     klickSperre = true; setTimeout(() => { klickSperre = false; }, 60);
     wfZiehen.st.classList.remove('dreht');
     wfBlick.rz = ((wfBlick.rz % 360) + 540) % 360 - 180;
+    wfBlickSetzen(wfZiehen.el);
+    $$('.cube-blick').forEach(b => b.classList.toggle('on', wfBlickIst(b.dataset.blick)));
     wfMerken();
   }
   wfZiehen = null;
 }
 addEventListener('pointerup', wfZiehenEnde);
+/* Würfel ↔ Liste: über einer Würfelzelle leuchten ihre Karten, über einer
+   Karte ihre Zelle im Würfel. */
+let wfVerbundenSchl = null;
+function wfVerbinden(schl){
+  if (schl === wfVerbundenSchl) return;
+  wfVerbundenSchl = schl;
+  $$('.glimmt').forEach(el => el.classList.remove('glimmt'));
+  const wfEl = $('.wf');
+  if (!wfEl) return;
+  wfEl.classList.toggle('verbunden', !!schl && schl.karten);
+  if (!schl) return;
+  const q = v => CSS.escape(v);
+  const zelle = $('.cube-l[data-ebene="'+q(schl.e)+'"] .cube-g i[data-s="'+q(schl.s)+'"][data-z="'+q(schl.z)+'"]');
+  if (zelle) zelle.classList.add('glimmt');
+  if (schl.karten) $$('.wf-grid .kc[data-ws="'+q(schl.s)+'"][data-wz="'+q(schl.z)+'"][data-we="'+q(schl.e)+'"]')
+    .forEach(k => k.classList.add('glimmt'));
+}
+deck.addEventListener('pointerover', e => {
+  if (deckMode !== 'wuerfel' || wfZiehen && wfZiehen.on || zug && zug.on) return;
+  const i = e.target.closest('.cube-g i[data-s]');
+  if (i){
+    const l = i.closest('.cube-l');
+    wfVerbinden({ s:i.dataset.s, z:i.dataset.z, e:l.dataset.ebene, karten:true, id:'z' });
+    return;
+  }
+  const k = e.target.closest('.wf-grid .kc');
+  if (k){ wfVerbinden({ s:k.dataset.ws, z:k.dataset.wz, e:k.dataset.we, karten:false }); return; }
+  wfVerbinden(null);
+});
+deck.addEventListener('pointerleave', () => wfVerbinden(null));
 addEventListener('pointercancel', wfZiehenEnde);
 deck.addEventListener('dblclick', e => {
   const st = e.target.closest('.cube');
@@ -3029,6 +3152,8 @@ deck.addEventListener('click', e => {
     wf.ebene = (v === '*' || wf.ebene === v) ? null : v;
     renderDeck(); return;
   }
+  const blick = e.target.closest('.cube-blick');
+  if (blick){ wfBlickFahren(WF_BLICKE[blick.dataset.blick]); return; }
   if (e.target.closest('.cube-reset')){
     Object.assign(wfBlick, WF_BLICK); wfBlickSetzen($('.cube-in')); wfMerken(); return;
   }
