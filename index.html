@@ -130,6 +130,9 @@ main{position:relative;z-index:1;max-width:var(--max);margin:0 auto;padding:0 va
 .hero-top{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
 .hero-count{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;color:var(--text-3);white-space:nowrap}
 h1{font-family:var(--display);font-size:clamp(38px,6.6vw,78px);line-height:.98;letter-spacing:-.045em;margin:20px 0 0;font-weight:700}
+/* Hero-Zeile: eine Zeile, die Größe passt fitHero() an die Breite an */
+#heroTitle{font-size:72px;white-space:nowrap;margin-top:18px}
+#heroTitle.umbruch{white-space:normal;text-wrap:balance}
 h1 span{font-variation-settings:'wdth' 116,'wght' 800}
 h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--em-1),var(--em-2) 52%,var(--em-3));
   -webkit-background-clip:text;background-clip:text;color:transparent;padding-right:.06em}
@@ -553,6 +556,30 @@ select.field{padding-right:8px}
 /* Verknüpfungs-Vorschlag: welche Kategorien wie Auftraggeber aussehen.
    Breiter als die Rückfrage, weil hier eine Liste zum Abhaken steht. */
 .confirm-box.weit{max-width:520px}
+/* Hilfe */
+.hilfe{max-width:600px;max-height:86vh;display:flex;flex-direction:column;padding:20px 22px 22px}
+.hilfe-kopf{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.hilfe-kopf h2{margin:0;font-size:20px;letter-spacing:-.02em}
+.hilfe-in{overflow:auto;font-size:14.5px;line-height:1.55;color:var(--text-2)}
+.hilfe-in h3{margin:18px 0 6px;font:600 10.5px/1.4 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--text-3)}
+.hilfe-in p{margin:0 0 8px}
+.hilfe-in b{color:var(--text)}
+.hilfe-in .h-jetzt{padding:12px 14px;border-radius:12px;border:1px solid var(--line-hi);background:var(--amber-soft);color:var(--text)}
+.hilfe-in dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0}
+.hilfe-in dt{font-family:var(--mono);font-size:12px;color:var(--text);white-space:nowrap}
+.hilfe-in dd{margin:0}
+.hilfe-in kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:5px;padding:0 5px}
+/* Teilen */
+.teil-ebene{display:flex;align-items:center;gap:10px;margin:0 0 12px;font-family:var(--mono);font-size:11px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--text-3)}
+.teil-liste{margin:0 0 18px;border:1px solid var(--line);border-radius:13px;max-height:46vh;overflow-y:auto}
+.teil-liste b{display:block;font-size:14.5px;font-weight:600;line-height:1.35;padding-top:5px}
+.teil-liste .t-zeile{display:flex;align-items:flex-start;gap:11px;padding:10px 14px;border-top:1px solid var(--line)}
+.teil-liste .t-zeile:first-child{border-top:0}
+.teil-liste .t-nr{font:500 11px/1.6 var(--mono);color:var(--text-3);flex:none;width:22px}
+.teil-liste input[type=text]{width:100%;height:32px;padding:0 10px;border-radius:8px;border:1px solid var(--glass-edge);
+  background:var(--glass);color:var(--text);font:600 14px var(--display)}
+.teil-liste .t-info{display:block;font:11.5px/1.4 var(--mono);color:var(--text-3);margin-top:4px}
 .verkn{margin:0 0 18px;border:1px solid var(--line,rgba(255,255,255,.10));border-radius:13px;overflow:hidden;
   max-height:46vh;overflow-y:auto;text-align:left}
 .verkn label{display:flex;align-items:flex-start;gap:11px;padding:11px 14px;cursor:pointer;
@@ -851,6 +878,17 @@ footer a:hover{color:var(--text)}
   .bar-title{justify-content:flex-start}
   .sheet{margin:16px auto 60px;border-radius:14px}
 }
+/* Schmale Telefone: Kopfzeile verdichten, damit Hilfe und Lizenz Platz haben */
+@media (max-width:480px){
+  .brand > span:not(.mark){display:none}
+  .nav-in{gap:8px;padding-left:12px}
+  .nav-r{gap:5px}
+  .nav-r .pill{padding:0 11px}
+  .nav-r .pill.icon-btn{padding:0}
+  .ordner-txt{display:none}
+  .ordner-ico{display:block !important}
+}
+.ordner-ico{display:none}
 @media (prefers-reduced-motion:reduce){
   .row{animation:none;opacity:1}
   .sticky,.pane,.pane-glass,.pane::after{transition:none}
@@ -953,8 +991,9 @@ html[data-theme="light"]{
     <a class="brand" href="#" id="home"><span class="mark" aria-hidden="true"><svg viewBox="15 5 90 102"><path d="M26,16 V62 A34,34 0 0 0 94,62 V16" fill="none" stroke="currentColor" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="64" r="18.5" fill="var(--amber,#F2B33D)"/></svg></span><span>Notiz<b>buch</b></span></a>
     <div class="nav-r">
       <span class="clock" id="clock"></span>
-      <button class="pill" id="folderBtn" type="button">Ordner<span class="dot-state" id="folderDot"></span></button>
+      <button class="pill" id="folderBtn" type="button" aria-label="Ordner"><svg class="ordner-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v8.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/></svg><span class="ordner-txt">Ordner</span><span class="dot-state" id="folderDot"></span></button>
       <button class="pill primary" id="addBtn" type="button">+<span class="hide-sm">&nbsp;Notiz</span></button>
+      <button class="pill icon-btn" id="helpBtn" type="button" aria-label="Hilfe" title="Hilfe (?)">?</button>
       <button class="pill icon-btn" id="themeBtn" type="button" aria-label="Hell/Dunkel umschalten">
         <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
         <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
@@ -969,8 +1008,7 @@ html[data-theme="light"]{
       <div class="eyebrow">Wissen · Werkbank Unverricht</div>
       <div class="hero-count" id="heroCount">001 — 000</div>
     </div>
-    <h1><span>Alles Notierte</span><br><em>auf einen Griff.</em></h1>
-    <p class="lead" id="lead">Jede Scheibe ist eine Notiz – als Markdown-Datei in deinem Ordner. Der Kamm zeigt den ganzen Bestand: scrollen bringt eine Scheibe ins Ziel, sie steht offen und zoomt darunter heraus. <span class="mono">←</span> <span class="mono">→</span> blättert, Klick auf die offene Scheibe liest, <span class="mono">Esc</span> legt zurück.</p>
+    <h1 id="heroTitle"><span>Alles Notierte</span> <em>auf einen Griff.</em></h1>
     <div class="stats" id="stats"></div>
   </section>
 
@@ -986,10 +1024,10 @@ html[data-theme="light"]{
     <button class="pill" id="merkBtn" type="button">Filter</button>
     <button class="pill" id="catBtn" type="button" hidden></button>
     <div class="seg" role="group" aria-label="Ansicht">
-      <button data-view="kamm" class="active">Kamm<span class="kbd hide-sm">1</span></button>
-      <button data-view="board">Haufen<span class="kbd hide-sm">2</span></button>
-      <button data-view="arena">Tafeln<span class="kbd hide-sm">3</span></button>
-      <button data-view="wuerfel">Würfel<span class="kbd hide-sm">4</span></button>
+      <button data-view="kamm" class="active">Kamm</button>
+      <button data-view="board">Haufen</button>
+      <button data-view="arena">Tafeln</button>
+      <button data-view="wuerfel">Würfel</button>
     </div>
   </section>
 
@@ -1021,11 +1059,12 @@ html[data-theme="light"]{
 
 <div class="scrim" id="scrim"></div>
 <div class="bar" id="bar" role="toolbar" aria-label="Geöffnete Notiz">
-  <button class="pill" id="backBtn" type="button">← <span class="hide-sm">Kartei</span><span class="kbd hide-sm">Esc</span></button>
+  <button class="pill" id="backBtn" type="button">← <span class="hide-sm">Kartei</span></button>
   <div class="bar-title"><span class="c-idx" id="barIdx">001</span><strong id="barName">–</strong><span class="tag hide-sm" id="barTag"></span></div>
   <div class="grp">
     <button class="pill icon-btn" id="prevBtn" type="button" aria-label="Vorherige Notiz">‹</button>
     <button class="pill icon-btn" id="nextBtn" type="button" aria-label="Nächste Notiz">›</button>
+    <button class="pill icon-btn" id="splitBtn" type="button" aria-label="An Überschriften aufteilen" title="An Überschriften aufteilen">✂</button>
     <button class="pill icon-btn" id="printBtn" type="button" aria-label="Drucken oder exportieren" title="Drucken / Exportieren">⎙</button>
     <button class="pill icon-btn" id="delBtn" type="button" aria-label="In den Papierkorb" title="In den Papierkorb">🗑</button>
     <button class="pill primary" id="editBtn" type="button"><span class="hide-sm">Bearbeiten</span> ✎</button>
@@ -1093,6 +1132,8 @@ html[data-theme="light"]{
       <button type="button" data-cmd="insertOrderedList">1. Liste</button>
       <button type="button" data-cmd="formatBlock" data-val="BLOCKQUOTE">Zitat</button>
       <button type="button" id="tbLink">Link</button>
+      <span class="tb-sep"></span>
+      <button type="button" id="tbSplit" title="Alles ab dem Cursor wird eine eigene Notiz">✂ Am Cursor teilen</button>
     </div>
     <div class="ed-body" id="editorBody" contenteditable="true"></div>
   </div>
@@ -1104,6 +1145,30 @@ html[data-theme="light"]{
     <div class="confirm-actions">
       <button class="pill" id="confirmCancel" type="button">Abbrechen</button>
       <button class="pill danger" id="confirmOk" type="button">In den Papierkorb</button>
+    </div>
+  </div>
+</div>
+<div class="confirm" id="hilfeOverlay" hidden>
+  <div class="confirm-box weit hilfe" role="dialog" aria-modal="true" aria-labelledby="hilfeTitel">
+    <div class="hilfe-kopf"><h2 id="hilfeTitel">So funktioniert’s</h2>
+      <button class="tag-close" id="hilfeZu" type="button" aria-label="Hilfe schließen">✕</button></div>
+    <div class="hilfe-in" id="hilfeInhalt"></div>
+  </div>
+</div>
+<div class="confirm" id="teilOverlay" hidden>
+  <div class="confirm-box weit" role="dialog" aria-modal="true">
+    <p id="teilText"></p>
+    <div class="teil-ebene" id="teilEbene" hidden>
+      <span>Teilen an</span>
+      <div class="seg" role="group" aria-label="Überschriftenebene">
+        <button type="button" data-ebene="1" class="active">H1</button>
+        <button type="button" data-ebene="2">H1 + H2</button>
+      </div>
+    </div>
+    <div class="teil-liste" id="teilListe"></div>
+    <div class="confirm-actions">
+      <button class="pill" id="teilAbbr" type="button">Abbrechen</button>
+      <button class="pill primary" id="teilOk" type="button">Teilen</button>
     </div>
   </div>
 </div>
@@ -1794,7 +1859,7 @@ WBTor({
     "noteos.agb-verknuepft",
     "wb-noteos-stand"
   ],
-  "schreiben": "#addBtn,#addBlank,#addImport,#folderConnect,#folderReconnect,#folderReload,#folderBulkImport,#folderDisconnect,#editBtn,#editorSave,#delBtn,#confirmOk,#verknOk,#tbLink,.kc-ok,.kc-del,.kc-neu,#toastUndo",
+  "schreiben": "#addBtn,#addBlank,#addImport,#folderConnect,#folderReconnect,#folderReload,#folderBulkImport,#folderDisconnect,#editBtn,#editorSave,#delBtn,#confirmOk,#verknOk,#tbLink,#tbSplit,#splitBtn,#teilOk,.kc-ok,.kc-del,.kc-neu,#toastUndo",
   "ausgabe": "#printBtn,#pmExport",
   "demo": {},
   "fussKlasse": "pill"
@@ -2519,7 +2584,6 @@ function wuerfelBild(list, sp, ze, eb, e){
     +   '<div class="cube-ax"><span class="ax">◎</span> Blick <span class="cube-blicke" role="group" aria-label="Blickwinkel">'
     +     Object.entries(WF_BLICKE).map(([k, b]) => '<button class="cube-blick'+(wfBlickIst(k) ? ' on' : '')+'" type="button" data-blick="'+k+'">'+b.name+'</button>').join('')
     +   '</span></div>'
-    +   '<p class="wf-hint">Würfel mit Maus oder Finger ziehen, um ihn zu drehen</p>'
     +   '<div class="cube-tags"><button class="cube-tag'+(wf.ebene === null ? ' on' : '')+'" type="button" data-ebene="*">Alle <b>'+list.length+'</b></button>'+marken+'</div>'
     + '</div></div>';
 }
@@ -2556,7 +2620,6 @@ function renderWuerfel(list){
   view = order;
   return '<div class="wf">' + wuerfelBild(list, sp, ze, eb, e)
     + '<div class="wf-scroll" id="wfScroll"><div class="wf-grid" style="--cols:'+sp.length+'">'+kopf+reihen+'</div></div>'
-    + '<p class="wf-hint">Ziehen verschiebt eine Karte · ✓ erledigt · ✕ in den Papierkorb (rückgängig machbar) · + legt in der Zelle an</p>'
     + '</div>';
 }
 /* Werte einer Notiz ändern und sichern – ohne Editor. */
@@ -3054,8 +3117,7 @@ function renderScopeDetail(n){
     + '<p class="sd-text">'+esc(plainExcerpt(n))+'</p>'
     + (tags ? '<div class="sd-tags">'+tags+'</div>' : '')
     + '</div>'
-    + '<div class="sd-side"><button class="pill primary" type="button" data-open="'+n.id+'">Lesen ↗</button>'
-    +   '<span class="sd-hint">← → blättert</span></div>';
+    + '<div class="sd-side"><button class="pill primary" type="button" data-open="'+n.id+'">Lesen ↗</button></div>';
 }
 /* Scrollen im Kamm setzt das Ziel neu */
 let scopeRaf = 0, snapTimer = null;
@@ -3501,7 +3563,7 @@ addEventListener('popstate', () => {
 addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   if ($('#editorView').classList.contains('active')) return;
-  if (!$('#confirmOverlay').hidden || !$('#verknOverlay').hidden) return;
+  if (!$('#confirmOverlay').hidden || !$('#verknOverlay').hidden || !$('#hilfeOverlay').hidden || !$('#teilOverlay').hidden) return;
   if (POPOVERS.some(([id]) => { const m = document.getElementById(id); return m && !m.hidden; })) return;
   const t = e.target;
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
@@ -4214,9 +4276,12 @@ function savedToast(title, isNew){
   else if (fsMode === 'idb') toast('„'+title+'" im Browser gesichert.');
   else toast('„'+title+(isNew ? '" angelegt' : '" geändert')+' – ohne verbundenen Ordner nur für diese Sitzung.');
 }
-$('#editorSave').addEventListener('click', async () => {
+/* Speichern als Funktion: der Knopf ruft sie, das Teilen am Cursor auch.
+   Gibt die gespeicherte Notiz zurück – oder null, wenn nichts gesichert ist. */
+$('#editorSave').addEventListener('click', () => { speichereEditor(); });
+async function speichereEditor({ stumm = false } = {}){
   const title = editorTitle.value.trim(), category = editorCategory.value;
-  if (!title || !category){ editorHint.textContent = 'Bitte Titel und Kategorie angeben.'; return; }
+  if (!title || !category){ editorHint.textContent = 'Bitte Titel und Kategorie angeben.'; return null; }
   const extraTags = editorTags.value.split(',').map(t=>t.trim()).filter(Boolean).filter(t=>t!==category);
   const tags = [category, ...extraTags];
   const content = htmlToMarkdown(editorBody);
@@ -4262,9 +4327,10 @@ $('#editorSave').addEventListener('click', async () => {
       if (reading) renderSheet();
       WB.melden('noteos', { was:'geaendert' });
       if (conflict) toast('„'+n.title+'" war extern geändert – fremde Fassung liegt im Ordner „Konflikte".');
+      else if (stumm) {}
       else if (renamed && fsMode === 'fs') toast('Gespeichert, Datei heißt jetzt „'+newFilename+'".');
       else savedToast(n.title, false);
-      return;
+      return n;
     }
     const id = notes.length;
     const taken = new Set(notes.map(n => n.filename).filter(Boolean));
@@ -4285,14 +4351,262 @@ $('#editorSave').addEventListener('click', async () => {
     syncScope(newNote.id);
     landNewCard(newNote);
     WB.melden('noteos', { was:'neu' });
-    savedToast(newNote.title, true);
+    if (!stumm) savedToast(newNote.title, true);
+    return newNote;
   }catch(err){
     editorHint.textContent = 'Speichern fehlgeschlagen (Ordnerzugriff verloren?). Bitte Ordner-Status prüfen.';
     toast('Speichern fehlgeschlagen – Notiz nicht gesichert.');
+    return null;
   }finally{
     saveBtn.disabled = false;
   }
+}
+
+/* ═══════ Notizen teilen ═══════
+   Zwei Wege, beide nach „neu schreiben, dann kürzen“ – geht unterwegs
+   etwas schief, liegt ein Teil höchstens doppelt vor, verloren geht nichts.
+   1. Im Editor „✂ Am Cursor teilen“: alles ab dem Cursor wird eine eigene
+      Notiz mit Kategorie, Tags, Status, Priorität und Person der alten.
+   2. In der Leseansicht „✂“: an jeder Überschrift (H1 bzw. H1 + H2) eine
+      eigene Notiz, Titel aus der Überschrift; die Vorschau zeigt vorher,
+      was entsteht, und die Titel lassen sich dort noch ändern. */
+async function notizAnlegen(f){
+  const now = new Date();
+  const id = notes.length;
+  const taken = new Set(notes.map(n => n.filename).filter(Boolean));
+  const n = {
+    id, title:f.title, category:f.category, tags:[...new Set(f.tags || [f.category])], agbId:f.agbId || null,
+    status:f.status || 'offen', prio:f.prio || 'mittel', person:f.person || '',
+    accent: shade(colorForCategory(f.category), ((id%5)-2)*0.025),
+    created: fmt(now), createdSort: now.getTime(), modified: fmt(now), modifiedSort: now.getTime(),
+    author: f.author || 'Du', source: f.source || null,
+    content: f.content && f.content.length ? f.content : ['(Kein Inhalt)'],
+    filename: slugify(f.title, taken)
+  };
+  if (fsMode === 'fs') await writeNoteFile(n);
+  else if (fsMode === 'idb') await idbPutNote(n);
+  notes.push(n);
+  return n;
+}
+/* Markdown einer Überschrift → reiner Text für den Titel */
+function mdZuText(md){
+  const d = document.createElement('div');
+  d.innerHTML = inlineMdToHtml(md);
+  return d.textContent.replace(/\s+/g,' ').trim();
+}
+let teilPlan = null;   /* { art:'cursor'|'ueberschrift', … } */
+function teilDialog(text, zeilenHtml, okText, ebeneSichtbar){
+  $('#teilText').textContent = text;
+  $('#teilListe').innerHTML = zeilenHtml;
+  $('#teilListe').hidden = !zeilenHtml;
+  $('#teilEbene').hidden = !ebeneSichtbar;
+  $('#teilOk').textContent = okText || 'Teilen';
+  $('#teilOk').disabled = !zeilenHtml;
+  $('#teilOverlay').hidden = false;
+  const f = $('#teilListe input[type=text]');
+  setTimeout(() => (f || $('#teilAbbr')).focus(), 40);
+}
+function teilZu(){ $('#teilOverlay').hidden = true; teilPlan = null; }
+$('#teilAbbr').addEventListener('click', teilZu);
+$('#teilOverlay').addEventListener('click', e => { if (e.target.id === 'teilOverlay') teilZu(); });
+
+/* 1 · Am Cursor */
+let teilCursor = null;   /* zuletzt bekannte Cursorstelle im Editor */
+document.addEventListener('selectionchange', () => {
+  const sel = getSelection();
+  if (sel && sel.rangeCount && editorBody.contains(sel.getRangeAt(0).startContainer)){
+    const r = sel.getRangeAt(0);
+    teilCursor = { node:r.startContainer, off:r.startOffset };
+  }
 });
+$('#tbSplit').addEventListener('click', () => {
+  if (!teilCursor || !editorBody.contains(teilCursor.node)){
+    editorHint.textContent = 'Erst den Cursor an die Stelle im Text setzen, ab der geteilt werden soll.'; return;
+  }
+  if (!editorTitle.value.trim() || !editorCategory.value){
+    editorHint.textContent = 'Zum Teilen braucht die Notiz zuerst Titel und Kategorie.'; return;
+  }
+  const r = document.createRange();
+  r.setStart(teilCursor.node, teilCursor.off);
+  r.setEnd(editorBody, editorBody.childNodes.length);
+  const rv = document.createRange();
+  rv.setStart(editorBody, 0); rv.setEnd(teilCursor.node, teilCursor.off);
+  const nach = document.createElement('div'), vor = document.createElement('div');
+  nach.appendChild(r.cloneContents()); vor.appendChild(rv.cloneContents());
+  let zeilen = htmlToMarkdown(nach);
+  if (!zeilen.length){ editorHint.textContent = 'Hinter dem Cursor steht nichts, was eine eigene Notiz werden könnte.'; return; }
+  if (!htmlToMarkdown(vor).length){ editorHint.textContent = 'Vor dem Cursor steht nichts – zum Teilen den Cursor weiter nach unten setzen.'; return; }
+  /* Beginnt der zweite Teil mit einer Überschrift, wird sie sein Titel. */
+  const h = /^#{1,4}\s+(.*)$/.exec(zeilen[0]);
+  const titel = h ? mdZuText(h[1]) : editorTitle.value.trim() + ' (Teil 2)';
+  if (h) zeilen = zeilen.slice(1);
+  editorHint.textContent = '';
+  teilPlan = { art:'cursor', range:r, zeilen };
+  teilDialog('Alles ab dem Cursor wird eine eigene Notiz – gleiche Kategorie, Tags, Status, Priorität und Person. '
+    + 'Die aktuelle Notiz wird danach gekürzt gespeichert.',
+    '<div class="t-zeile"><span class="t-nr">1</span><span style="flex:1;min-width:0"><b>'+esc(editorTitle.value.trim())+'</b>'
+    + '<span class="t-info">bleibt · Text bis zum Cursor</span></span></div>'
+    + '<div class="t-zeile"><span class="t-nr">2</span><span style="flex:1;min-width:0">'
+    + '<input type="text" data-t="0" value="'+esc(titel)+'" aria-label="Titel der neuen Notiz">'
+    + '<span class="t-info">neu · Text ab dem Cursor'+(h ? ', Überschrift wird zum Titel' : '')+'</span></span></div>',
+    'Teilen', false);
+});
+
+/* 2 · An Überschriften */
+function abschnitte(lines, tiefe){
+  const re = tiefe === 2 ? /^#{1,2}\s+(.*)$/ : /^#\s+(.*)$/;
+  const teile = [{ titel:null, zeilen:[] }];
+  let fence = false;
+  (lines || []).forEach(l => {
+    if (MD_FENCE.test(l)) fence = !fence;
+    const m = !fence && re.exec(l);
+    if (m) teile.push({ titel:mdZuText(m[1]), kopf:l, zeilen:[] });
+    else teile[teile.length-1].zeilen.push(l);
+  });
+  const vorspann = teile.shift();
+  const echt = z => z.some(l => l.trim() && l !== '(Kein Inhalt)' && l !== '&nbsp;');
+  /* Steht vor der ersten Überschrift nichts, behält die Notiz den ersten
+     Abschnitt samt seiner Überschrift – sonst bliebe sie leer zurück. */
+  let bleibt = vorspann.zeilen;
+  if (!echt(bleibt) && teile.length){ const t = teile.shift(); bleibt = [t.kopf, ...t.zeilen]; }
+  return { bleibt, neu: teile };
+}
+function teilVorschau(){
+  const n = notes[curIdx];
+  const { bleibt, neu } = abschnitte(n.content, teilPlan.tiefe);
+  teilPlan.bleibt = bleibt; teilPlan.neu = neu;
+  $$('#teilEbene button').forEach(b => b.classList.toggle('active', +b.dataset.ebene === teilPlan.tiefe));
+  if (!neu.length){
+    teilDialog('In „'+n.title+'“ gibt es keine '+(teilPlan.tiefe === 2 ? 'zweite H1- oder H2-' : 'zweite H1-')+'Überschrift, an der sich teilen ließe. '
+      + 'Alternativ im Editor den Cursor setzen und „✂ Am Cursor teilen“ wählen.', '', 'Teilen', true);
+    return;
+  }
+  teilDialog('„'+n.title+'“ wird in '+(neu.length + 1)+' Notizen aufgeteilt. Die neuen übernehmen Kategorie, Tags, Status, '
+    + 'Priorität und Person; die Titel kannst du hier noch ändern.',
+    '<div class="t-zeile"><span class="t-nr">1</span><span style="flex:1;min-width:0"><b>'+esc(n.title)+'</b>'
+    + '<span class="t-info">bleibt · '+bleibt.length+' Zeile(n)</span></span></div>'
+    + neu.map((t, i) => '<div class="t-zeile"><span class="t-nr">'+(i+2)+'</span><span style="flex:1;min-width:0">'
+      + '<input type="text" data-t="'+i+'" value="'+esc(t.titel || 'Abschnitt '+(i+2))+'" aria-label="Titel">'
+      + '<span class="t-info">neu · '+t.zeilen.length+' Zeile(n)</span></span></div>').join(''),
+    (neu.length + 1)+' Notizen erzeugen', true);
+}
+$('#splitBtn').addEventListener('click', () => {
+  const c = (notes[curIdx] && notes[curIdx].content) || [];
+  if (!notes[curIdx]) return;
+  /* Ebene vorwählen: H1, wenn es mehr als eine gibt, sonst H1 + H2 */
+  teilPlan = { art:'ueberschrift', tiefe: c.filter(l => /^#\s/.test(l)).length > 1 ? 1 : 2 };
+  teilVorschau();
+});
+$('#teilEbene').addEventListener('click', e => {
+  const b = e.target.closest('button[data-ebene]');
+  if (!b || !teilPlan || teilPlan.art !== 'ueberschrift') return;
+  teilPlan.tiefe = +b.dataset.ebene; teilVorschau();
+});
+$('#teilListe').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); $('#teilOk').click(); } });
+
+$('#teilOk').addEventListener('click', async () => {
+  if (!teilPlan) return;
+  const titel = $$('#teilListe input[type=text]').map(f => f.value.trim());
+  if (titel.some(t => !t)){ toast('Jede neue Notiz braucht einen Titel.'); return; }
+  const plan = teilPlan;
+  $('#teilOk').disabled = true;
+  try {
+    if (plan.art === 'cursor'){
+      const vorlage = { category:editorCategory.value, agbId:gewaehlteAgbId(),
+        tags:[editorCategory.value, ...editorTags.value.split(',').map(t=>t.trim()).filter(Boolean)],
+        status:editorStatus.value, prio:editorPrio.value, person:editorPerson.value.trim(), source:pendingSource };
+      const neu = await notizAnlegen({ ...vorlage, title:titel[0], content:plan.zeilen });     /* erst neu … */
+      teilZu();
+      plan.range.deleteContents();                                                            /* … dann kürzen */
+      const alt = await speichereEditor({ stumm:true });
+      renderDeck();
+      WB.melden('noteos', { was:'neu' });
+      toast(alt ? 'Geteilt: „'+alt.title+'“ und „'+neu.title+'“.'
+                : '„'+neu.title+'“ angelegt – die gekürzte Notiz ist noch nicht gespeichert.');
+      return;
+    }
+    const n = notes[curIdx];
+    const vorlage = { category:n.category, agbId:n.agbId, tags:n.tags, status:nStatus(n), prio:nPrio(n),
+                      person:nPerson(n), author:n.author, source:n.source };
+    const erzeugt = [];
+    for (let i = 0; i < plan.neu.length; i++)
+      erzeugt.push(await notizAnlegen({ ...vorlage, title:titel[i], content:plan.neu[i].zeilen }));
+    teilZu();
+    n.content = plan.bleibt.length ? plan.bleibt : ['(Kein Inhalt)'];
+    await notizSichern(n, null);
+    WB.melden('noteos', { was:'neu' });
+    toast('„'+n.title+'“ in '+(erzeugt.length + 1)+' Notizen aufgeteilt.');
+  } catch(err){
+    toast('Teilen fehlgeschlagen – Ordnerzugriff prüfen. Die Ausgangsnotiz ist nicht gekürzt.');
+    $('#teilOk').disabled = false;
+  }
+});
+
+/* ═══════ Hilfe ═══════
+   Die Beschreibungen stehen nicht mehr dauernd auf der Seite, sondern
+   hinter „?“ (Taste ? öffnet sie auch). Die aktuelle Ansicht steht oben. */
+const VIEW_NAME = { kamm:'Kamm', board:'Haufen', arena:'Tafeln', wuerfel:'Würfel' };
+function hilfeAuf(){
+  closePopoversExcept(null);
+  const andere = Object.keys(VIEW_NAME).filter(k => k !== viewMode);
+  $('#hilfeInhalt').innerHTML =
+      '<h3>Diese Ansicht · '+VIEW_NAME[viewMode]+'</h3><p class="h-jetzt">'+esc(LEADS[viewMode])+'</p>'
+    + '<h3>Die anderen Ansichten</h3>'
+    + andere.map(k => '<p><b>'+VIEW_NAME[k]+'</b> – '+esc(LEADS[k])+'</p>').join('')
+    + '<h3>Kamm bedienen</h3>'
+    + '<p>Scrollen, Ziehen oder <kbd>←</kbd> <kbd>→</kbd> bringt eine Scheibe ins Ziel. Klick auf die offene Scheibe '
+    + 'oder „Lesen ↗“ öffnet die Notiz, <kbd>Esc</kbd> legt sie zurück.</p>'
+    + '<h3>Würfel bedienen</h3>'
+    + '<p>Würfel mit Maus oder Finger ziehen dreht ihn, Doppelklick stellt ihn zurück. '
+    + 'Karten zwischen Zellen ziehen ändert Status, Priorität oder Person (am Telefon: kurz halten, dann ziehen). '
+    + '<b>✓</b> erledigt · <b>✕</b> in den Papierkorb (rückgängig machbar) · <b>+</b> legt in der Zelle an.</p>'
+    + '<h3>Notizen teilen</h3>'
+    + '<p><b>Im Editor:</b> Cursor setzen, „✂ Am Cursor teilen“ – alles danach wird eine eigene Notiz. '
+    + '<b>In der Leseansicht:</b> ✂ teilt an jeder Überschrift; vorher siehst du, was entsteht.</p>'
+    + '<h3>Tastenkürzel</h3><dl>'
+    + '<dt><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></dt><dd>Kamm · Haufen · Tafeln · Würfel</dd>'
+    + '<dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>blättern – Scheiben im Kamm, Themen bei den Tafeln, Notizen beim Lesen</dd>'
+    + '<dt><kbd>Bild↑</kbd> <kbd>Bild↓</kbd></dt><dd>Notiz zurück/weiter beim Lesen</dd>'
+    + '<dt><kbd>Esc</kbd></dt><dd>Notiz schließen, Menü oder Dialog zu</dd>'
+    + '<dt><kbd>Entf</kbd></dt><dd>ausgewählte Würfel-Karte in den Papierkorb</dd>'
+    + '<dt><kbd>?</kbd></dt><dd>diese Hilfe</dd></dl>';
+  $('#hilfeOverlay').hidden = false;
+  setTimeout(() => $('#hilfeZu').focus(), 40);
+}
+function hilfeZu(){ $('#hilfeOverlay').hidden = true; }
+$('#helpBtn').addEventListener('click', hilfeAuf);
+$('#hilfeZu').addEventListener('click', hilfeZu);
+$('#hilfeOverlay').addEventListener('click', e => { if (e.target.id === 'hilfeOverlay') hilfeZu(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){
+    if (!$('#hilfeOverlay').hidden){ e.stopImmediatePropagation(); hilfeZu(); return; }
+    if (!$('#teilOverlay').hidden){ e.stopImmediatePropagation(); teilZu(); return; }
+  }
+  if (e.key !== '?' || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (editorView.classList.contains('active')) return;
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+  e.preventDefault();
+  $('#hilfeOverlay').hidden ? hilfeAuf() : hilfeZu();
+}, true);
+
+/* ═══════ Hero-Zeile einzeilig ═══════
+   Die Schrift wird so groß, wie die Breite es hergibt (höchstens 72 px).
+   Erst wenn sie dafür unter 26 px müsste – schmale Telefone –, darf die
+   Zeile umbrechen, und dann in lesbarer Größe. */
+function fitHero(){
+  const h = $('#heroTitle'); if (!h) return;
+  h.classList.remove('umbruch');
+  h.style.fontSize = '72px';
+  const w = h.clientWidth, sw = h.scrollWidth;
+  if (!w) return;
+  const g = sw > w ? Math.floor(72 * w / sw * 0.98) : 72;
+  if (g < 26){ h.classList.add('umbruch'); h.style.fontSize = '34px'; }
+  else h.style.fontSize = g + 'px';
+}
+fitHero();
+addEventListener('resize', () => { clearTimeout(fitHero.t); fitHero.t = setTimeout(fitHero, 120); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitHero);
 function landNewCard(note){
   requestAnimationFrame(() => requestAnimationFrame(() => {
     const el = deck.querySelector('[data-note="'+note.id+'"]');
