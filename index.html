@@ -406,6 +406,29 @@ h1 em{font-style:italic;font-weight:600;background:linear-gradient(94deg,var(--e
 .sticky.paper .s-date{font-size:8.5px;color:rgba(23,27,34,.6)}
 .sticky.paper .s-title{font-size:12.5px;-webkit-line-clamp:4}
 .sticky.paper .s-text{display:none}
+/* Tag-Gruppen: Notizen gleicher Tags stehen beisammen (darin nach Status,
+   dann Priorität); zwischen den Gruppen bleibt sichtbar mehr Luft. */
+.tgr{display:flex;flex-wrap:wrap;gap:16px;min-width:0}
+.pile.open .pile-stack.gruppiert{gap:34px 42px}
+.wb-face.gruppiert{gap:30px 36px}
+.wb-face .tgr{gap:14px}
+.wf-cell.gruppiert{gap:18px}
+.wf-cell .tgr{flex-direction:column;flex-wrap:nowrap;gap:7px}
+.pane.tg-neu{margin-left:24px}
+/* Kategorien verwalten */
+.kat-liste{display:flex;flex-direction:column;gap:2px;max-height:52vh;overflow-y:auto;margin:6px 0 16px}
+.kat-z{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px}
+.kat-z:hover{background:var(--glass)}
+.kat-dot{width:9px;height:9px;border-radius:50%;background:var(--acc);flex:none}
+.kat-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kat-n{font-family:var(--mono);font-size:11px;color:var(--text-3);white-space:nowrap}
+.kat-weg{width:28px;height:28px;display:grid;place-items:center;padding:0;border-radius:8px;border:1px solid var(--line);
+  background:none;color:var(--text-2);cursor:pointer}
+.kat-weg:hover:not(:disabled){color:var(--danger);border-color:var(--danger)}
+.kat-weg:disabled{opacity:.3;cursor:not-allowed}
+.kat-neu{display:flex;gap:8px}
+.kat-neu .field{flex:1;min-width:0}
+.kat-hint{min-height:1.2em;margin-top:10px;font-size:13px;color:var(--text-3)}
 .strip-row{position:relative;min-width:0}
 /* Laufschiene: zeigt, wie weit die Leiste reicht und wo man steht */
 .strip-rail{position:relative;height:2px;margin:-6px 2px 0;border-radius:2px;overflow:hidden;
@@ -1022,6 +1045,7 @@ html[data-theme="light"]{
     </div>
     <button class="pill" id="tagBtn" type="button">Tags</button>
     <button class="pill" id="merkBtn" type="button">Filter</button>
+    <button class="pill" id="grpBtn" type="button" aria-pressed="true" title="Notizen nach Tag, dann Status und Priorität gruppieren">Gruppiert</button>
     <button class="pill" id="catBtn" type="button" hidden></button>
     <div class="seg" role="group" aria-label="Ansicht">
       <button data-view="kamm" class="active">Kamm</button>
@@ -1075,6 +1099,7 @@ html[data-theme="light"]{
 <div class="menu" id="addMenu" hidden>
   <button id="addBlank">Leere Notiz</button>
   <button id="addImport">Datei importieren …</button>
+  <button id="addKat">Kategorien verwalten …</button>
 </div>
 
 <div class="menu" id="folderMenu" hidden>
@@ -1104,6 +1129,7 @@ html[data-theme="light"]{
     <input type="text" class="ed-title" id="editorTitle" placeholder="Titel der Notiz">
     <div class="ed-row">
       <select id="editorCategory" class="field" aria-label="Kategorie"><option value="">Kategorie wählen …</option></select>
+      <button class="pill icon-btn" id="katBtn" type="button" title="Kategorien verwalten" aria-label="Kategorien verwalten">⚙</button>
       <input type="text" id="editorTags" class="field ed-tags" placeholder="Tags, mit Komma getrennt" aria-label="Tags">
       <span class="ed-source" id="editorSource"></span>
     </div>
@@ -1180,6 +1206,18 @@ html[data-theme="light"]{
       <button class="pill" id="verknSpaeter" type="button">Später</button>
       <button class="pill" id="verknOk" type="button">Verknüpfen</button>
     </div>
+  </div>
+</div>
+<div class="confirm" id="katOverlay" hidden>
+  <div class="confirm-box weit" role="dialog" aria-modal="true" aria-labelledby="katTitel">
+    <div class="hilfe-kopf"><h2 id="katTitel">Kategorien</h2>
+      <button class="tag-close" id="katZu" type="button" aria-label="Kategorien schließen">✕</button></div>
+    <div class="kat-liste" id="katListe"></div>
+    <form class="kat-neu" id="katNeuForm" autocomplete="off">
+      <input type="text" class="field" id="katNeuName" placeholder="Neue Kategorie" maxlength="40" aria-label="Name der neuen Kategorie">
+      <button class="pill primary" type="submit">Anlegen</button>
+    </form>
+    <div class="kat-hint" id="katHint"></div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -2037,6 +2075,77 @@ function colorForCategory(cat){
   let h = 0; for (let i=0;i<cat.length;i++) h = (h + cat.charCodeAt(i)) % FALLBACK_COLORS.length;
   return FALLBACK_COLORS[h];
 }
+/* ═══════ Kategorien: anlegen und löschen ═══════
+   Die Anfangskategorien (CATS) und eigene Kategorien lassen sich löschen,
+   aber nur, wenn keine Notiz mehr darin liegt. Eigene kommen hinzu. Der
+   Stand liegt im Browser (localStorage): neu = selbst angelegt, weg =
+   gelöschte Anfangskategorien. Eine Kategorie, in der Notizen liegen,
+   erscheint immer – auch wenn sie früher einmal gelöscht wurde. */
+const KAT_LS = 'noteos.kategorien';
+const katStand = { neu:[], weg:[] };
+try {
+  const g = JSON.parse(localStorage.getItem(KAT_LS) || 'null');
+  if (g && typeof g === 'object'){
+    if (Array.isArray(g.neu)) katStand.neu = g.neu.map(String).filter(Boolean);
+    if (Array.isArray(g.weg)) katStand.weg = g.weg.map(String).filter(Boolean);
+  }
+} catch(e){}
+function katSichern(){ try { localStorage.setItem(KAT_LS, JSON.stringify(katStand)); } catch(e){} }
+function alleKategorien(){
+  const weg = new Set(katStand.weg.map(k => k.toLowerCase()));
+  const m = new Map();
+  [...Object.keys(CATS), ...katStand.neu].forEach(c => { if (!weg.has(c.toLowerCase()) && !m.has(c.toLowerCase())) m.set(c.toLowerCase(), c); });
+  notes.forEach(n => { if (n.category && !m.has(n.category.toLowerCase())) m.set(n.category.toLowerCase(), n.category); });
+  return [...m.values()].sort((a,b) => a.localeCompare(b,'de'));
+}
+const notizenIn = cat => notes.filter(n => n.category === cat).length;
+
+/* ═══════ Tags: Groß-/Kleinschreibung spielt keine Rolle ═══════
+   „wichtig“, „Wichtig“ und „WICHTIG“ sind derselbe Tag. Geschrieben wird
+   die Form, die schon am häufigsten vorkommt (Kategorienamen gehen vor);
+   ein ganz neuer Tag bekommt einen großen Anfangsbuchstaben. Doppelte
+   fallen weg, ebenso ein Tag, der nur die Kategorie wiederholt. tags[0]
+   bleibt wie bisher die Kategorie. */
+function tagSchreibweisen(){
+  const zaehl = new Map();
+  const add = (t, w) => {
+    t = String(t || '').trim(); if (!t) return;
+    const k = t.toLowerCase();
+    if (!zaehl.has(k)) zaehl.set(k, new Map());
+    const m = zaehl.get(k); m.set(t, (m.get(t) || 0) + w);
+  };
+  alleKategorien().forEach(c => add(c, 1e6));
+  notes.forEach(n => (n.tags || []).forEach(t => add(t, 1)));
+  const out = new Map();
+  zaehl.forEach((m, k) => {
+    let best = null, bw = -1;
+    m.forEach((w, t) => { const s = w * 2 + (t[0] !== t[0].toLowerCase() ? 1 : 0); if (s > bw){ bw = s; best = t; } });
+    out.set(k, best);
+  });
+  return out;
+}
+function tagsBereinigen(roh, category, kanon){
+  kanon = kanon || tagSchreibweisen();
+  const out = [category], seen = new Set([String(category).toLowerCase()]);
+  (roh || []).forEach(t => {
+    t = String(t || '').trim().replace(/\s+/g, ' ');
+    if (!t) return;
+    const k = t.toLowerCase();
+    if (seen.has(k)) return;
+    seen.add(k);
+    out.push(kanon.get(k) || (t[0].toLocaleUpperCase('de') + t.slice(1)));
+  });
+  return out;
+}
+/* Nach dem Einlesen einmal über alle: in der Datei steht die alte
+   Schreibweise, bis die Notiz ohnehin gespeichert wird. */
+function alleTagsVereinheitlichen(){
+  const kanon = tagSchreibweisen();
+  notes.forEach(n => {
+    const neu = tagsBereinigen(n.tags, n.category, kanon);
+    if (neu.join('\u0001') !== (n.tags || []).join('\u0001')){ n.tags = neu; try { searchCache.delete(n); } catch(e){} }
+  });
+}
 function slugify(title, taken){
   let base = title.toLowerCase()
     .replace(/[äöüß]/g, c => ({'ä':'ae','ö':'oe','ü':'ue','ß':'ss'}[c]))
@@ -2096,6 +2205,8 @@ const notes = RAW.map(([cat,title,d], i) => {
     person: ['Maik','Anna','Jonas',''][Math.floor(i / 2) % 4]
   };
 });
+
+alleTagsVereinheitlichen();
 
 /* ───────── Zustand ───────── */
 let curIdx = 0, sortMode = 'kategorie', searchQuery = '';
@@ -2289,7 +2400,10 @@ function filtered(){
   const terms = searchQuery.trim().toLowerCase().split(/\s+/).filter(Boolean);
   let list = terms.length ? notes.filter(n => matchesSearch(n, terms)) : notes.slice();
   if (activeCategory) list = list.filter(n => n.category === activeCategory);
-  if (activeTags.size) list = list.filter(n => n.tags.some(t => activeTags.has(t)));
+  if (activeTags.size){
+    const at = new Set([...activeTags].map(t => t.toLowerCase()));
+    list = list.filter(n => n.tags.some(t => at.has(t.toLowerCase())));
+  }
   ['status','prio','person'].forEach(a => {
     if (activeMerk[a].size) list = list.filter(n => activeMerk[a].has(ACHSEN[a].von(n)));
   });
@@ -2328,8 +2442,10 @@ function renderBoard(list){
   const groups = groupByCategory(list);
   const order = [];
   const html = '<div class="board">' + groups.map(g => {
-    g.notes.forEach(n => order.push(n));
     const open = openPiles.has(g.cat);
+    /* Reihenfolge immer gruppiert mitschreiben; gezeichnet wird gruppiert
+       nur, wenn der Haufen ausgebreitet ist – gestapelt zählt jede Notiz einmal. */
+    const ausgebreitet = gruppenHtml(tagGruppenVon(g.notes), n => stickyHtml(n, 0, 'glass'), order);
     return '<div class="pile'+(open ? ' open' : '')+'" data-cat="'+esc(g.cat)+'" style="--acc:'+g.notes[0].accent+'">'
       + '<div class="pile-head-row" style="display:flex;align-items:center;gap:10px">'
       + '<button class="pile-head" type="button" aria-expanded="'+(open?'true':'false')+'">'
@@ -2338,8 +2454,8 @@ function renderBoard(list){
       +   '<span class="pile-hint">'+(open ? 'stapeln' : 'ausbreiten')+'</span></button>'
       + '<button class="cat-filter" type="button" data-cat="'+esc(g.cat)+'" title="Nur diese Kategorie zeigen">nur</button>'
       + '</div>'
-      + '<div class="pile-stack">'
-      +   g.notes.map((n,i) => stickyHtml(n, open ? 0 : i, 'glass')).join('')
+      + '<div class="pile-stack'+(open && tagGruppen ? ' gruppiert' : '')+'">'
+      +   (open ? ausgebreitet : g.notes.map((n,i) => stickyHtml(n, i, 'glass')).join(''))
       + '</div></div>';
   }).join('') + '</div>';
   view = order;
@@ -2389,7 +2505,6 @@ function renderArena(list){
     + '<i></i><span class="m-label">'+esc(g.label)+'</span>'
     + '<span class="m-n">'+pad3(g.notes.length)+' Notizen</span></button>').join('');
   const boards = groups.map((g,i) => {
-    g.notes.forEach(x => order.push(x));
     return '<section class="wb'+(i === arenaIdx ? ' is-front' : '')+'" data-i="'+i+'" data-cat="'+esc(g.cat || g.label)+'"'
       + ' style="--acc:'+g.notes[0].accent+'">'
       + '<div class="wb-head"><span class="wb-title">'+esc(g.label)+'</span>'
@@ -2397,7 +2512,8 @@ function renderArena(list){
       +   (g.cat ? '<button class="wb-cat cat-filter" type="button" data-cat="'+esc(g.cat)+'"'
       +     ' title="Nur diese Kategorie zeigen">nur diese</button>' : '')
       + '</div>'
-      + '<div class="wb-face">' + g.notes.map(x => stickyHtml(x, 0, 'paper')).join('') + '</div>'
+      + '<div class="wb-face'+(tagGruppen ? ' gruppiert' : '')+'">'
+      +   gruppenHtml(tagGruppenVon(g.notes), x => stickyHtml(x, 0, 'paper'), order) + '</div>'
       + '</section>';
   }).join('');
   view = order;
@@ -2431,6 +2547,46 @@ const ACHSEN = {
   person: { name:'Person',    feld:'person', von:nPerson, werte:() => [...personen().map(p => [p, p]), ['', 'Niemand']] }
 };
 const ACHS_REIHE = ['status','prio','person'];
+/* ═══════ Tag-Gruppen ═══════
+   Innerhalb einer Kategorie (bzw. eines Themas, einer Würfelzelle) stehen
+   Notizen mit gleichem Tag nacheinander – darin erst nach Status (offen,
+   in Bearbeitung, erledigt), dann nach Priorität (hoch, mittel, niedrig).
+   Eine Notiz mit mehreren Tags steht in jeder ihrer Gruppen. Notizen ohne
+   eigenen Tag kommen zum Schluss. Die Tags selbst stehen nicht dran –
+   man sieht sie erst in der geöffneten Notiz; die Gruppen erkennt man am
+   größeren Abstand. „Gruppiert“ in der Leiste schaltet das ab. */
+let tagGruppen = true;
+try { tagGruppen = localStorage.getItem('noteos.taggruppen') !== 'aus'; } catch(e){}
+const STATUS_RANG = { offen:0, arbeit:1, erledigt:2 }, PRIO_RANG = { hoch:0, mittel:1, niedrig:2 };
+function eigeneTags(n){
+  const c = String(n.category || '').toLowerCase();
+  return (n.tags || []).filter(t => t.toLowerCase() !== c);
+}
+function tagGruppenVon(list){
+  if (!tagGruppen) return [{ key:null, notes:list }];
+  const by = new Map();
+  list.forEach(n => {
+    const ts = eigeneTags(n);
+    (ts.length ? ts : ['']).forEach(t => {
+      const k = t.toLowerCase();
+      if (!by.has(k)) by.set(k, []);
+      const a = by.get(k); if (!a.includes(n)) a.push(n);
+    });
+  });
+  return [...by.keys()].sort((a,b) => a === '' ? 1 : b === '' ? -1 : a.localeCompare(b,'de'))
+    .map(k => ({ key:k, notes: by.get(k).slice().sort((a,b) =>
+      STATUS_RANG[nStatus(a)] - STATUS_RANG[nStatus(b)] || PRIO_RANG[nPrio(a)] - PRIO_RANG[nPrio(b)]) }));
+}
+/* Gruppen zeichnen und dabei die Reihenfolge für Kamm und Blättern
+   mitschreiben. viewNeu merkt sich, wo im Kamm eine neue Gruppe beginnt. */
+let viewNeu = new Set();
+function gruppenHtml(gruppen, fn, order){
+  if (!tagGruppen) return gruppen[0].notes.map(n => { order.push(n); return fn(n); }).join('');
+  return gruppen.map(g => {
+    if (order.length) viewNeu.add(order.length);
+    return '<div class="tgr">' + g.notes.map(n => { order.push(n); return fn(n); }).join('') + '</div>';
+  }).join('');
+}
 const wf = { s:'status', z:'prio', ebene:null };
 try {
   const g = JSON.parse(localStorage.getItem('noteos.wuerfel') || 'null');
@@ -2610,9 +2766,10 @@ function renderWuerfel(list){
           const karten = zellen[zv+'|'+sv] || [];
           const offen = karten.filter(x => nStatus(x) !== 'erledigt');
           const fertig = karten.filter(x => nStatus(x) === 'erledigt');
-          offen.concat(fertig).forEach(x => order.push(x));
-          return '<div class="wf-c wf-cell" data-s="'+esc(sv)+'" data-z="'+esc(zv)+'">'
-            + offen.map(x => kanbanKarte(x, wf.ebene === null)).join('')
+          const offenHtml = gruppenHtml(tagGruppenVon(offen), x => kanbanKarte(x, wf.ebene === null), order);
+          fertig.forEach(x => order.push(x));
+          return '<div class="wf-c wf-cell'+(tagGruppen ? ' gruppiert' : '')+'" data-s="'+esc(sv)+'" data-z="'+esc(zv)+'">'
+            + offenHtml
             + kcStapel(fertig, zv+'|'+sv)
             + '<button class="kc-neu" type="button" title="Neue Notiz in dieser Zelle" aria-label="Neue Notiz hier">+</button></div>';
         }).join('');
@@ -2802,6 +2959,7 @@ function togglePile(el){
 }
 function renderDeck(){
   const list = filtered();
+  viewNeu = new Set();
   deck.dataset.mode = deckMode;
   if (!list.length){
     view = [];
@@ -2949,6 +3107,8 @@ function bindArena(arena){
     if (mini){ const i = +mini.dataset.i; if (i !== arenaIdx){ arenaIdx = i; arenaKey = keyOfArena(i); applyArena(true); } return; }
   });
 }
+/* Mit Gruppen kann eine Notiz mehrfach in view stehen – gezählt wird jede einmal. */
+const sichtbarAnzahl = () => new Set(view).size;
 function updateHero(){
   const cats = new Set(notes.map(n => n.category));
   const newest = notes.reduce((a,n) => (!a || n.modifiedSort > a.modifiedSort) ? n : a, null);
@@ -2956,7 +3116,7 @@ function updateHero(){
   $('#stats').innerHTML =
     '<span><b>'+notes.length+'</b> Notizen</span>'
     + '<span><b>'+cats.size+'</b> Kategorien</span>'
-    + (view.length !== notes.length ? '<span><b>'+view.length+'</b> gefiltert</span>' : '')
+    + (sichtbarAnzahl() !== notes.length ? '<span><b>'+sichtbarAnzahl()+'</b> gefiltert</span>' : '')
     + (newest ? '<span>Zuletzt: <b>'+esc(newest.modified)+'</b></span>' : '');
   buildScope();
   /* Lesekopie nur noch für die Zahl an der Kachel im Kontor – kein
@@ -3025,12 +3185,8 @@ let paneIdx = 0;            /* Position im aktuellen View */
 let paneCenters = [];       /* Mittelpunkte der Scheiben, für das Ziel */
 let paneNote = null;        /* Notiz, die gerade im Ziel steht */
 
-/* Im Farbblock steht die Kategorie – filtert man nach Kategorie, die Tags. */
-function paneLabel(n){
-  if (!activeCategory) return n.category;
-  const rest = n.tags.filter(t => t !== n.category);
-  return rest.length ? rest.join(' · ') : '–';
-}
+/* Im Farbblock steht die Kategorie. Tags zeigt erst die geöffnete Notiz. */
+function paneLabel(n){ return n.category; }
 function buildScope(){
   if (!trackEl) return;
   const keep = paneNote ? paneNote.id : null;
@@ -3039,11 +3195,10 @@ function buildScope(){
     const rot = Math.cos(i/3.1)*9;
     const y = Math.sin(i/3.1)*-6;
     const prev = view[i-1];
-    /* Nur die erste Scheibe einer Kategorie trägt die Beschriftung –
-       bei gesetztem Kategoriefilter steht dort stattdessen der Tag. */
-    const label = (activeCategory || !prev || prev.category !== n.category)
+    /* Nur die erste Scheibe einer Kategorie trägt die Beschriftung. */
+    const label = (!prev || prev.category !== n.category)
       ? '<span class="pane-label">'+esc(paneLabel(n))+'</span>' : '';
-    return '<button class="pane" type="button" data-i="'+i+'" data-note="'+n.id+'" tabindex="-1"'
+    return '<button class="pane'+(viewNeu.has(i) ? ' tg-neu' : '')+'" type="button" data-i="'+i+'" data-note="'+n.id+'" tabindex="-1"'
       + ' style="--wc:'+n.accent+';--h:'+h.toFixed(1)+'%;--rot:'+rot.toFixed(1)+'deg;--y:'+y.toFixed(1)+'px"'
       + ' aria-label="'+esc(n.title)+' – '+esc(n.category)+'">'
       + '<span class="pane-glass"></span>' + label
@@ -3095,7 +3250,7 @@ function updateScopeCount(){
   const c = $('#heroCount');
   if (!c) return;
   c.textContent = (typeof viewMode !== 'undefined' && viewMode !== 'kamm')
-    ? pad3(view.length) + ' von ' + pad3(notes.length)
+    ? pad3(sichtbarAnzahl()) + ' von ' + pad3(notes.length)
     : pad3(view.length ? paneIdx+1 : 0) + ' — ' + pad3(view.length);
 }
 function renderScopeDetail(n){
@@ -3106,7 +3261,6 @@ function renderScopeDetail(n){
     return;
   }
   detailEl.style.setProperty('--acc', n.accent);
-  const tags = n.tags.filter(t => t !== n.category).map(t => '<span class="tag">'+esc(t)+'</span>').join('');
   detailEl.innerHTML =
     '<div class="sd-main">'
     + '<div class="sd-kick"><span>'+pad3(paneIdx+1)+' — '+pad3(view.length)+'</span>'
@@ -3115,7 +3269,6 @@ function renderScopeDetail(n){
     +   '<span>'+esc(n.modified)+'</span><span>'+(n.filename ? esc(n.filename) : 'nicht gespeichert')+'</span></div>'
     + '<h2>'+esc(n.title)+'</h2>'
     + '<p class="sd-text">'+esc(plainExcerpt(n))+'</p>'
-    + (tags ? '<div class="sd-tags">'+tags+'</div>' : '')
     + '</div>'
     + '<div class="sd-side"><button class="pill primary" type="button" data-open="'+n.id+'">Lesen ↗</button></div>';
 }
@@ -3200,7 +3353,7 @@ function setCategoryFilter(cat){
 $('#catBtn').addEventListener('click', () => setCategoryFilter(null));
 /* Geöffnete Notiz und Ziel laufen synchron */
 function syncScope(id){
-  const i = view.findIndex(n => n.id === id);
+  const i = posOf(id);
   if (i < 0 || i === paneIdx) return;
   setActivePane(i, { animate:false });
   centerPane(i, 'auto');
@@ -3359,9 +3512,9 @@ addEventListener('resize', () => {
 
 /* ───────── Tag-Filter ───────── */
 function allTags(){
-  const s = new Set();
-  notes.forEach(n => n.tags.forEach(t => s.add(t)));
-  return Array.from(s).sort((a,b)=>a.localeCompare(b,'de'));
+  const m = new Map();
+  notes.forEach(n => n.tags.forEach(t => { if (!m.has(t.toLowerCase())) m.set(t.toLowerCase(), t); }));
+  return Array.from(m.values()).sort((a,b)=>a.localeCompare(b,'de'));
 }
 function updateTagBtn(){
   const btn = $('#tagBtn');
@@ -3469,11 +3622,30 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopover
 
 /* ───────── Leseansicht ───────── */
 const reader = $('#reader'), sheet = $('#sheet');
-function viewPos(n){ const i = view.indexOf(n); return i < 0 ? 0 : i + 1; }
+/* Steht eine Notiz in mehreren Tag-Gruppen, gilt beim Lesen die Stelle,
+   von der aus sie geöffnet wurde – sonst würde das Blättern zurückspringen. */
+let curPos = -1;
+function posOf(id){
+  if (curPos >= 0 && view[curPos] && view[curPos].id === id) return curPos;
+  return view.findIndex(x => x.id === id);
+}
+function posFromEl(id, el){
+  if (el && el.classList && el.classList.contains('pane')){
+    const i = +el.dataset.i;
+    if (view[i] && view[i].id === id) return i;
+  }
+  if (el && deck.contains(el)){
+    const k = $$('[data-note="'+id+'"]', deck).indexOf(el);
+    for (let i = 0, c = -1; k > 0 && i < view.length; i++) if (view[i].id === id && ++c === k) return i;
+  }
+  return view.findIndex(x => x.id === id);
+}
+function viewPos(n){ const i = posOf(n.id); return i < 0 ? 0 : i + 1; }
 function renderSheet(){
   const n = notes[curIdx];
   if (!n){ sheet.innerHTML = '<div class="s-empty">Keine Notiz ausgewählt.</div>'; return; }
   sheet.style.setProperty('--acc', n.accent);
+  curPos = posOf(n.id);
   const pos = viewPos(n), total = view.length || notes.length;
   const tags = n.tags.map(t => '<span class="tag">'+esc(t)+'</span>').join('');
   sheet.innerHTML =
@@ -3493,7 +3665,7 @@ function renderSheet(){
   $('#barName').textContent = n.title;
   $('#barTag').textContent = n.category;
   syncScope(n.id);
-  const i = view.indexOf(n);
+  const i = curPos;
   $('#prevBtn').disabled = i <= 0;
   $('#nextBtn').disabled = i < 0 || i >= view.length - 1;
   document.title = n.title + ' · Notizbuch';
@@ -3502,6 +3674,7 @@ function openNote(id, fromEl){
   if (!notes[id]) return;
   curIdx = id;
   const card = fromEl || deck.querySelector('[data-note="'+id+'"]');
+  curPos = posFromEl(id, fromEl);
   renderSheet();
   reading = true;
   document.body.classList.add('reading');
@@ -3539,10 +3712,10 @@ function closeNote({ back = true } = {}){
 }
 function stepNote(dir){
   if (!reading) return;
-  const i = view.indexOf(notes[curIdx]);
+  const i = posOf(curIdx);
   const next = view[i + dir];
   if (!next) return;
-  curIdx = next.id;
+  curIdx = next.id; curPos = i + dir;
   renderSheet();
   history.replaceState({ noteos:curIdx }, '', '#n'+curIdx);
   if (!reduced() && sheet.animate){
@@ -3563,7 +3736,7 @@ addEventListener('popstate', () => {
 addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   if ($('#editorView').classList.contains('active')) return;
-  if (!$('#confirmOverlay').hidden || !$('#verknOverlay').hidden || !$('#hilfeOverlay').hidden || !$('#teilOverlay').hidden) return;
+  if (!$('#confirmOverlay').hidden || !$('#verknOverlay').hidden || !$('#hilfeOverlay').hidden || !$('#teilOverlay').hidden || !$('#katOverlay').hidden) return;
   if (POPOVERS.some(([id]) => { const m = document.getElementById(id); return m && !m.hidden; })) return;
   const t = e.target;
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
@@ -3617,12 +3790,9 @@ function kategorienAufbauen(){
   const gewaehlt = editorCategory.value;
   editorCategory.innerHTML = '<option value="">Kategorie wählen …</option>';
   const kunden = agbNachName();                       /* Name → agbId, nur aktive */
-  const eigene = new Set(notes.map(n => n.category));
-  const fest = new Set(Object.keys(CATS));
   /* Auftraggeber stehen unten in ihrer eigenen Gruppe – oben bleiben die
      freien Kategorien, damit ein Name nicht zweimal in der Liste steht. */
-  [...new Set([...fest, ...eigene])].filter(c => !kunden.has(c))
-    .sort((a,b)=>a.localeCompare(b,'de')).forEach(c => {
+  alleKategorien().filter(c => !kunden.has(c)).forEach(c => {
       const o = document.createElement('option'); o.value = c; o.textContent = c;
       editorCategory.appendChild(o);
     });
@@ -3664,6 +3834,7 @@ function openEditor({ title='', category='', bodyHtml='', source=null, editId=nu
   addMenu.hidden = true;
   editingNoteId = editId;
   editorTitle.value = title;
+  kategorienAufbauen();
   editorCategory.value = category;
   editorTags.value = tags.filter(t => t !== category).join(', ');
   editorBody.innerHTML = bodyHtml;
@@ -3690,6 +3861,89 @@ function closeEditor(){
 }
 $('#addBlank').addEventListener('click', () => openEditor());
 $('#addImport').addEventListener('click', () => { addMenu.hidden = true; importInput.click(); });
+/* Tags im Editor: beim Verlassen des Felds gleich in der richtigen
+   Schreibweise und ohne Doppelte zeigen. */
+editorTags.addEventListener('blur', () => {
+  const cat = editorCategory.value || '';
+  const t = tagsBereinigen(editorTags.value.split(','), cat).slice(1);
+  editorTags.value = t.join(', ');
+});
+
+/* ───────── Kategorien verwalten ───────── */
+const katOverlay = $('#katOverlay');
+let katAusEditor = false;
+function katListeZeichnen(){
+  $('#katListe').innerHTML = alleKategorien().map(c => {
+    const n = notizenIn(c);
+    return '<div class="kat-z" style="--acc:'+colorForCategory(c)+'"><span class="kat-dot"></span>'
+      + '<span class="kat-name">'+esc(c)+'</span>'
+      + '<span class="kat-n">'+(n ? n+(n === 1 ? ' Notiz' : ' Notizen') : 'leer')+'</span>'
+      + '<button class="kat-weg" type="button" data-kat="'+esc(c)+'"'+(n ? ' disabled' : '')
+      +   ' title="'+(n ? 'Erst löschbar, wenn keine Notiz mehr darin liegt' : 'Kategorie löschen')+'"'
+      +   ' aria-label="'+esc(c)+' löschen">✕</button></div>';
+  }).join('') || '<div class="tag-empty">Keine Kategorien.</div>';
+}
+function katAuf(ausEditor){
+  closePopoversExcept(null);
+  katAusEditor = !!ausEditor;
+  $('#katHint').textContent = '';
+  $('#katNeuName').value = '';
+  katListeZeichnen();
+  katOverlay.hidden = false;
+  setTimeout(() => $('#katNeuName').focus(), 40);
+}
+function katZu(){
+  katOverlay.hidden = true;
+  if (editorView.classList.contains('active')) kategorienAufbauen();
+}
+$('#katBtn').addEventListener('click', () => katAuf(true));
+$('#addKat').addEventListener('click', () => { addMenu.hidden = true; katAuf(false); });
+$('#katZu').addEventListener('click', katZu);
+katOverlay.addEventListener('click', e => {
+  if (e.target === katOverlay){ katZu(); return; }
+  const b = e.target.closest('.kat-weg');
+  if (!b || b.disabled) return;
+  const c = b.dataset.kat;
+  if (notizenIn(c)){ $('#katHint').textContent = '„'+c+'“ enthält noch Notizen.'; return; }
+  const k = c.toLowerCase();
+  katStand.neu = katStand.neu.filter(x => x.toLowerCase() !== k);
+  if (Object.keys(CATS).some(x => x.toLowerCase() === k) && !katStand.weg.some(x => x.toLowerCase() === k)) katStand.weg.push(c);
+  katSichern();
+  if (activeCategory === c) setCategoryFilter(null);
+  if (editorCategory.value === c) editorCategory.value = '';
+  katListeZeichnen();
+  $('#katHint').textContent = '„'+c+'“ gelöscht.';
+});
+$('#katNeuForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('#katNeuName').value.trim().replace(/\s+/g, ' ');
+  if (!name) return;
+  const k = name.toLowerCase();
+  const da = alleKategorien().find(x => x.toLowerCase() === k);
+  if (da){ $('#katHint').textContent = '„'+da+'“ gibt es schon.'; return; }
+  const fest = Object.keys(CATS).find(x => x.toLowerCase() === k);
+  katStand.weg = katStand.weg.filter(x => x.toLowerCase() !== k);
+  if (!fest) katStand.neu.push(name[0].toLocaleUpperCase('de') + name.slice(1));
+  katSichern();
+  const neu = fest || katStand.neu[katStand.neu.length - 1];
+  $('#katNeuName').value = '';
+  katListeZeichnen();
+  $('#katHint').textContent = '„'+neu+'“ angelegt.';
+  if (katAusEditor && editorView.classList.contains('active')){ kategorienAufbauen(); editorCategory.value = neu; }
+});
+
+/* ───────── Gruppieren an/aus ───────── */
+function updateGrpBtn(){
+  const b = $('#grpBtn');
+  b.classList.toggle('on', tagGruppen);
+  b.setAttribute('aria-pressed', tagGruppen ? 'true' : 'false');
+}
+$('#grpBtn').addEventListener('click', () => {
+  tagGruppen = !tagGruppen;
+  try { localStorage.setItem('noteos.taggruppen', tagGruppen ? 'an' : 'aus'); } catch(e){}
+  updateGrpBtn(); renderDeck();
+});
+updateGrpBtn();
 $('#editBtn').addEventListener('click', () => {
   const n = notes[curIdx];
   if (!n) return;
@@ -4282,8 +4536,7 @@ $('#editorSave').addEventListener('click', () => { speichereEditor(); });
 async function speichereEditor({ stumm = false } = {}){
   const title = editorTitle.value.trim(), category = editorCategory.value;
   if (!title || !category){ editorHint.textContent = 'Bitte Titel und Kategorie angeben.'; return null; }
-  const extraTags = editorTags.value.split(',').map(t=>t.trim()).filter(Boolean).filter(t=>t!==category);
-  const tags = [category, ...extraTags];
+  const tags = tagsBereinigen(editorTags.value.split(','), category);
   const content = htmlToMarkdown(editorBody);
   const kanban = { status: editorStatus.value, prio: editorPrio.value, person: editorPerson.value.trim() };
   const now = new Date();
@@ -4345,7 +4598,7 @@ async function speichereEditor({ stumm = false } = {}){
     else if (fsMode === 'idb') await idbPutNote(newNote);
     notes.push(newNote);
     closeEditor();
-    if (activeTags.size && !newNote.tags.some(t => activeTags.has(t))){ activeTags.clear(); updateTagBtn(); }
+    if (activeTags.size && !newNote.tags.some(t => [...activeTags].some(a => a.toLowerCase() === t.toLowerCase()))){ activeTags.clear(); updateTagBtn(); }
     if (activeCategory && newNote.category !== activeCategory){ setCategoryFilter(null); }
     renderDeck();
     syncScope(newNote.id);
@@ -4375,7 +4628,7 @@ async function notizAnlegen(f){
   const id = notes.length;
   const taken = new Set(notes.map(n => n.filename).filter(Boolean));
   const n = {
-    id, title:f.title, category:f.category, tags:[...new Set(f.tags || [f.category])], agbId:f.agbId || null,
+    id, title:f.title, category:f.category, tags:tagsBereinigen(f.tags || [], f.category), agbId:f.agbId || null,
     status:f.status || 'offen', prio:f.prio || 'mittel', person:f.person || '',
     accent: shade(colorForCategory(f.category), ((id%5)-2)*0.025),
     created: fmt(now), createdSort: now.getTime(), modified: fmt(now), modifiedSort: now.getTime(),
@@ -4513,7 +4766,7 @@ $('#teilOk').addEventListener('click', async () => {
   try {
     if (plan.art === 'cursor'){
       const vorlage = { category:editorCategory.value, agbId:gewaehlteAgbId(),
-        tags:[editorCategory.value, ...editorTags.value.split(',').map(t=>t.trim()).filter(Boolean)],
+        tags:tagsBereinigen(editorTags.value.split(','), editorCategory.value),
         status:editorStatus.value, prio:editorPrio.value, person:editorPerson.value.trim(), source:pendingSource };
       const neu = await notizAnlegen({ ...vorlage, title:titel[0], content:plan.zeilen });     /* erst neu … */
       teilZu();
@@ -4560,6 +4813,11 @@ function hilfeAuf(){
     + '<p>Würfel mit Maus oder Finger ziehen dreht ihn, Doppelklick stellt ihn zurück. '
     + 'Karten zwischen Zellen ziehen ändert Status, Priorität oder Person (am Telefon: kurz halten, dann ziehen). '
     + '<b>✓</b> erledigt · <b>✕</b> in den Papierkorb (rückgängig machbar) · <b>+</b> legt in der Zelle an.</p>'
+    + '<h3>Gruppen &amp; Kategorien</h3>'
+    + '<p><b>Gruppiert</b> stellt Notizen mit gleichem Tag nacheinander – darin nach Status, dann Priorität; '
+    + 'zwischen den Gruppen ist mehr Abstand. Eine Notiz mit mehreren Tags steht in jeder Gruppe. '
+    + 'Tags sieht man in der geöffneten Notiz; Groß-/Kleinschreibung wird angeglichen. '
+    + '<b>+ Notiz → Kategorien verwalten</b> (oder ⚙ im Editor) legt Kategorien an und löscht leere.</p>'
     + '<h3>Notizen teilen</h3>'
     + '<p><b>Im Editor:</b> Cursor setzen, „✂ Am Cursor teilen“ – alles danach wird eine eigene Notiz. '
     + '<b>In der Leseansicht:</b> ✂ teilt an jeder Überschrift; vorher siehst du, was entsteht.</p>'
@@ -4581,6 +4839,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape'){
     if (!$('#hilfeOverlay').hidden){ e.stopImmediatePropagation(); hilfeZu(); return; }
     if (!$('#teilOverlay').hidden){ e.stopImmediatePropagation(); teilZu(); return; }
+    if (!$('#katOverlay').hidden){ e.stopImmediatePropagation(); katZu(); return; }
   }
   if (e.key !== '?' || e.metaKey || e.ctrlKey || e.altKey) return;
   if (editorView.classList.contains('active')) return;
@@ -4764,7 +5023,8 @@ function replaceNotes(list){
   etikettenNachziehen(list);
   notes.length = 0;
   list.forEach((n,i) => { n.id = i; notes.push(n); });
-  curIdx = 0;
+  alleTagsVereinheitlichen();
+  curIdx = 0; curPos = -1;
 }
 function rebuildAccents(list){
   list.forEach((n,i) => { n.accent = shade(colorForCategory(n.category), ((i%5)-2)*0.025); });
@@ -5127,8 +5387,8 @@ $('#delBtn').addEventListener('click', () => {
 
 /* ───────── Vorschau beim Überfahren ─────────
    Mit der Maus über eine Karte (Haufen, Tafel, Würfel) zeigt nach kurzem
-   Verweilen die Notiz selbst: Kategorie, Status, Priorität, Person, Tags
-   und der Anfang des Textes – formatiert. Am Telefon gibt es kein Hover;
+   Verweilen die Notiz selbst: Kategorie, Status, Priorität, Person
+   und der Anfang des Textes (Tags erst in der geöffneten Notiz) – formatiert. Am Telefon gibt es kein Hover;
    dort bleibt es beim Antippen. */
 const hv = $('#hover');
 let hvTimer = null, hvId = null;
@@ -5138,7 +5398,6 @@ function hoverAuf(el){
   const n = notes[+el.dataset.note];
   if (!n || zug || reading) return;
   hvId = n.id;
-  const tags = n.tags.filter(t => t !== n.category);
   hv.style.setProperty('--acc', n.accent);
   hv.innerHTML =
       '<div class="hv-kick"><span class="hv-dot"></span>'+esc(n.category)+'<span class="hv-d">'+esc(n.modified)+'</span></div>'
@@ -5146,7 +5405,6 @@ function hoverAuf(el){
     + '<div class="hv-k"><span class="kb-s" data-s="'+nStatus(n)+'">'+esc(statusLabel(nStatus(n)))+'</span>'
     +   '<span class="kb-p" data-p="'+nPrio(n)+'">'+esc(prioLabel(nPrio(n)))+'</span>'
     +   '<span class="kb-w">'+(nPerson(n) ? esc(nPerson(n)) : 'niemand')+'</span></div>'
-    + (tags.length ? '<div class="hv-tags">'+tags.map(t => '<span>#'+esc(t)+'</span>').join('')+'</div>' : '')
     + '<div class="hv-b">'+contentToHtml((n.content || []).slice(0, 14))+'</div>';
   hv.hidden = false;
   const r = el.getBoundingClientRect(), w = Math.min(340, innerWidth - 24);
