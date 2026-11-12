@@ -3123,7 +3123,13 @@ function updateHero(){
      Zähler je Auftraggeber mehr, das Notizbuch steht für sich. */
   const jeStatus = { offen:0, arbeit:0, erledigt:0 };
   notes.forEach(n => { jeStatus[n.status || 'offen'] = (jeStatus[n.status || 'offen'] || 0) + 1; });
-  WB.schreiben(WB_NOTES_LS, { anzahl: notes.length, kategorien: cats.size, jeStatus,
+  /* Seit 12.11.2026: die Titel der noch offenen Notizen, jüngste zuerst –
+     die Kachel im Werkzeugkasten des Kontors lässt sie durchlaufen. Nur
+     Titel, Status, Priorität und Kategorie; der Text bleibt hier. */
+  const titel = notes.filter(n => (n.status || 'offen') !== 'erledigt')
+    .sort((a, b) => (b.modifiedSort || 0) - (a.modifiedSort || 0)).slice(0, 15)
+    .map(n => ({ t:String(n.title || 'Ohne Titel').slice(0, 90), s:n.status || 'offen', p:n.prio || '', k:n.category || '' }));
+  WB.schreiben(WB_NOTES_LS, { anzahl: notes.length, kategorien: cats.size, jeStatus, titel,
     zuletzt: newest ? newest.modified : null, zeit: Date.now() });
 }
 /* ───────── Glasscheiben: ein Scheibenkamm über den Bestand ─────────
